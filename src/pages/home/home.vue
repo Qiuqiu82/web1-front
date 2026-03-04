@@ -1,4 +1,6 @@
 <template>
+
+
 <div class="home-preview" :style='{"width":"100%","padding":"10px 20px 0","margin":"20px 0 0","flexWrap":"wrap","justifyContent":"center","display":"block"}'>
 	<el-row type="flex" :gutter="5" justify="center" style="width: 100%">
 		<el-col :span="3" v-if="queryList.length>1">
@@ -135,6 +137,10 @@
 			<i v-if="true" :style='{"padding":"0 20px 0 0","borderColor":"#ccc","margin":"0 0 0 -10px","color":"#333","borderWidth":"0","background":"none","display":"inline-block","width":"40px","fontSize":"16px","lineHeight":"40px","borderStyle":"solid","height":"40px"}' class="el-icon-d-arrow-right"></i>
 		</div>
 	</div>
+
+	<router-link to="/index/coscart">购物车</router-link>
+	<router-link to="/index/cosorder">我的订单</router-link>
+
 
 </div>
 </template>

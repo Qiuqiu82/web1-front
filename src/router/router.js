@@ -7,6 +7,8 @@ import Index from '../pages/index'
 import Home from '../pages/home/home'
 import Login from '../pages/login/login'
 import Register from '../pages/register/register'
+import CoscartList from '../pages/coscart/list'
+import CosorderList from '../pages/cosorder/list'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -31,7 +33,9 @@ export default new VueRouter({
 				{
 					path: 'remaicosfuDetail',
 					component: RemaicosfuDetail
-				}
+				},
+				{ path: 'coscart', component: CoscartList },
+				{ path: 'cosorder', component: CosorderList },
 			]
 		},
 		{
