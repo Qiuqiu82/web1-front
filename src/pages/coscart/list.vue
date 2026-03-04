@@ -52,7 +52,7 @@
     </div>
 
     <el-dialog title="填写订单信息" :visible.sync="checkoutVisible" width="540px">
-      <el-form :model="checkoutForm" :rules="checkoutRules" ref="checkoutForm" label-width="90px">
+      <el-form ref="checkoutForm" :model="checkoutForm" :rules="checkoutRules" label-width="90px">
         <el-form-item label="联系人" prop="contactName">
           <el-input v-model="checkoutForm.contactName" />
         </el-form-item>
@@ -74,7 +74,9 @@
       </el-form>
       <span slot="footer">
         <el-button @click="checkoutVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitOrder">提交订单</el-button>
+        <el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitOrder">
+          提交订单
+        </el-button>
       </span>
     </el-dialog>
   </div>
@@ -87,115 +89,155 @@ export default {
       list: [],
       selectedRows: [],
       checkoutVisible: false,
+      submitting: false,
       checkoutForm: {
-        payType: "支付宝支付",
-        contactName: "",
-        contactPhone: "",
-        address: "",
-        remark: "",
+        payType: '支付宝支付',
+        contactName: '',
+        contactPhone: '',
+        address: '',
+        remark: '',
       },
       checkoutRules: {
-        contactName: [{ required: true, message: "请输入联系人", trigger: "blur" }],
-        contactPhone: [{ required: true, message: "请输入联系电话", trigger: "blur" }],
-        address: [{ required: true, message: "请输入地址", trigger: "blur" }],
+        contactName: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+        contactPhone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }],
+        address: [{ required: true, message: '请输入地址', trigger: 'blur' }],
       },
-    };
+    }
   },
   computed: {
     totalAmount() {
-      const sum = this.selectedRows.reduce((acc, row) => {
-        return acc + Number(row.amount || 0);
-      }, 0);
-      return sum.toFixed(2);
+      const sum = this.selectedRows.reduce((acc, row) => acc + Number(row.amount || 0), 0)
+      return sum.toFixed(2)
     },
   },
   created() {
-    this.load();
+    this.load()
   },
   methods: {
     imgUrl(path) {
-      if (!path) return "";
-      return path.startsWith("http") ? path : this.$config.baseUrl + path;
+      if (!path) return ''
+      return path.startsWith('http') ? path : this.$config.baseUrl + path
     },
     formatMoney(v) {
-      return Number(v || 0).toFixed(2);
+      return Number(v || 0).toFixed(2)
     },
-    load() {
-      this.$http.get("coscart/list").then((res) => {
-        if (res.data.code !== 0) {
-          this.$message.error(res.data.msg || "购物车加载失败");
-          return;
+    async load() {
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.coscartList,
+        method: 'get',
+        showLoading: false,
+      })
+      if (!res || res.code !== 0) {
+        this.$message.error((res && res.msg) || '购物车加载失败')
+        return
+      }
+      const data = res.data || []
+      const rows = Array.isArray(data) ? data : data.list || []
+      this.list = rows.map((r) => {
+        const quantity = Number(r.quantity || 1)
+        const price = Number(r.price || 0)
+        return {
+          ...r,
+          productName: r.productName || r.product_name || '',
+          productCover: r.productCover || r.product_cover || '',
+          quantity,
+          price,
+          amount: Number(r.amount || quantity * price).toFixed(2),
         }
-        const data = res.data.data || [];
-        const rows = Array.isArray(data) ? data : data.list || [];
-        this.list = rows.map((r) => {
-          const quantity = Number(r.quantity || 1);
-          const price = Number(r.price || 0);
-          return {
-            ...r,
-            productName: r.productName || r.product_name || "",
-            productCover: r.productCover || r.product_cover || "",
-            quantity,
-            price,
-            amount: Number(r.amount || quantity * price).toFixed(2),
-          };
-        });
-        this.selectedRows = [];
-      });
+      })
+      this.selectedRows = []
     },
     onSelectionChange(rows) {
-      this.selectedRows = rows || [];
+      this.selectedRows = rows || []
     },
-    onQtyChange(row) {
-      row.amount = (Number(row.quantity || 1) * Number(row.price || 0)).toFixed(2);
-      this.$http.post("coscart/update", row).then(() => {}).catch(() => {});
+    async onQtyChange(row) {
+      row.amount = (Number(row.quantity || 1) * Number(row.price || 0)).toFixed(2)
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.coscartUpdate,
+        method: 'post',
+        dataType: 'json',
+        showLoading: false,
+        params: {
+          id: row.id,
+          quantity: Number(row.quantity || 1),
+          checked: 1,
+        },
+      })
+      if (!res || res.code !== 0) {
+        this.$message.error((res && res.msg) || '更新数量失败')
+        this.load()
+      }
     },
     removeItem(row) {
-      this.$confirm("确认删除该商品吗？", "提示", { type: "warning" })
-        .then(() => {
-          this.$http.post("coscart/delete", [row.id]).then((res) => {
-            if (res.data.code === 0) {
-              this.$message.success("删除成功");
-              this.load();
-            } else {
-              this.$message.error(res.data.msg || "删除失败");
-            }
-          });
+      this.$confirm('确认删除该商品吗？', '提示', { type: 'warning' })
+        .then(async () => {
+          const res = await this.$proxy.Request({
+            url: this.$proxy.Api.coscartDelete,
+            method: 'post',
+            dataType: 'json',
+            params: [row.id],
+          })
+          if (res && res.code === 0) {
+            this.$message.success('删除成功')
+            this.load()
+          }
         })
-        .catch(() => {});
+        .catch(() => {})
     },
     openCheckout() {
       if (!this.selectedRows.length) {
-        this.$message.warning("请先勾选要结算的商品");
-        return;
+        this.$message.warning('请先勾选要结算的商品')
+        return
       }
-      this.checkoutVisible = true;
+      this.checkoutVisible = true
     },
-    submitOrder() {
-      this.$refs.checkoutForm.validate((valid) => {
-        if (!valid) return;
-        const cartIds = this.selectedRows.map((r) => r.id);
-        const payload = {
-          cartIds,
-          payType: this.checkoutForm.payType,
-          contactName: this.checkoutForm.contactName,
-          contactPhone: this.checkoutForm.contactPhone,
-          address: this.checkoutForm.address,
-          remark: this.checkoutForm.remark,
-        };
-        this.$http.post("cosorder/submit", payload).then((res) => {
-          if (res.data.code === 0) {
-            this.$message.success("下单成功");
-            this.checkoutVisible = false;
-            this.$router.push("/index/cosorder");
-          } else {
-            this.$message.error(res.data.msg || "下单失败");
-          }
-        });
-      });
+    validateCheckoutForm() {
+      return new Promise((resolve) => {
+        this.$refs.checkoutForm.validate((valid) => resolve(valid))
+      })
+    },
+    async submitOrder() {
+      if (this.submitting) return
+      const valid = await this.validateCheckoutForm()
+      if (!valid) return
+
+      const cartIds = this.selectedRows.map((r) => Number(r.id)).filter(Boolean)
+      if (!cartIds.length) {
+        this.$message.warning('请先勾选要结算的商品')
+        return
+      }
+
+      const payload = {
+        cartIds,
+        payType: this.checkoutForm.payType,
+        contactName: this.checkoutForm.contactName,
+        contactPhone: this.checkoutForm.contactPhone,
+        address: this.checkoutForm.address,
+        remark: this.checkoutForm.remark,
+      }
+
+      this.submitting = true
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosorderSubmit,
+        method: 'post',
+        dataType: 'json',
+        params: payload,
+      })
+      this.submitting = false
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && res.msg) || '下单失败')
+        return
+      }
+
+      this.$message.success('下单成功')
+      this.checkoutVisible = false
+      this.selectedRows = []
+      this.load()
+      this.$router.push('/index/cosorder')
     },
   },
-};
+}
 </script>
 
 <style scoped>
