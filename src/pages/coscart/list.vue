@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <div class="cart-page">
     <div class="page-title">购物车</div>
-
+<!-- 测试git2 -->
     <el-table
       :data="list"
       style="width: 100%"
