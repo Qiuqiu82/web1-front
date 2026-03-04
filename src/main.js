@@ -15,8 +15,10 @@ import { isAuth, getCurDateTime, getCurDate } from './common/system'
 import App from './App.vue'
 import Breadcrumb from '@/components/Breadcrumb'
 import FileUpload from '@/components/FileUpload'
-import Editor from "@/components/Editor"
+import Editor from '@/components/Editor'
 import store from './store'
+import Api from './utils/Api'
+import Request from './utils/Request'
 
 Vue.config.productionTip = false
 
@@ -25,6 +27,7 @@ Vue.prototype.$validate = validate
 Vue.prototype.isAuth = isAuth
 Vue.prototype.getCurDateTime = getCurDateTime
 Vue.prototype.getCurDate = getCurDate
+Vue.prototype.$proxy = { Api, Request }
 
 Vue.use(VueRouter)
 Vue.use(VueResource)
@@ -41,9 +44,9 @@ Vue.component('editor', Editor)
 Vue.http.options.root = config.baseUrl
 Vue.http.headers.common['Token'] = localStorage.getItem('Token')
 Vue.http.interceptors.push(function(request, next) {
-　next((response) => {
+  next((response) => {
     if (response.data.code == 401 || response.data.code == 403) {
-      this.$router.replace('/login').catch(err => {})
+      this.$router.replace('/login').catch(() => {})
     } else {
       return response
     }
@@ -57,7 +60,7 @@ router.afterEach((to, from) => {
 })
 
 new Vue({
-  render: h => h(App),
+  render: (h) => h(App),
   router,
-  store,
+  store
 }).$mount('#app')

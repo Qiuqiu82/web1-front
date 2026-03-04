@@ -1,89 +1,75 @@
 <template>
   <div class="home-container">
     <div class="header">
-      <div class="logo">Web01 项目</div>
+      <div class="logo">
+        <div class="cn">次元定制</div>
+        <div class="en">ACG CUSTOM</div>
+      </div>
       <div class="nav">
         <router-link to="/index/home">首页</router-link>
+        <router-link to="/index/coscart">购物车</router-link>
+        <router-link to="/index/cosorder">我的订单</router-link>
         <router-link to="/login">登录</router-link>
-        <router-link :to="{path: '/register', query: {role: 'yonghu', pageFlag: 'register'}}">注册</router-link>
+        <router-link :to="{ path: '/register', query: { role: 'yonghu', pageFlag: 'register' } }">
+          注册
+        </router-link>
       </div>
     </div>
-    
+
     <div class="content">
-      <router-view/>
-    </div>
-    
-    <div class="footer">
-      <p>© 2026 Web01 项目 - 基于 Vue 2 + Element UI</p>
+      <router-view />
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Index',
-  data() {
-    return {}
-  }
-}
+  name: "Index",
+};
 </script>
 
 <style scoped>
 .home-container {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background: #eef1f7;
 }
-
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0 50px;
-  height: 70px;
+  height: 74px;
+  background: #fff;
+  border-bottom: 1px solid #e6e8ef;
+  padding: 0 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-
-.logo {
+.logo .cn {
   font-size: 24px;
-  font-weight: bold;
+  line-height: 1;
+  font-weight: 700;
+  color: #5b4ae6;
 }
-
+.logo .en {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8f95a8;
+  letter-spacing: 1px;
+}
 .nav {
   display: flex;
-  gap: 30px;
+  align-items: center;
+  gap: 16px;
 }
-
 .nav a {
-  color: white;
+  color: #2a3042;
   text-decoration: none;
-  font-size: 16px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: all 0.3s;
+  padding: 8px 14px;
+  border-radius: 18px;
 }
-
-.nav a:hover {
-  background: rgba(255,255,255,0.2);
-}
-
 .nav a.router-link-active {
-  background: rgba(255,255,255,0.3);
+  background: #4f46e5;
+  color: #fff;
 }
-
 .content {
-  flex: 1;
   padding: 20px;
-}
-
-.footer {
-  background: #333;
-  color: white;
-  text-align: center;
-  padding: 20px;
-  margin-top: auto;
 }
 </style>
-
