@@ -27,7 +27,7 @@ git add .
 git commit -m "pay init" 中文会乱码
 
 ✅ 第三步：推送到 GitHub
-git push -u origin feature-pay
+git push -u origin pay
 
 🎯三、GitHub 页面操作
 点击：

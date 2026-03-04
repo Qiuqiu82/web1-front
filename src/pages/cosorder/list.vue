@@ -109,11 +109,22 @@ export default {
         this.$message.warning('订单号不存在')
         return
       }
-      if (!this.sessionUser.userId) {
+      const userId = this.sessionUser.userId || Number(row.userId || row.user_id || 0)
+      const userTable =
+      this.sessionUser.userTable ||
+      row.userTable ||
+      row.user_table ||
+      localStorage.getItem('sessionTable') ||
+      localStorage.getItem('UserTableName') ||
+      'yonghu'
+
+      if (!localStorage.getItem('Token') || !userId) {
         this.$message.warning('请先登录后再支付')
         this.$router.push('/login')
         return
       }
+      this.sessionUser.userId = userId
+      this.sessionUser.userTable = userTable
 
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosPayCreate,
@@ -121,8 +132,8 @@ export default {
         dataType: 'json',
         params: {
           orderNo: orderNo,
-          userId: this.sessionUser.userId,
-          userTable: this.sessionUser.userTable,
+          userId: userId,
+          userTable: userTable,
           payChannel: 'mock'
         }
       })
