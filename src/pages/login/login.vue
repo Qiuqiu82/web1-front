@@ -75,7 +75,8 @@ export default {
           if (valid) {
             this.$http.get(`${this.loginForm.tableName}/login`, {params: this.loginForm}).then(res => {
               if (res.data.code === 0) {
-                localStorage.setItem('Token', res.data.token);
+				const token = res.data.token
+                localStorage.setItem('Token', token);
                 localStorage.setItem('UserTableName', this.loginForm.tableName);
                 localStorage.setItem('username', this.loginForm.username);
                 localStorage.setItem('adminName', this.loginForm.username);
@@ -87,6 +88,26 @@ export default {
                   type: 'success',
                   duration: 1500,
                 });
+				// 新增：拿当前登录用户信息，补齐 userId
+				this.$http.get(`${this.loginForm.tableName}/session`, {
+				headers: { Token: token }
+				}).then(sessionRes => {
+				const curr = (sessionRes.data && sessionRes.data.data) || {}
+				const uid = curr.id || curr.userid || curr.userId
+				if (uid) {
+					localStorage.setItem('userid', String(uid))
+					localStorage.setItem('userId', String(uid))
+				}
+  
+      			this.$router.push('/index/home')
+				this.$message({
+					message: '登录成功',
+					type: 'success',
+					duration: 1500
+				})
+				}).catch(() => {
+				this.$message.error('登录成功，但读取用户信息失败，请重新登录')
+				})
               } else {
                 this.$message.error(res.data.msg);
               }
