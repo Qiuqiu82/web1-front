@@ -2,10 +2,12 @@
   // auth
   yonghuLogin: '/yonghu/login',
   yonghuRegister: '/yonghu/register',
+  shejishiLogin: '/shejishi/login',
 
   // product
   remaicosfuList: '/remaicosfu/list',
   remaicosfuDetailPrefix: '/remaicosfu/detail/',
+  remaicosfuAutoSort: '/remaicosfu/autoSort',
 
   // cart
   coscartAdd: '/coscart/add',
@@ -22,6 +24,9 @@
   cosorderAdminDetailPrefix: '/cosorder/admin/detail/',
   cosorderAdminTransition: '/cosorder/admin/transition',
   cosorderAdminStatusLogPrefix: '/cosorder/admin/status-log/',
+  cosorderDesignerPool: '/cosorder/designer/pool',
+  cosorderDesignerClaim: '/cosorder/designer/claim',
+  cosorderDesignerMine: '/cosorder/designer/mine',
 
   // mock pay
   cosPayCreate: '/cospay/create',

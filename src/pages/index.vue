@@ -10,6 +10,7 @@
         <router-link to="/index/coscart">购物车</router-link>
         <router-link to="/index/cosorder">我的订单</router-link>
         <router-link v-if="isAdmin" to="/index/cosorder-admin">订单协同</router-link>
+        <router-link v-if="isDesigner" to="/index/cosorder-designer">设计师接单</router-link>
         <router-link to="/login">登录</router-link>
         <router-link :to="{ path: '/register', query: { role: 'yonghu', pageFlag: 'register' } }">
           注册
@@ -31,6 +32,11 @@ export default {
       const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
       const roleName = localStorage.getItem('role') || ''
       return tableName === 'users' || roleName === '管理员'
+    },
+    isDesigner() {
+      const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
+      const roleName = localStorage.getItem('role') || ''
+      return tableName === 'shejishi' || roleName === '设计师' || roleName === 'DESIGNER'
     }
   }
 }

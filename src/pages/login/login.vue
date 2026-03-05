@@ -32,7 +32,7 @@ export default {
 	data() {
 		return {
             baseUrl: this.$config.baseUrl,
-			roleMenus: [{"backMenu":[{"child":[{"appFrontIcon":"cuIcon-vip","buttons":["新增","查看","修改","删除"],"menu":"用户","menuJump":"列表","tableName":"yonghu"}],"menu":"用户管理"},{"child":[{"appFrontIcon":"cuIcon-vipcard","buttons":["新增","查看","修改","删除"],"menu":"服装款式","menuJump":"列表","tableName":"fuzhuangkuanshi"}],"menu":"服装款式管理"},{"child":[{"appFrontIcon":"cuIcon-camera","buttons":["新增","查看","修改","删除"],"menu":"面料类别","menuJump":"列表","tableName":"mianliaoleibie"}],"menu":"面料类别管理"},{"child":[{"appFrontIcon":"cuIcon-newshot","buttons":["新增","查看","修改","删除","查看评论","立即预约"],"menu":"热卖西服","menuJump":"列表","tableName":"remaixifu"}],"menu":"热卖西服管理"},{"child":[{"appFrontIcon":"cuIcon-medal","buttons":["查看","修改","删除","审核"],"menu":"服装预约","menuJump":"列表","tableName":"fuzhuangyuyue"}],"menu":"服装预约管理"},{"child":[{"appFrontIcon":"cuIcon-group","buttons":["查看","修改","删除"],"menu":"服装交流","tableName":"forum"}],"menu":"服装交流"},{"child":[{"appFrontIcon":"cuIcon-news","buttons":["新增","查看","修改","删除"],"menu":"优惠资讯","tableName":"news"},{"appFrontIcon":"cuIcon-service","buttons":["查看","修改","删除"],"menu":"在线客服","tableName":"chat"},{"appFrontIcon":"cuIcon-addressbook","buttons":["查看","修改"],"menu":"系统简介","tableName":"systemintro"},{"appFrontIcon":"cuIcon-taxi","buttons":["新增","查看","修改","删除"],"menu":"轮播图管理","tableName":"config"}],"menu":"系统管理"}],"frontMenu":[{"child":[{"appFrontIcon":"cuIcon-explore","buttons":["查看","查看评论","立即预约"],"menu":"热卖西服列表","menuJump":"列表","tableName":"remaixifu"}],"menu":"热卖西服模块"}],"hasBackLogin":"是","hasBackRegister":"否","hasFrontLogin":"是","hasFrontRegister":"否","roleName":"管理员","tableName":"users"},{"backMenu":[{"child":[{"appFrontIcon":"cuIcon-medal","buttons":["查看","删除","支付"],"menu":"服装预约","menuJump":"列表","tableName":"fuzhuangyuyue"}],"menu":"服装预约管理"}],"frontMenu":[{"child":[{"appFrontIcon":"cuIcon-explore","buttons":["查看","查看评论","立即预约"],"menu":"热卖西服列表","menuJump":"列表","tableName":"remaixifu"}],"menu":"热卖西服模块"}],"hasBackLogin":"是","hasBackRegister":"否","hasFrontLogin":"是","hasFrontRegister":"是","roleName":"用户","tableName":"yonghu"}],
+			roleMenus: [{"backMenu":[{"child":[{"appFrontIcon":"cuIcon-vip","buttons":["新增","查看","修改","删除"],"menu":"用户","menuJump":"列表","tableName":"yonghu"}],"menu":"用户管理"},{"child":[{"appFrontIcon":"cuIcon-vipcard","buttons":["新增","查看","修改","删除"],"menu":"服装款式","menuJump":"列表","tableName":"fuzhuangkuanshi"}],"menu":"服装款式管理"},{"child":[{"appFrontIcon":"cuIcon-camera","buttons":["新增","查看","修改","删除"],"menu":"面料类别","menuJump":"列表","tableName":"mianliaoleibie"}],"menu":"面料类别管理"},{"child":[{"appFrontIcon":"cuIcon-newshot","buttons":["新增","查看","修改","删除","查看评论","立即预约"],"menu":"热卖西服","menuJump":"列表","tableName":"remaixifu"}],"menu":"热卖西服管理"},{"child":[{"appFrontIcon":"cuIcon-medal","buttons":["查看","修改","删除","审核"],"menu":"服装预约","menuJump":"列表","tableName":"fuzhuangyuyue"}],"menu":"服装预约管理"},{"child":[{"appFrontIcon":"cuIcon-group","buttons":["查看","修改","删除"],"menu":"服装交流","tableName":"forum"}],"menu":"服装交流"},{"child":[{"appFrontIcon":"cuIcon-news","buttons":["新增","查看","修改","删除"],"menu":"优惠资讯","tableName":"news"},{"appFrontIcon":"cuIcon-service","buttons":["查看","修改","删除"],"menu":"在线客服","tableName":"chat"},{"appFrontIcon":"cuIcon-addressbook","buttons":["查看","修改"],"menu":"系统简介","tableName":"systemintro"},{"appFrontIcon":"cuIcon-taxi","buttons":["新增","查看","修改","删除"],"menu":"轮播图管理","tableName":"config"}],"menu":"系统管理"}],"frontMenu":[{"child":[{"appFrontIcon":"cuIcon-explore","buttons":["查看","查看评论","立即预约"],"menu":"热卖西服列表","menuJump":"列表","tableName":"remaixifu"}],"menu":"热卖西服模块"}],"hasBackLogin":"是","hasBackRegister":"否","hasFrontLogin":"是","hasFrontRegister":"否","roleName":"管理员","tableName":"users"},{"backMenu":[{"child":[{"appFrontIcon":"cuIcon-medal","buttons":["查看","删除","支付"],"menu":"服装预约","menuJump":"列表","tableName":"fuzhuangyuyue"}],"menu":"服装预约管理"}],"frontMenu":[{"child":[{"appFrontIcon":"cuIcon-explore","buttons":["查看","查看评论","立即预约"],"menu":"热卖西服列表","menuJump":"列表","tableName":"remaixifu"}],"menu":"热卖西服模块"}],"hasBackLogin":"是","hasBackRegister":"否","hasFrontLogin":"是","hasFrontRegister":"是","roleName":"用户","tableName":"yonghu"},{"backMenu":[],"frontMenu":[],"hasBackLogin":"否","hasBackRegister":"否","hasFrontLogin":"是","hasFrontRegister":"否","roleName":"设计师","tableName":"shejishi"}],
 			loginForm: {
 				username: '',
 				password: '',
@@ -79,42 +79,40 @@ export default {
               : this.$http.get(loginApi, { params: this.loginForm })
             loginRequest.then(res => {
               if (res.data.code === 0) {
-				const token = res.data.token
+					const token = res.data.token
                 localStorage.setItem('Token', token);
                 localStorage.setItem('UserTableName', this.loginForm.tableName);
                 localStorage.setItem('username', this.loginForm.username);
                 localStorage.setItem('adminName', this.loginForm.username);
                 localStorage.setItem('sessionTable', this.loginForm.tableName);
                 localStorage.setItem('role', this.role);
-                const targetRoute = this.loginForm.tableName === 'users'
-                  ? '/index/cosorder-admin'
-                  : '/index/home';
-                this.$router.push(targetRoute);
-                this.$message({
-                  message: '登录成功',
-                  type: 'success',
-                  duration: 1500,
-                });
-				// 新增：拿当前登录用户信息，补齐 userId
-				this.$http.get(`${this.loginForm.tableName}/session`, {
-				headers: { Token: token }
-				}).then(sessionRes => {
-				const curr = (sessionRes.data && sessionRes.data.data) || {}
-				const uid = curr.id || curr.userid || curr.userId
-				if (uid) {
-					localStorage.setItem('userid', String(uid))
-					localStorage.setItem('userId', String(uid))
-				}
-  
-      			this.$router.push(targetRoute);
-				this.$message({
-					message: '登录成功',
-					type: 'success',
-					duration: 1500
-				})
-				}).catch(() => {
-				this.$message.error('登录成功，但读取用户信息失败，请重新登录')
-				})
+
+                const targetRouteMap = {
+                  users: '/index/cosorder-admin',
+                  shejishi: '/index/cosorder-designer',
+                  yonghu: '/index/home'
+                }
+                const targetRoute = targetRouteMap[this.loginForm.tableName] || '/index/home'
+
+					this.$http.get(`${this.loginForm.tableName}/session`, {
+					  headers: { Token: token }
+					}).then(sessionRes => {
+					  const curr = (sessionRes.data && sessionRes.data.data) || {}
+					  const uid = curr.id || curr.userid || curr.userId
+					  if (uid) {
+						localStorage.setItem('userid', String(uid))
+						localStorage.setItem('userId', String(uid))
+					  }
+					}).catch(() => {
+					  this.$message.warning('登录成功，但读取用户信息失败')
+					}).then(() => {
+					  this.$router.push(targetRoute)
+					  this.$message({
+						message: '登录成功',
+						type: 'success',
+						duration: 1500
+					  })
+					})
               } else {
                 this.$message.error(res.data.msg);
               }
@@ -175,9 +173,3 @@ export default {
 		}
 	}
 </style>
-
-
-
-
-
-
