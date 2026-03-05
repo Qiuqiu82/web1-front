@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="home-container">
     <div class="header">
       <div class="logo">
@@ -9,6 +9,7 @@
         <router-link to="/index/home">首页</router-link>
         <router-link to="/index/coscart">购物车</router-link>
         <router-link to="/index/cosorder">我的订单</router-link>
+        <router-link v-if="isAdmin" to="/index/cosorder-admin">订单协同</router-link>
         <router-link to="/login">登录</router-link>
         <router-link :to="{ path: '/register', query: { role: 'yonghu', pageFlag: 'register' } }">
           注册
@@ -24,8 +25,15 @@
 
 <script>
 export default {
-  name: "Index",
-};
+  name: 'Index',
+  computed: {
+    isAdmin() {
+      const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
+      const roleName = localStorage.getItem('role') || ''
+      return tableName === 'users' || roleName === '管理员'
+    }
+  }
+}
 </script>
 
 <style scoped>

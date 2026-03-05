@@ -1,21 +1,21 @@
-<template>
+﻿<template>
   <div class="order-page">
     <div class="page-title">我的订单</div>
-<!-- 测试git1 -->
+
     <el-table :data="list" style="width: 100%" border>
       <el-table-column prop="orderNo" label="订单号" min-width="190" />
       <el-table-column prop="totalAmount" label="订单金额" width="120">
-        <template slot-scope="scope">￥{{ formatMoney(scope.row.totalAmount) }}</template>
+        <template slot-scope="scope">{{ formatMoney(scope.row.totalAmount) }}</template>
       </el-table-column>
       <el-table-column prop="payStatus" label="支付状态" width="110" />
-      <el-table-column prop="orderStatus" label="订单状态" width="120" />
+      <el-table-column prop="orderStatus" label="履约状态" width="120" />
       <el-table-column prop="payType" label="支付方式" width="120" />
       <el-table-column prop="addtime" label="下单时间" min-width="170" />
-      <el-table-column label="操作" width="240" fixed="right">
+      <el-table-column label="操作" width="320" fixed="right">
         <template slot-scope="scope">
           <el-button type="text" @click="showItems(scope.row)">查看商品</el-button>
           <el-button
-            v-if="scope.row.payStatus === '未支付'"
+            v-if="canPay(scope.row)"
             type="primary"
             size="mini"
             @click="goPay(scope.row)"
@@ -23,12 +23,20 @@
             去支付
           </el-button>
           <el-button
-            v-if="scope.row.payStatus === '未支付'"
+            v-if="canPay(scope.row)"
             type="success"
             size="mini"
             @click="mockFinishPay(scope.row)"
           >
             模拟支付成功
+          </el-button>
+          <el-button
+            v-if="canCancel(scope.row)"
+            type="danger"
+            size="mini"
+            @click="cancelOrder(scope.row)"
+          >
+            取消订单
           </el-button>
         </template>
       </el-table-column>
@@ -40,10 +48,10 @@
         <el-table-column prop="specs" label="规格" width="100" />
         <el-table-column prop="quantity" label="数量" width="80" />
         <el-table-column prop="price" label="单价" width="100">
-          <template slot-scope="scope">￥{{ formatMoney(scope.row.price) }}</template>
+          <template slot-scope="scope">{{ formatMoney(scope.row.price) }}</template>
         </el-table-column>
         <el-table-column prop="amount" label="小计" width="100">
-          <template slot-scope="scope">￥{{ formatMoney(scope.row.amount) }}</template>
+          <template slot-scope="scope">{{ formatMoney(scope.row.amount) }}</template>
         </el-table-column>
       </el-table>
     </el-dialog>
@@ -81,6 +89,12 @@ export default {
     formatMoney(v) {
       return Number(v || 0).toFixed(2)
     },
+    canPay(row) {
+      return (row.payStatus || '') === '未支付'
+    },
+    canCancel(row) {
+      return (row.payStatus || '') === '未支付' && (row.orderStatus || '') === '待确认'
+    },
     async load() {
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosorderPage,
@@ -111,12 +125,12 @@ export default {
       }
       const userId = this.sessionUser.userId || Number(row.userId || row.user_id || 0)
       const userTable =
-      this.sessionUser.userTable ||
-      row.userTable ||
-      row.user_table ||
-      localStorage.getItem('sessionTable') ||
-      localStorage.getItem('UserTableName') ||
-      'yonghu'
+        this.sessionUser.userTable ||
+        row.userTable ||
+        row.user_table ||
+        localStorage.getItem('sessionTable') ||
+        localStorage.getItem('UserTableName') ||
+        'yonghu'
 
       if (!localStorage.getItem('Token') || !userId) {
         this.$message.warning('请先登录后再支付')
@@ -131,9 +145,9 @@ export default {
         method: 'post',
         dataType: 'json',
         params: {
-          orderNo: orderNo,
-          userId: userId,
-          userTable: userTable,
+          orderNo,
+          userId,
+          userTable,
           payChannel: 'mock'
         }
       })
@@ -155,7 +169,7 @@ export default {
           url: this.$proxy.Api.cosPayStatus,
           method: 'get',
           params: {
-            orderNo: orderNo,
+            orderNo,
             userId: this.sessionUser.userId,
             userTable: this.sessionUser.userTable
           },
@@ -199,7 +213,7 @@ export default {
       const mockRes = await this.$proxy.Request({
         url: this.$proxy.Api.cosPayMockSuccess,
         method: 'post',
-        params: { payOrderNo: payOrderNo }
+        params: { payOrderNo }
       })
       if (!mockRes || mockRes.code !== 0) {
         this.$message.error((mockRes && (mockRes.msg || mockRes.info)) || '模拟支付失败')
@@ -208,6 +222,37 @@ export default {
 
       this.$message.success('模拟支付成功，正在刷新状态')
       this.startPoll(rowOrderNo)
+    },
+    async cancelOrder(row) {
+      const orderId = row.id
+      if (!orderId) {
+        this.$message.warning('订单ID不存在')
+        return
+      }
+      const ok = await this.$confirm('确认取消该订单吗？', '提示', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => true).catch(() => false)
+
+      if (!ok) {
+        return
+      }
+
+      const res = await this.$proxy.Request({
+        url: `${this.$proxy.Api.cosorderCancelPrefix}${orderId}`,
+        method: 'post',
+        dataType: 'json',
+        params: {}
+      })
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && (res.msg || res.info)) || '取消订单失败')
+        return
+      }
+
+      this.$message.success('订单已取消')
+      this.load()
     },
     showItems(row) {
       const raw = row.itemsJson || row.items_json

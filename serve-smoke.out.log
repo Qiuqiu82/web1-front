@@ -1,0 +1,15 @@
+
+> web01@1.0.0 serve F:\springboot\front\web01
+> vue-cli-service serve
+
+ INFO  Starting development server...
+ DONE  Compiled successfully in 4365ms4:02:25 ├F10: PM┤
+
+
+  App running at:
+  - Local:   http://localhost:8083/ 
+  - Network: http://192.168.1.13:8083/
+
+  Note that the development build is not optimized.
+  To create a production build, run npm run build.
+
