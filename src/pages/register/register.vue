@@ -1,103 +1,77 @@
 <template>
-  <div>
-    <div
-      class="container"
-      :style='{"minHeight":"100vh","width":"100%","alignItems":"center","background":"url(http://codegen.caihongy.cn/20221231/7a3226bd0dfc41549fbee764c9f6552d.jpg) no-repeat center top / 100% 100%","justifyContent":"center","display":"flex"}'
-    >
-      <el-form
-        v-if="pageFlag === 'register'"
-        ref="registerForm"
-        class="rgs-form"
-        :model="registerForm"
-        :rules="rules"
-        :style='{"padding":"20px","boxShadow":"0px 0px 0px #9cd8da,inset 0px 0px 0px 0px #e0f8e8","margin":"0","borderColor":"#00adb5  #00adb5 #00adb5 #00adb5","borderRadius":"30px","background":"rgba(255,255,255,.0)","borderWidth":"0px","width":"800px","minWidth":"800px","borderStyle":"solid double solid double","height":"auto"}'
-      >
-        <div v-if="true" :style='{"width":"100%","margin":"0 0 4px 0","fontSize":"20px","color":"#3086b9","textAlign":"center","fontWeight":"500"}'>
-          USER / REGISTER
-        </div>
-        <div v-if="true" :style='{"margin":"0 auto 20px","borderColor":"#c4deee","color":"#3086b9","textAlign":"center","borderWidth":"4px 0px","width":"80%","fontSize":"22px","lineHeight":"44px","borderStyle":"dotted dashed","fontWeight":"500"}'>
-          私人西服定制注册
-        </div>
+  <div class="register-page">
+    <div class="register-card">
+      <div class="header">
+        <h2>{{ pageTitle }}</h2>
+        <p>Create an account, then sign in to the matching workspace.</p>
+      </div>
 
+      <el-form ref="registerForm" :model="registerForm" :rules="rules" label-position="top">
         <template v-if="tableName === 'yonghu'">
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="yonghuzhanghao">
-            <el-input v-model="registerForm.yonghuzhanghao" placeholder="请输入用户账号" />
+          <el-form-item label="User Account" prop="yonghuzhanghao">
+            <el-input v-model.trim="registerForm.yonghuzhanghao" placeholder="Input user account" />
           </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="mima">
-            <el-input v-model="registerForm.mima" type="password" placeholder="请输入密码" />
+          <el-form-item label="User Name" prop="yonghuxingming">
+            <el-input v-model.trim="registerForm.yonghuxingming" placeholder="Input user name" />
           </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="mima2">
-            <el-input v-model="registerForm.mima2" type="password" placeholder="请再次输入密码" />
-          </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="yonghuxingming">
-            <el-input v-model="registerForm.yonghuxingming" placeholder="请输入用户姓名" />
-          </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="touxiang">
-            <file-upload
-              tip="点击上传头像"
-              action="file/upload"
-              :limit="1"
-              :multiple="true"
-              :fileUrls="registerForm.touxiang ? registerForm.touxiang : ''"
-              @change="yonghutouxiangUploadChange"
-            />
-          </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="xingbie">
-            <el-select v-model="registerForm.xingbie" placeholder="请选择性别">
-              <el-option v-for="(item, index) in yonghuxingbieOptions" :key="index" :label="item" :value="item" />
+          <el-form-item label="Gender" prop="xingbie">
+            <el-select v-model="registerForm.xingbie" placeholder="Select gender" style="width: 100%">
+              <el-option v-for="item in yonghuxingbieOptions" :key="item" :label="item" :value="item" />
             </el-select>
           </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="lianxifangshi">
-            <el-input v-model="registerForm.lianxifangshi" placeholder="请输入联系方式" />
-          </el-form-item>
         </template>
 
-        <template v-else-if="tableName === 'shejishi'">
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="shejishizhanghao">
-            <el-input v-model="registerForm.shejishizhanghao" placeholder="请输入设计师账号" />
+        <template v-else>
+          <el-form-item label="Designer Account" prop="shejishizhanghao">
+            <el-input v-model.trim="registerForm.shejishizhanghao" placeholder="Input designer account" />
           </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="mima">
-            <el-input v-model="registerForm.mima" type="password" placeholder="请输入密码" />
+          <el-form-item label="Designer Name" prop="shejishixingming">
+            <el-input v-model.trim="registerForm.shejishixingming" placeholder="Input designer name" />
           </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="mima2">
-            <el-input v-model="registerForm.mima2" type="password" placeholder="请再次输入密码" />
+          <el-form-item label="Specialty" prop="zhuanchang">
+            <el-input v-model.trim="registerForm.zhuanchang" placeholder="Optional: armor / suit / dress" />
           </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="shejishixingming">
-            <el-input v-model="registerForm.shejishixingming" placeholder="请输入设计师姓名" />
-          </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="touxiang">
-            <file-upload
-              tip="点击上传头像"
-              action="file/upload"
-              :limit="1"
-              :multiple="true"
-              :fileUrls="registerForm.touxiang ? registerForm.touxiang : ''"
-              @change="shejishitouxiangUploadChange"
+          <el-form-item label="Profile" prop="jianjie">
+            <el-input
+              v-model="registerForm.jianjie"
+              type="textarea"
+              :rows="3"
+              placeholder="Optional: short self introduction"
             />
           </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="lianxifangshi">
-            <el-input v-model="registerForm.lianxifangshi" placeholder="请输入联系方式" />
-          </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="zhuanchang">
-            <el-input v-model="registerForm.zhuanchang" placeholder="请输入擅长方向（可选）" />
-          </el-form-item>
-          <el-form-item :style='{"width":"80%","padding":"0","margin":"0 auto 20px","height":"auto"}' prop="jianjie">
-            <el-input v-model="registerForm.jianjie" type="textarea" :rows="3" placeholder="请输入个人简介（可选）" />
-          </el-form-item>
         </template>
 
-        <el-button
-          :style='{"border":"0","cursor":"pointer","padding":"0px","boxShadow":"0px 0px 0px #9cdde0","margin":"12px 16px 10px 240px","color":"#fff","display":"inline-block","outline":"none","borderRadius":"8px","background":"linear-gradient(320deg, rgba(48,134,185,1) 0%, rgba(197,230,250,1) 80%, rgba(48,134,185,1) 100%)","width":"128px","fontSize":"16px","height":"40px"}'
-          type="primary"
-          @click="submitForm('registerForm')"
-        >注册</el-button>
-        <el-button
-          :style='{"border":"0px solid #bbb","cursor":"pointer","padding":"0px","boxShadow":"1px 2px 3px #ccc","margin":"12px auto 5px","color":"#333","display":"inline-block","outline":"none","borderRadius":"8px","background":"linear-gradient(320deg, rgba(204,204,204,1) 0%, rgba(255,255,255,1) 80%, rgba(204,204,204,1) 100%),#999","width":"128px","fontSize":"16px","height":"40px"}'
-          @click="resetForm('registerForm')"
-        >重置</el-button>
-        <router-link :style='{"cursor":"pointer","padding":"0 10%","color":"#333","display":"inline-block","width":"100%","lineHeight":"1","fontSize":"12px","textDecoration":"none"}' to="/login">
-          已有账户登录
-        </router-link>
+        <el-form-item label="Password" prop="mima">
+          <el-input v-model.trim="registerForm.mima" type="password" show-password placeholder="Input password" />
+        </el-form-item>
+        <el-form-item label="Confirm Password" prop="mima2">
+          <el-input
+            v-model.trim="registerForm.mima2"
+            type="password"
+            show-password
+            placeholder="Input password again"
+          />
+        </el-form-item>
+        <el-form-item label="Phone" prop="lianxifangshi">
+          <el-input v-model.trim="registerForm.lianxifangshi" placeholder="Input phone number" />
+        </el-form-item>
+
+        <el-form-item label="Avatar" prop="touxiang">
+          <file-upload
+            tip="Upload avatar"
+            action="file/upload"
+            :limit="1"
+            :multiple="true"
+            :fileUrls="registerForm.touxiang || ''"
+            @change="handleAvatarChange"
+          />
+        </el-form-item>
+
+        <div class="btn-row">
+          <el-button type="primary" :loading="submitting" @click="submitForm('registerForm')">Register</el-button>
+          <el-button @click="resetForm('registerForm')">Reset</el-button>
+          <el-button type="text" @click="$router.push('/login')">Already have an account?</el-button>
+        </div>
       </el-form>
     </div>
   </div>
@@ -107,8 +81,9 @@
 export default {
   data() {
     return {
-      pageFlag: '',
-      tableName: '',
+      tableName: 'yonghu',
+      submitting: false,
+      yonghuxingbieOptions: ['Male', 'Female'],
       registerForm: {
         xingbie: '',
         yonghuzhanghao: '',
@@ -122,104 +97,112 @@ export default {
         zhuanchang: '',
         jianjie: ''
       },
-      rules: {},
-      yonghuxingbieOptions: []
+      rules: {}
+    }
+  },
+  computed: {
+    pageTitle() {
+      return this.tableName === 'shejishi' ? 'Designer Register' : 'User Register'
     }
   },
   created() {
-    this.pageFlag = this.$route.query.pageFlag
-    this.tableName = this.$route.query.role
-    this.yonghuxingbieOptions = '男,女'.split(',')
+    const role = this.$route.query.role
+    this.tableName = role === 'shejishi' ? 'shejishi' : 'yonghu'
     this.buildRules()
   },
   methods: {
     buildRules() {
       const baseRules = {
-        mima: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-        mima2: [{ required: true, message: '请再次输入密码', trigger: 'blur' }]
-      }
-
-      if (this.tableName === 'yonghu') {
-        this.rules = {
-          ...baseRules,
-          yonghuzhanghao: [{ required: true, message: '请输入用户账号', trigger: 'blur' }],
-          yonghuxingming: [{ required: true, message: '请输入用户姓名', trigger: 'blur' }],
-          xingbie: [{ required: true, message: '请选择性别', trigger: 'change' }],
-          lianxifangshi: [{ required: true, validator: this.$validate.isMobile, trigger: 'blur' }]
-        }
-        return
+        mima: [
+          { required: true, message: 'Please input password', trigger: 'blur' },
+          { min: 3, max: 20, message: 'Password length: 3-20', trigger: 'blur' }
+        ],
+        mima2: [{ required: true, message: 'Please input confirm password', trigger: 'blur' }],
+        lianxifangshi: [
+          { required: true, message: 'Please input phone', trigger: 'blur' },
+          { pattern: /^1\d{10}$/, message: 'Please input valid phone', trigger: 'blur' }
+        ]
       }
 
       if (this.tableName === 'shejishi') {
         this.rules = {
           ...baseRules,
-          shejishizhanghao: [{ required: true, message: '请输入设计师账号', trigger: 'blur' }],
-          shejishixingming: [{ required: true, message: '请输入设计师姓名', trigger: 'blur' }],
-          lianxifangshi: [{ required: true, validator: this.$validate.isMobile, trigger: 'blur' }]
+          shejishizhanghao: [
+            { required: true, message: 'Please input designer account', trigger: 'blur' },
+            { min: 3, max: 20, message: 'Account length: 3-20', trigger: 'blur' }
+          ],
+          shejishixingming: [{ required: true, message: 'Please input designer name', trigger: 'blur' }]
         }
         return
       }
 
-      this.rules = { ...baseRules }
+      this.rules = {
+        ...baseRules,
+        yonghuzhanghao: [
+          { required: true, message: 'Please input user account', trigger: 'blur' },
+          { min: 3, max: 20, message: 'Account length: 3-20', trigger: 'blur' }
+        ],
+        yonghuxingming: [{ required: true, message: 'Please input user name', trigger: 'blur' }],
+        xingbie: [{ required: true, message: 'Please select gender', trigger: 'change' }]
+      }
     },
-    yonghutouxiangUploadChange(fileUrls) {
+    handleAvatarChange(fileUrls) {
       this.registerForm.touxiang = fileUrls.replace(new RegExp(this.$config.baseUrl, 'g'), '')
     },
-    shejishitouxiangUploadChange(fileUrls) {
-      this.registerForm.touxiang = fileUrls.replace(new RegExp(this.$config.baseUrl, 'g'), '')
+    buildPayload() {
+      const basePayload = {
+        mima: this.registerForm.mima,
+        touxiang: this.registerForm.touxiang,
+        lianxifangshi: this.registerForm.lianxifangshi
+      }
+      if (this.tableName === 'shejishi') {
+        return {
+          ...basePayload,
+          shejishizhanghao: this.registerForm.shejishizhanghao,
+          shejishixingming: this.registerForm.shejishixingming,
+          zhuanchang: this.registerForm.zhuanchang,
+          jianjie: this.registerForm.jianjie
+        }
+      }
+      return {
+        ...basePayload,
+        yonghuzhanghao: this.registerForm.yonghuzhanghao,
+        yonghuxingming: this.registerForm.yonghuxingming,
+        xingbie: this.registerForm.xingbie
+      }
     },
     submitForm(formName) {
+      if (this.submitting) {
+        return
+      }
       this.$refs[formName].validate((valid) => {
         if (!valid) {
           return false
         }
-
-        if (this.tableName !== 'yonghu' && this.tableName !== 'shejishi') {
-          this.$message.error('不支持的注册角色')
-          return false
-        }
-
-        const accountField = this.tableName === 'shejishi' ? 'shejishizhanghao' : 'yonghuzhanghao'
-        const accountLabel = this.tableName === 'shejishi' ? '设计师账号' : '用户账号'
-        const account = this.registerForm[accountField] || ''
-
-        if (account.length < 3) {
-          this.$message.error(`${accountLabel}长度不能小于3`)
-          return false
-        }
-        if (account.length > 20) {
-          this.$message.error(`${accountLabel}长度不能大于20`)
-          return false
-        }
-
         if (this.registerForm.mima !== this.registerForm.mima2) {
-          this.$message.error('两次密码输入不一致')
-          return false
-        }
-        if (this.registerForm.mima.length < 3) {
-          this.$message.error('密码长度不能小于3')
-          return false
-        }
-        if (this.registerForm.mima.length > 20) {
-          this.$message.error('密码长度不能大于20')
+          this.$message.error('Passwords do not match')
           return false
         }
 
+        this.submitting = true
         const url = `${this.tableName}/register`
-        this.$http.post(url, this.registerForm).then((res) => {
-          if (res.data.code === 0) {
-            this.$message({
-              message: '注册成功',
-              type: 'success',
-              duration: 1500,
-              onClose: () => {
-                this.$router.push('/login')
-              }
-            })
-          } else {
-            this.$message.error(res.data.msg)
-          }
-        })
+        const payload = this.buildPayload()
+        this.$http
+          .post(url, payload)
+          .then((res) => {
+            if (res.data.code === 0) {
+              this.$message.success('Register success, please login')
+              this.$router.push({ path: '/login', query: { role: this.tableName } })
+            } else {
+              this.$message.error(res.data.msg || 'Register failed')
+            }
+          })
+          .catch(() => {
+            this.$message.error('Register request failed, please check backend')
+          })
+          .finally(() => {
+            this.submitting = false
+          })
       })
     },
     resetForm(formName) {
@@ -229,93 +212,55 @@ export default {
 }
 </script>
 
-<style rel="stylesheet/scss" lang="scss" scoped>
-.container {
-  position: relative;
-  background: url(http://codegen.caihongy.cn/20221231/7a3226bd0dfc41549fbee764c9f6552d.jpg) no-repeat center top / 100% 100%;
+<style scoped>
+.register-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at 15% 18%, #a8b7ff 0, #edf2ff 36%, #f6f7fc 100%);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
 
-  .el-date-editor.el-input {
-    width: 100%;
-  }
+.register-card {
+  width: min(760px, 100%);
+  border-radius: 22px;
+  border: 1px solid #e8edff;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  padding: 26px;
+  box-shadow: 0 18px 40px rgba(84, 104, 168, 0.22);
+}
 
-  .rgs-form .el-input ::v-deep .el-input__inner {
-    border-radius: 0px;
-    padding: 0 10px;
-    box-shadow: 0px 0px 0px #a0d8db;
-    outline: none;
-    color: #999;
-    background: #fff;
-    width: 100%;
-    font-size: 14px;
-    border-color: #c4deee;
-    border-width: 0 0 2px;
-    border-style: dotted;
-    height: 40px;
-  }
+.header h2 {
+  font-size: 30px;
+  color: #283973;
+}
 
-  .rgs-form .el-select ::v-deep .el-input__inner {
-    border: 0px solid #eacb96;
-    padding: 0 10px;
-    color: #999;
-    font-size: 14px;
-    border-color: #c4deee;
-    border-radius: 0px;
-    box-shadow: 0px 0px 0px #a0d8db;
-    outline: none;
-    background: #fff;
-    width: 100%;
-    border-width: 0 0 2px;
-    border-style: dotted;
-    height: 40px;
-  }
+.header p {
+  margin-top: 6px;
+  color: #8a94b6;
+}
 
-  .rgs-form ::v-deep .el-upload--picture-card {
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    width: auto;
-    height: auto;
-    line-height: initial;
-    vertical-align: middle;
-  }
+.btn-row {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
-  .rgs-form ::v-deep .upload .upload-img {
-    border: 2px dotted #c4deee;
-    cursor: pointer;
-    border-radius: 0px;
-    color: #c4deee;
-    background: #fff;
-    width: 160px;
-    font-size: 32px;
-    line-height: 80px;
-    text-align: center;
-    height: 80px;
-  }
+.btn-row .el-button:first-child {
+  min-width: 120px;
+}
 
-  .rgs-form ::v-deep .el-upload-list .el-upload-list__item {
-    border: 2px dotted #c4deee;
-    cursor: pointer;
-    border-radius: 0px;
-    color: #c4deee;
-    background: #fff;
-    width: 160px;
-    font-size: 32px;
-    line-height: 80px;
-    text-align: center;
-    height: 80px;
-  }
-
-  .rgs-form ::v-deep .el-upload .el-icon-plus {
-    border: 2px dotted #c4deee;
-    cursor: pointer;
-    border-radius: 0px;
-    color: #c4deee;
-    background: #fff;
-    width: 160px;
-    font-size: 32px;
-    line-height: 80px;
-    text-align: center;
-    height: 80px;
-  }
+.register-card ::v-deep .upload .upload-img,
+.register-card ::v-deep .el-upload-list .el-upload-list__item,
+.register-card ::v-deep .el-upload .el-icon-plus {
+  width: 132px;
+  height: 132px;
+  line-height: 132px;
+  border-radius: 12px;
+  border: 1px dashed #d3dbff;
+  background: #f8faff;
 }
 </style>

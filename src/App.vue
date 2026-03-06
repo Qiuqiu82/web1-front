@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
@@ -17,9 +17,16 @@ export default {
   box-sizing: border-box;
 }
 
+:root {
+  --text-primary: #253365;
+  --text-secondary: #7e89ae;
+  --bg-base: #f4f7ff;
+}
+
 body {
-  font-family: 'Microsoft YaHei', Arial, sans-serif;
-  background-color: #f5f5f5;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
 }
 
 #app {

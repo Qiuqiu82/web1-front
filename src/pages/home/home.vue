@@ -1,287 +1,589 @@
 <template>
+  <div class="home-page">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">ACG CUSTOM FLOW</div>
+        <h1>Turn your costume ideas into wearable design pieces</h1>
+        <p>
+          Unified workflow for users, admins, and designers. Browse popular products,
+          submit order details, and track every production stage.
+        </p>
 
+        <div class="hero-actions">
+          <el-button type="primary" round @click="toBrowse('cos')">Browse COS</el-button>
+          <el-button round @click="toBrowse('suit')">Browse Suit</el-button>
+        </div>
 
-<div class="home-preview" :style='{"width":"100%","padding":"10px 20px 0","margin":"20px 0 0","flexWrap":"wrap","justifyContent":"center","display":"block"}'>
-	<el-row type="flex" :gutter="5" justify="center" style="width: 100%">
-		<el-col :span="3" v-if="queryList.length>1">
-			<el-select v-model="queryIndex">
-				<el-option
-				  v-for="(item,index) in queryList"
-				  :key="index"
-				  :label="item.queryName"
-				  :value="index"
-				></el-option>
-			</el-select>
-		</el-col>
-		<el-col :span="3" v-if="queryIndex==0">
-			<el-input v-model="remaixifufuzhuangmingcheng" placeholder="服装名称"></el-input>
-		</el-col>
-		<el-col :span="3" v-if="queryIndex==0">
-			<el-button type="primary" @click="search('remaixifu')">搜索</el-button>
-		</el-col>
-	</el-row>
+        <div class="search-row">
+          <el-input
+            v-model="keyword"
+            clearable
+            placeholder="Search by product name, style, or fabric"
+            @keyup.enter.native="searchProduct"
+          >
+            <el-select slot="prepend" v-model="activeFeed" style="width: 104px">
+              <el-option label="COS" value="cos" />
+              <el-option label="Suit" value="suit" />
+            </el-select>
+            <el-button slot="append" icon="el-icon-search" @click="searchProduct" />
+          </el-input>
+        </div>
+      </div>
 
-	<!-- 系统简介-->
-	<div :style='{"padding":"20px 30px 40px","boxShadow":"0px 0px 0px #eee","margin":"20px auto 20px","borderColor":"#98c6e2","flexWrap":"wrap","background":"none","borderWidth":"0 0 8px","display":"flex","width":"100%","position":"relative","borderStyle":"dotted","height":"auto"}'>
-	  <div :style='{"padding":"0","margin":"0 0 40px","color":"#fff","textAlign":"center","background":"url(http://codegen.caihongy.cn/20230101/6c449007e7a54a8892733c2b466c35cb.png) no-repeat center top","display":"block","width":"100%","lineHeight":"56px","fontSize":"24px","height":"56px"}'>{{systemIntroductionDetail.title}}</div>
-	  <div :style='{"width":"100%","padding":"0px","flexWrap":"wrap","justifyContent":"space-between","display":"flex","height":"auto"}'>
-	    <img :style='{"boxShadow":"0px 0px 0px #ddd","padding":"10px","margin":"0px","borderColor":"#9dcde9","objectFit":"cover","borderRadius":"0","borderWidth":"8px","background":"#fff","display":"block","width":"48%","borderStyle":"dotted","height":"350px"}' :src="baseUrl + systemIntroductionDetail.picture1">
-	    <img :style='{"padding":"10px","margin":"0px","borderColor":"#9dcde9","objectFit":"cover","borderWidth":"1px","background":"#fff","display":"block","width":"48%","borderStyle":"dashed","height":"150px"}' :src="baseUrl + systemIntroductionDetail.picture2">
-	  </div>
-	  <div :style='{"padding":"10px","boxShadow":"0px 0px 4px #eee","margin":"0 0 10px 0","borderColor":"#ffec9d","color":"rgb(102, 102, 102)","display":"block","right":"30px","textIndent":"2em","overflow":"hidden","borderRadius":"0px","top":"296px","background":"#fff","borderWidth":"0px","width":"calc(48% - 30px)","lineHeight":"24px","fontSize":"14px","position":"absolute","borderStyle":"double dotted solid double","height":"188px"}' v-html="systemIntroductionDetail.content"></div>
-	</div>
-	
-	<!-- 优惠资讯 -->
-	<div class="news" :style='{"padding":"20px 0","margin":"20px auto 20px","borderColor":"#98c6e2","overflow":"hidden","borderRadius":"0px","background":"none","borderWidth":"0 0 8px","width":"100%","position":"relative","borderStyle":"dotted","height":"auto"}'>
-		<div class="title" :style='{"padding":"0","margin":"30px auto 30px","borderRadius":"0px","textAlign":"center","background":"url(http://codegen.caihongy.cn/20230101/6c449007e7a54a8892733c2b466c35cb.png) no-repeat center top","width":"100%","lineHeight":"56px","position":"relative","height":"56px"}'>
-			<span :style='{"padding":"0","fontSize":"24px","color":"#fff","textShadow":"0px 0px 0px #eee","background":"none"}'>优惠资讯</span>
-		</div>
-		
-		<div v-if="newsList.length" class="list list4 index-pv1" :style='{"padding":"10px","margin":"0 auto","flexWrap":"wrap","background":"none","display":"flex","width":"100%","justifyContent":"center","height":"auto"}'>
-		    <div @click="toDetail('newsDetail', newsList[0])" v-if="newsList.length>0" class="new-list-item animation-box" :style='{"cursor":"pointer","padding":"10px","margin":"0 1% 0 0","textAlign":"center","background":"none","width":"48%","height":"300px","order":"1"}'>
-				<div :style='{"padding":"0 20px","margin":"0px","whiteSpace":"nowrap","overflow":"hidden","color":"#fff","borderRadius":"0","textAlign":"left","background":"linear-gradient(320deg, rgba(48,134,185,1) 0%, rgba(197,230,250,1) 25%, rgba(48,134,185,1) 100%),#3086b9","fontSize":"14px","lineHeight":"32px","textOverflow":"ellipsis"}' class="new-list-item-title line1">{{newsList[0].title}}</div>
-				<div :style='{"padding":"10px","boxShadow":"0px 0px 4px #eee","margin":"0 0 10px","borderColor":"#ffec9d","color":"#666","textAlign":"left","textIndent":"2em","overflow":"hidden","background":"#fff","borderWidth":"0px","fontSize":"14px","lineHeight":"24px","borderStyle":"solid","height":"212px"}' class="descript  line3">{{newsList[0].introduction}}</div>
-				<div :style='{"padding":"0px","margin":"0px  auto","color":"#666","borderRadius":"0px","textAlign":"right","background":"none","display":"block","width":"100%","fontSize":"12px"}' class="time">{{newsList[0].addtime}}</div>
-		    </div>
-		    <div @click="toDetail('newsDetail', newsList[0])" v-if="newsList.length>0" class="new-list-item animation-box" :style='{"cursor":"pointer","padding":"10px","borderColor":"#9dcde9","margin":"0 1% 0 0","borderRadius":"8px 8px 0 0","background":"rgba(255,255,255,.3)","borderWidth":"8px","width":"48%","borderStyle":"dotted","height":"300px","order":"2"}'>
-				<img :style='{"width":"100%","padding":"0px","objectFit":"cover","borderRadius":"0px","height":"100%"}' :src="baseUrl + newsList[0].picture" alt="">
-		    </div>
-		    <div @click="toDetail('newsDetail', newsList[1])" v-if="newsList.length>1" class="new-list-item animation-box" :style='{"cursor":"pointer","padding":"10px","margin":"1% 1% 0 0","background":"none","width":"48%","height":"300px","order":"4"}'>
-				<div :style='{"padding":"0 20px","margin":"0 0 0px","whiteSpace":"nowrap","overflow":"hidden","color":"#fff","borderRadius":"0 ","textAlign":"left","background":"linear-gradient(320deg, rgba(48,134,185,1) 0%, rgba(197,230,250,1) 25%, rgba(48,134,185,1) 100%),#3086b9","fontSize":"14px","lineHeight":"32px","textOverflow":"ellipsis","height":"32px"}' class="new-list-item-title line1">{{newsList[1].title}}</div>
-				<div :style='{"padding":"10px","boxShadow":"0px 0px 4px #eee","margin":"0 0 10px","borderColor":"#ffec9d","color":"#666","textIndent":"2em","overflow":"hidden","borderWidth":"0px","background":"#fff","fontSize":"14px","lineHeight":"24px","borderStyle":"solid","height":"212px"}' class="descript  line3">{{newsList[1].introduction}}</div>
-				<div :style='{"color":"#666","textAlign":"right","fontSize":"12px"}' class="time">{{newsList[1].addtime}}</div>
-		    </div>
-		    <div @click="toDetail('newsDetail', newsList[1])" v-if="newsList.length>1" class="new-list-item animation-box" :style='{"cursor":"pointer","border":"8px dotted #9dcde9","padding":"10px","margin":"0 1% 0 0","borderRadius":"0","background":"#fff","width":"48%","height":"300px","order":"3"}'>
-				<img :style='{"width":"100%","padding":"0px","objectFit":"cover","borderRadius":"0px","height":"100%"}' :src="baseUrl + newsList[1].picture" alt="">
-		    </div>
-		    <div @click="toDetail('newsDetail', newsList[2])" v-if="newsList.length>2" class="new-list-item animation-box" :style='{"cursor":"pointer","padding":"10px","margin":"1% 1% 0 0","background":"none","width":"48%","height":"300px","order":"5"}'>
-				<div :style='{"padding":"0 20px","margin":"0 0 0px","whiteSpace":"nowrap","overflow":"hidden","color":"#fff","borderRadius":"0","textAlign":"left","background":"linear-gradient(320deg, rgba(48,134,185,1) 0%, rgba(197,230,250,1) 25%, rgba(48,134,185,1) 100%),#3086b9","fontSize":"14px","lineHeight":"32px","textOverflow":"ellipsis","height":"32px"}' class="new-list-item-title  line1">{{newsList[2].title}}</div>
-				<div :style='{"padding":"10px","boxShadow":"0px 0px 4px #eee","margin":"0 0 10px","borderColor":"#ffec9d","overflow":"hidden","color":"#666","borderWidth":"0px","background":"#fff","fontSize":"14px","lineHeight":"24px","borderStyle":"solid","height":"212px"}' class="descript  line3">{{newsList[2].introduction}}</div>
-				<div :style='{"color":"#666","textAlign":"right","fontSize":"12px"}' class="time">{{newsList[2].addtime}}</div>
-		    </div>
-		    <div @click="toDetail('newsDetail', newsList[2])" v-if="newsList.length>2" class="new-list-item animation-box" :style='{"cursor":"pointer","border":"8px dotted #9dcde9","padding":"10px","margin":"0 1% 0 0","borderRadius":"0","background":"rgba(255,255,255,.3)","width":"48%","height":"300px","order":"6"}'>
-				<img :style='{"width":"100%","padding":"0px","objectFit":"cover","borderRadius":"0px","height":"100%"}' :src="baseUrl + newsList[2].picture" alt="">
-		    </div>
-		</div>
-		
-		<div @click="moreBtn('news')" :style='{"cursor":"pointer","boxShadow":"0px 0px 0px #ddd5c6,inset 0px 0px 0px 0px #ffa100","padding":"0 20px","margin":"20px auto 40px","borderColor":"#9dcde9","textAlign":"center","display":"block","borderRadius":"0px","background":"#fff","borderWidth":"8px 0px 6px 0px","width":"130px","lineHeight":"40px","borderStyle":"dotted"}'>
-			<span :style='{"color":"#333","background":"none","fontSize":"16px"}'>查看更多</span>
-			<i v-if="true" :style='{"color":"#333","fontSize":"16px","display":"inline-block"}' class="el-icon-d-arrow-right"></i>
-		</div>
-	</div>
+      <div class="hero-side">
+        <div class="spotlight" v-for="item in hotCosList.slice(0, 3)" :key="item.id" @click="openRecommend(item, 'cos')">
+          <img :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="hot" />
+          <div class="spotlight-info">
+            <div class="name">{{ item.fuzhuangmingcheng || 'Hot Item' }}</div>
+            <div class="meta">Heat {{ item.clicknum || 0 }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-	<!-- 热卖西服推荐 -->
-	<div class="recommend" :style='{"border":"0px solid #dfdfdf","boxShadow":"0px 0px 0px #eee","padding":"0","margin":"20px auto","borderColor":"#98c6e2","display":"flex","overflow":"hidden","borderRadius":"0","flexWrap":"wrap","background":"none","borderWidth":"0 0 8px","width":"100%","position":"relative","borderStyle":"dotted","height":"auto"}'>
-	    <div class="title" :style='{"padding":"0","margin":"30px auto 20px","borderRadius":"0","textAlign":"center","background":"url(http://codegen.caihongy.cn/20230101/6c449007e7a54a8892733c2b466c35cb.png) no-repeat center top","width":"100%","lineHeight":"56px","position":"relative","height":"56px"}'>
-			<span :style='{"padding":"0","margin":"0 auto","color":"#fff","background":"nonr","display":"inline-block","fontSize":"24px","textShadow":"0px 0px 0px #eee"}'>热卖西服推荐</span>
-		</div>
-		
-		<div class="list list1 index-pv1" :style='{"padding":"0 10px","margin":"0px auto","borderRadius":"0px","flexWrap":"wrap","background":"none","display":"flex","width":"100%","position":"relative","justifyContent":"space-between","height":"auto"}'>
-			<div :style='{"padding":"10px","boxShadow":"0px 0px 4px #eee","margin":"10px","borderColor":"#eee","borderRadius":"0px","background":"#fff","borderWidth":"1px","display":"inline-block","width":"23%","position":"relative","borderStyle":"solid","height":"auto"}' v-for="(item,index) in remaixifuRecommend" :key="index" @click="toDetail('remaixifuDetail', item)" class="list-item animation-box">
-				<img :style='{"cursor":"pointer","boxShadow":"0px 0px 0px #ddd","padding":"10px","borderColor":"#9dcde9","objectFit":"cover","borderRadius":"0","borderWidth":"4px","background":"#fff","display":"block","width":"100%","borderStyle":"dotted","height":"240px"}' v-if="preHttp(item.huawentuan)" :src="item.huawentuan.split(',')[0]" alt="" />
-				<img :style='{"cursor":"pointer","boxShadow":"0px 0px 0px #ddd","padding":"10px","borderColor":"#9dcde9","objectFit":"cover","borderRadius":"0","borderWidth":"4px","background":"#fff","display":"block","width":"100%","borderStyle":"dotted","height":"240px"}' v-else :src="baseUrl + (item.huawentuan?item.huawentuan.split(',')[0]:'')" alt="" />
-				<div class="name line1" :style='{"cursor":"pointer","padding":"4px 10px","boxShadow":"0px 0px 0px #f1e288","margin":"0px auto 0 auto","borderColor":"#9dcde9","whiteSpace":"nowrap","color":"#333","textAlign":"center","overflow":"hidden","borderRadius":"0","background":"#fff","borderWidth":"0 0 1px","width":"100%","lineHeight":"24px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.fuzhuangmingcheng}}</div>
-				<div class="name line1" :style='{"cursor":"pointer","padding":"4px 10px","boxShadow":"0px 0px 0px #f1e288","margin":"0px auto 0 auto","borderColor":"#9dcde9","whiteSpace":"nowrap","color":"#333","textAlign":"center","overflow":"hidden","borderRadius":"0","background":"#fff","borderWidth":"0 0 1px","width":"100%","lineHeight":"24px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.fuzhuangkuanshi}}</div>
-				<div class="name line1" :style='{"cursor":"pointer","padding":"4px 10px","boxShadow":"0px 0px 0px #f1e288","margin":"0px auto 0 auto","borderColor":"#9dcde9","whiteSpace":"nowrap","color":"#333","textAlign":"center","overflow":"hidden","borderRadius":"0","background":"#fff","borderWidth":"0 0 1px","width":"100%","lineHeight":"24px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.mianliaoleibie}}</div>
-			</div>
-		</div>
-		
-		<div @click="moreBtn('remaixifu')" :style='{"border":"0px solid #ffa100","cursor":"pointer","boxShadow":"0px 0px 0px #ddd5c6,inset 0px 0px 0px 0px #ffa100","padding":"0 20px","margin":"20px auto 40px","borderColor":"#9dcde9","textAlign":"center","display":"block","borderRadius":"0px","background":"#fff","borderWidth":"8px 0px 6px 0px","width":"130px","lineHeight":"40px","borderStyle":"dotted"}'>
-			<span :style='{"color":"#333","background":"none","fontSize":"14px"}'>查看更多</span>
-			<i v-if="true" :style='{"color":"#333","fontSize":"14px","display":"inline-block"}' class="el-icon-d-arrow-right"></i>
-		</div>
-	</div>
-	<!-- 热卖COS服推荐 -->
-	<div class="recommend" :style='{"border":"0px solid #dfdfdf","boxShadow":"0px 0px 0px #eee","padding":"0","margin":"20px auto","borderColor":"#98c6e2","display":"flex","overflow":"hidden","borderRadius":"0","flexWrap":"wrap","background":"none","borderWidth":"0 0 8px","width":"100%","position":"relative","borderStyle":"dotted","height":"auto"}'>
-	    <div class="title" :style='{"padding":"0","margin":"30px auto 20px","borderRadius":"0","textAlign":"center","background":"url(http://codegen.caihongy.cn/20230101/6c449007e7a54a8892733c2b466c35cb.png) no-repeat center top","width":"100%","lineHeight":"56px","position":"relative","height":"56px"}'>
-			<span :style='{"padding":"0","margin":"0 auto","color":"#fff","background":"nonr","display":"inline-block","fontSize":"24px","textShadow":"0px 0px 0px #eee"}'>热卖COS服推荐</span>
-		</div>
-		
-		<div class="list list1 index-pv1" :style='{"padding":"0 10px","margin":"0px auto","borderRadius":"0px","flexWrap":"wrap","background":"none","display":"flex","width":"100%","position":"relative","justifyContent":"space-between","height":"auto"}'>
-			<div :style='{"padding":"10px","boxShadow":"0px 0px 4px #eee","margin":"10px","borderColor":"#eee","borderRadius":"0px","background":"#fff","borderWidth":"1px","display":"inline-block","width":"23%","position":"relative","borderStyle":"solid","height":"auto"}' v-for="(item,index) in remaicosfuRecommend" :key="index" @click="toDetail('remaicosfuDetail', item)" class="list-item animation-box">
-				<img :style='{"cursor":"pointer","boxShadow":"0px 0px 0px #ddd","padding":"10px","borderColor":"#9dcde9","objectFit":"contain","borderRadius":"0","borderWidth":"4px","background":"#f8f8f8","display":"block","width":"100%","borderStyle":"dotted","height":"320px"}' v-if="preHttp(item.huawentuan)" :src="item.huawentuan.split(',')[0]" alt="" />
-				<img :style='{"cursor":"pointer","boxShadow":"0px 0px 0px #ddd","padding":"10px","borderColor":"#9dcde9","objectFit":"contain","borderRadius":"0","borderWidth":"4px","background":"#f8f8f8","display":"block","width":"100%","borderStyle":"dotted","height":"320px"}' v-else :src="baseUrl + (item.huawentuan?item.huawentuan.split(',')[0]:'')" alt="" />
-				<div class="name line1" :style='{"cursor":"pointer","padding":"4px 10px","boxShadow":"0px 0px 0px #f1e288","margin":"0px auto 0 auto","borderColor":"#9dcde9","whiteSpace":"nowrap","color":"#333","textAlign":"center","overflow":"hidden","borderRadius":"0","background":"#fff","borderWidth":"0 0 1px","width":"100%","lineHeight":"24px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.fuzhuangmingcheng}}</div>
-				<div class="name line1" :style='{"cursor":"pointer","padding":"4px 10px","boxShadow":"0px 0px 0px #f1e288","margin":"0px auto 0 auto","borderColor":"#9dcde9","whiteSpace":"nowrap","color":"#333","textAlign":"center","overflow":"hidden","borderRadius":"0","background":"#fff","borderWidth":"0 0 1px","width":"100%","lineHeight":"24px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.fuzhuangkuanshi}}</div>
-				<div class="name line1" :style='{"cursor":"pointer","padding":"4px 10px","boxShadow":"0px 0px 0px #f1e288","margin":"0px auto 0 auto","borderColor":"#9dcde9","whiteSpace":"nowrap","color":"#333","textAlign":"center","overflow":"hidden","borderRadius":"0","background":"#fff","borderWidth":"0 0 1px","width":"100%","lineHeight":"24px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.mianliaoleibie}}</div>
-			</div>
-		</div>
-		
-		<div @click="moreBtn('remaixifu')" :style='{"border":"0px solid #ffa100","cursor":"pointer","boxShadow":"0px 0px 0px #ddd5c6,inset 0px 0px 0px 0px #ffa100","padding":"0 20px","margin":"20px auto 40px","borderColor":"#9dcde9","textAlign":"center","display":"block","borderRadius":"0px","background":"#fff","borderWidth":"8px 0px 6px 0px","width":"130px","lineHeight":"40px","borderStyle":"dotted"}'>
-			<span :style='{"color":"#333","background":"none","fontSize":"14px"}'>查看更多</span>
-			<i v-if="true" :style='{"color":"#333","fontSize":"14px","display":"inline-block"}' class="el-icon-d-arrow-right"></i>
-		</div>
-	</div>
+    <section class="stats-grid">
+      <div class="stats-card" v-for="card in dashboardCards" :key="card.label">
+        <div class="icon" :style="{ background: card.bg }">
+          <i :class="card.icon" />
+        </div>
+        <div>
+          <div class="label">{{ card.label }}</div>
+          <div class="value">{{ card.value }}</div>
+        </div>
+      </div>
+    </section>
 
+    <section class="recommend-block">
+      <div class="section-head">
+        <div>
+          <h2>Trending Products</h2>
+          <p>Default sorted by popularity to speed up product discovery.</p>
+        </div>
+        <el-radio-group v-model="activeFeed" size="small">
+          <el-radio-button label="cos">COS Rank</el-radio-button>
+          <el-radio-button label="suit">Suit Rank</el-radio-button>
+        </el-radio-group>
+      </div>
 
-	<!-- 热卖西服展示 -->
-	<div class="lists" :style='{"padding":"0px","boxShadow":"0px 0px 0px #eee","margin":"20px auto 20px","borderColor":"#98c6e2","display":"flex","overflow":"hidden","borderRadius":"0px","flexWrap":"wrap","background":"none","borderWidth":"0 0 8px","width":"100%","position":"relative","borderStyle":"dotted","height":"auto","order":"8"}'>
-		<div class="title" :style='{"padding":"0","margin":"30px auto 30px","textAlign":"center","background":"url(http://codegen.caihongy.cn/20230101/6c449007e7a54a8892733c2b466c35cb.png) no-repeat center top","width":"100%","lineHeight":"56px","position":"relative","height":"56px"}'>
-		  <span :style='{"padding":"0","fontSize":"24px","color":"#fff","textShadow":"0px 0px 0px #eee","background":"none"}'>热卖西服展示</span>
-		</div>
-		
-		<div class="list list2 index-pv1" :style='{"width":"100%","padding":"0 10px","flexWrap":"wrap","background":"none","display":"flex","height":"auto"}'>
-			<div :style='{"padding":"10px","boxShadow":"0px 0px 4px #eee","margin":"10px","borderColor":"#eee","display":"flex","flexWrap":"wrap","background":"#fff","borderWidth":"1px","width":"48%","fontSize":"0","position":"relative","borderStyle":"solid","height":"240px"}' v-for="(item,index) in remaixifuList" class="list-item animation-box" :key="index" @click="toDetail('remaixifuDetail', item)">
-				<img :style='{"cursor":"pointer","padding":"10px","borderColor":"#9dcde9","objectFit":"cover","borderWidth":"4px","display":"inline-block","width":"48%","borderStyle":"dotted","height":"100%"}' v-if="preHttp(item.huawentuan)" :src="item.huawentuan.split(',')[0]" alt="" />
-				<img :style='{"cursor":"pointer","padding":"10px","borderColor":"#9dcde9","objectFit":"cover","borderWidth":"4px","display":"inline-block","width":"48%","borderStyle":"dotted","height":"100%"}' v-else :src="baseUrl +  (item.huawentuan?item.huawentuan.split(',')[0]:'')" alt="" />
-				<div :style='{"width":"48%","padding":"0px 10px","overflow":"hidden","display":"inline-block","height":"100%"}' class="item-info">
-					<div class="name line1" :style='{"padding":"0 10px","borderColor":"#9dcde9","margin":"0 0 10px","whiteSpace":"nowrap","overflow":"hidden","color":"#333","borderWidth":"0 0 2px","lineHeight":"40px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.fuzhuangmingcheng}}</div>
-					<div class="name line1" :style='{"padding":"0 10px","borderColor":"#9dcde9","margin":"0 0 10px","whiteSpace":"nowrap","overflow":"hidden","color":"#333","borderWidth":"0 0 2px","lineHeight":"40px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.fuzhuangkuanshi}}</div>
-					<div class="name line1" :style='{"padding":"0 10px","borderColor":"#9dcde9","margin":"0 0 10px","whiteSpace":"nowrap","overflow":"hidden","color":"#333","borderWidth":"0 0 2px","lineHeight":"40px","fontSize":"14px","textOverflow":"ellipsis","borderStyle":"dotted"}'>{{item.mianliaoleibie}}</div>
-				</div>
-			</div>
-		</div>
-		
-		<div @click="moreBtn('remaixifu')" :style='{"cursor":"pointer","margin":"20px auto 40px","borderColor":"#9dcde9","borderRadius":"0px","textAlign":"center","background":"#fff","borderWidth":"8px 0px 6px 0px","display":"block","width":"auto","lineHeight":"40px","borderStyle":"dotted"}'>
-			<span :style='{"padding":"0 0 0 10px","borderColor":"#ccc","margin":"0","color":"#333","background":"none","borderWidth":"0","display":"inline-block","width":"100px","fontSize":"16px","lineHeight":"40px","borderStyle":"solid","height":"40px"}'>查看更多</span>
-			<i v-if="true" :style='{"padding":"0 20px 0 0","borderColor":"#ccc","margin":"0 0 0 -10px","color":"#333","borderWidth":"0","background":"none","display":"inline-block","width":"40px","fontSize":"16px","lineHeight":"40px","borderStyle":"solid","height":"40px"}' class="el-icon-d-arrow-right"></i>
-		</div>
-	</div>
+      <div class="card-grid">
+        <article class="goods-card" v-for="item in feedList.slice(0, 8)" :key="`${activeFeed}-${item.id}`">
+          <img class="cover" :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="cover" />
+          <div class="goods-content">
+            <h3>{{ item.fuzhuangmingcheng || 'Unnamed Product' }}</h3>
+            <div class="sub">{{ item.fuzhuangkuanshi || 'Style pending' }}</div>
+            <div class="tags">
+              <span>{{ item.mianliaoleibie || 'Selected fabric' }}</span>
+              <span>Heat {{ item.clicknum || 0 }}</span>
+            </div>
+            <div class="bottom-row">
+              <strong>${{ formatPrice(item) }}</strong>
+              <el-button type="text" @click="openRecommend(item, activeFeed)">
+                {{ activeFeed === 'cos' ? 'View Detail' : 'View Inspiration' }}
+              </el-button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
 
-	<router-link to="/index/coscart">购物车</router-link>
-	<router-link to="/index/cosorder">我的订单</router-link>
+    <section class="content-grid">
+      <el-card shadow="never" class="intro-card">
+        <div slot="header" class="slot-title">
+          <span>{{ systemIntro.title || 'Brand Story' }}</span>
+        </div>
+        <div class="intro-media">
+          <img :src="imgUrl(systemIntro.picture1)" alt="intro-1" />
+          <img :src="imgUrl(systemIntro.picture2)" alt="intro-2" />
+        </div>
+        <div class="intro-content" v-html="systemIntro.content || 'Welcome to ACG custom platform.'" />
+      </el-card>
 
+      <el-card shadow="never" class="news-card">
+        <div slot="header" class="slot-title between">
+          <span>Latest News</span>
+          <el-button type="text" @click="toBrowse(activeFeed)">Go Browse</el-button>
+        </div>
 
-</div>
+        <div class="news-list" v-if="newsList.length">
+          <div class="news-item" v-for="item in newsList" :key="item.id">
+            <img :src="imgUrl(item.picture)" alt="news" />
+            <div class="news-content">
+              <h4>{{ item.title }}</h4>
+              <p>{{ summaryText(item.introduction, 52) }}</p>
+              <span>{{ formatDate(item.addtime) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <el-empty v-else description="No news yet" :image-size="76" />
+      </el-card>
+    </section>
+  </div>
 </template>
 
 <script>
-  export default {
-    data() {
-      return {
-        baseUrl: '',
-        systemIntroductionDetail: {},
-        queryList:[
-          {
-              queryName:"服装名称",
-          },
-        ],
-        queryIndex: 0,
-        remaixifufuzhuangmingcheng: '',
-        newsList: [],
-        remaixifuRecommend: [],
-		remaicosfuRecommend: [],
-        remaixifuList: [],
+export default {
+  data() {
+    return {
+      baseUrl: '',
+      keyword: '',
+      activeFeed: 'cos',
+      systemIntro: {},
+      newsList: [],
+      hotCosList: [],
+      hotSuitList: []
+    }
+  },
+  computed: {
+    feedList() {
+      return this.activeFeed === 'cos' ? this.hotCosList : this.hotSuitList
+    },
+    dashboardCards() {
+      return [
+        { label: 'Hot COS', value: this.hotCosList.length, icon: 'el-icon-s-opportunity', bg: '#e9f1ff' },
+        { label: 'Hot Suit', value: this.hotSuitList.length, icon: 'el-icon-suitcase', bg: '#fdf0e9' },
+        { label: 'News', value: this.newsList.length, icon: 'el-icon-reading', bg: '#eef8ef' }
+      ]
+    }
+  },
+  created() {
+    this.baseUrl = this.$config.baseUrl
+    this.loadSystemIntro()
+    this.loadNews()
+    this.loadHotLists()
+  },
+  methods: {
+    imgUrl(path) {
+      if (!path) {
+        return ''
       }
+      return path.startsWith('http') ? path : `${this.baseUrl}${path}`
     },
-    created() {
-      this.baseUrl = this.$config.baseUrl;
-      this.getNewsList();
-      this.getSystemIntroduction();
-      this.getList();
+    formatPrice(item) {
+      const price = item.fuzhuangjiage || item.price || 0
+      return Number(price).toFixed(2)
     },
-    methods: {
-      preHttp(str) {
-          return str && str.substr(0,4)=='http';
-      },
-      getSystemIntroduction() {
-          this.$http.get('systemintro/detail/1', {}).then(res => {
-            if(res.data.code == 0) {
-              this.systemIntroductionDetail = res.data.data;
-            }
-          })
-      },
-      search(tablename) {
-        if (this.queryIndex == 0 && this.remaixifufuzhuangmingcheng) {
-          this.$router.push({path: '/index/' + tablename, query: {indexQueryCondition: this.remaixifufuzhuangmingcheng}});
+    summaryText(text, limit = 60) {
+      const plainText = String(text || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+      if (!plainText) {
+        return 'No content'
+      }
+      return plainText.length > limit ? `${plainText.slice(0, limit)}...` : plainText
+    },
+    formatDate(time) {
+      if (!time) {
+        return '-'
+      }
+      return String(time).split(' ')[0]
+    },
+    toBrowse(type = 'cos') {
+      this.$router.push({ path: '/index/browse', query: { type } })
+    },
+    searchProduct() {
+      const keyword = String(this.keyword || '').trim()
+      this.$router.push({ path: '/index/browse', query: { type: this.activeFeed, keyword } })
+    },
+    openRecommend(item, type) {
+      if (type === 'cos') {
+        this.$router.push({
+          path: '/index/remaicosfuDetail',
+          query: { detailObj: JSON.stringify(item) }
+        })
+        return
+      }
+      this.$message.info('Suit detail page is under upgrade. Browse list remains available.')
+      this.$router.push({ path: '/index/browse', query: { type: 'suit' } })
+    },
+    loadSystemIntro() {
+      this.$http.get('systemintro/detail/1').then((res) => {
+        if (res.data.code === 0) {
+          this.systemIntro = res.data.data || {}
         }
-      },
-		getNewsList() {
-			this.$http.get('news/list', {params: {
-				page: 1,
-				limit: 6,
-			order: 'desc'}}).then(res => {
-				if (res.data.code == 0) {
-					this.newsList = res.data.data.list;
-				}
-			});
-		},
-		getList() {
-          let autoSortUrl = "";
-          autoSortUrl = "remaixifu/autoSort";
-          if(localStorage.getItem('Token')) {
-              autoSortUrl = "remaixifu/autoSort2";
+      })
+    },
+    loadNews() {
+      this.$http
+        .get('news/list', {
+          params: {
+            page: 1,
+            limit: 3,
+            sort: 'id',
+            order: 'desc'
           }
-			this.$http.get(autoSortUrl, {params: {
-				page: 1,
-				limit: 8,
-			}}).then(res => {
-				if (res.data.code == 0) {
-					this.remaixifuRecommend = res.data.data.list;
-				}
-			});
-			
-			this.$http.get('remaixifu/list', {params: {
-				page: 1,
-				limit: 6,
-			}}).then(res => {
-				if (res.data.code == 0) {
-					this.remaixifuList = res.data.data.list;
-				}
-			});
+        })
+        .then((res) => {
+          if (res.data.code === 0) {
+            const rows = (res.data.data && res.data.data.list) || []
+            this.newsList = rows
+          }
+        })
+    },
+    loadHotLists() {
+      const cosAutoSortUrl = localStorage.getItem('Token') ? 'remaicosfu/autoSort2' : 'remaicosfu/autoSort'
+      const suitAutoSortUrl = localStorage.getItem('Token') ? 'remaixifu/autoSort2' : 'remaixifu/autoSort'
 
-			let cosAutoSortUrl = "remaicosfu/autoSort";
-			if (localStorage.getItem('Token')) {
-			cosAutoSortUrl = "remaicosfu/autoSort2";
-			}
-	
-			this.$http.get(cosAutoSortUrl, {params: {
-				page: 1,
-				limit: 8,
-			}}).then(res => {
-				if (res.data.code == 0) {
-					this.remaicosfuRecommend = res.data.data.list;
-				}
-			});
+      this.$http
+        .get(cosAutoSortUrl, {
+          params: {
+            page: 1,
+            limit: 10
+          }
+        })
+        .then((res) => {
+          if (res.data.code === 0) {
+            this.hotCosList = (res.data.data && res.data.data.list) || []
+          }
+        })
 
-		},
-		toDetail(path, item) {
-			this.$router.push({path: '/index/' + path, query: {detailObj: JSON.stringify(item)}});
-		},
-		moreBtn(path) {
-			this.$router.push({path: '/index/' + path});
-		}
+      this.$http
+        .get(suitAutoSortUrl, {
+          params: {
+            page: 1,
+            limit: 10
+          }
+        })
+        .then((res) => {
+          if (res.data.code === 0) {
+            this.hotSuitList = (res.data.data && res.data.data.list) || []
+          }
+        })
     }
   }
+}
 </script>
 
-<style rel="stylesheet/scss" lang="scss" scoped>
-	.home-preview {
-		.line1 {
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-		
-		.line3 {
-			overflow: hidden;
-			text-overflow: ellipsis;
-			display: -webkit-box;
-			-webkit-line-clamp: 3;
-			-webkit-box-orient: vertical;
-		}
-	
-		.index-pv1 .animation-box {
-			transform: rotate(0deg) scale(1) skew(0deg, 0deg) translate3d(0px, 0px, 0px);
-		}
-		
-		.index-pv1 .animation-box:hover {
-			-webkit-perspective: 1000px;
-			perspective: 1000px;
-			transition: 0.3s;
-			z-index: 1;
-		}
-		
-		.index-pv1 .animation-box img {
-			transform: rotate(0deg) scale(1) skew(0deg, 0deg) translate3d(0px, 0px, 0px);
-		}
-		
-		.index-pv1 .animation-box img:hover {
-			filter: brightness(1);
-			transform: scale(0.9);
-			-webkit-perspective: 1000px;
-			perspective: 1000px;
-			transition: all 0.3s ease-in-out 0s;
-		}
-	}
+<style scoped>
+.home-page {
+  display: grid;
+  gap: 16px;
+}
+
+.hero {
+  border-radius: 24px;
+  padding: 26px;
+  background: linear-gradient(130deg, #203265 0%, #2f4ca2 35%, #4b67ca 100%);
+  box-shadow: 0 20px 36px rgba(44, 66, 129, 0.35);
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 20px;
+}
+
+.eyebrow {
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  letter-spacing: 0.8px;
+}
+
+.hero-main h1 {
+  margin-top: 14px;
+  font-size: 34px;
+  line-height: 1.3;
+  max-width: 680px;
+}
+
+.hero-main p {
+  margin-top: 14px;
+  line-height: 1.8;
+  color: rgba(235, 243, 255, 0.95);
+  max-width: 700px;
+}
+
+.hero-actions {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.search-row {
+  margin-top: 18px;
+  max-width: 560px;
+}
+
+.hero-side {
+  display: grid;
+  gap: 10px;
+}
+
+.spotlight {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.spotlight:hover {
+  transform: translateY(-2px);
+}
+
+.spotlight img {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.spotlight-info .name {
+  font-weight: 600;
+}
+
+.spotlight-info .meta {
+  margin-top: 6px;
+  color: rgba(238, 246, 255, 0.9);
+  font-size: 12px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stats-card {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #edf1ff;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 24px rgba(83, 105, 172, 0.08);
+}
+
+.icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  color: #3f4f8f;
+}
+
+.label {
+  color: #8f98bb;
+  font-size: 12px;
+}
+
+.value {
+  margin-top: 2px;
+  font-size: 26px;
+  color: #243569;
+  font-weight: 700;
+}
+
+.recommend-block {
+  border-radius: 20px;
+  border: 1px solid #e9eeff;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+  padding: 18px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.section-head h2 {
+  font-size: 24px;
+  color: #22315e;
+}
+
+.section-head p {
+  margin-top: 8px;
+  color: #7f8aaf;
+}
+
+.card-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.goods-card {
+  border-radius: 16px;
+  border: 1px solid #eef2ff;
+  background: #fff;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.goods-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px rgba(73, 94, 161, 0.15);
+}
+
+.cover {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  background: #f0f3ff;
+}
+
+.goods-content {
+  padding: 12px;
+}
+
+.goods-content h3 {
+  font-size: 15px;
+  color: #222f5b;
+  line-height: 1.4;
+  min-height: 40px;
+}
+
+.sub {
+  margin-top: 6px;
+  color: #7f89ad;
+  font-size: 13px;
+}
+
+.tags {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tags span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f0f4ff;
+  color: #4f5f9a;
+  font-size: 12px;
+}
+
+.bottom-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bottom-row strong {
+  color: #2c3f89;
+  font-size: 18px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 12px;
+}
+
+.intro-card,
+.news-card {
+  border-radius: 18px;
+  border: 1px solid #ebeffd;
+}
+
+.slot-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #2d3b70;
+}
+
+.between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.intro-media {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.intro-media img {
+  width: 100%;
+  height: 170px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f2f5ff;
+}
+
+.intro-content {
+  margin-top: 10px;
+  color: #4f5777;
+  line-height: 1.85;
+}
+
+.news-list {
+  display: grid;
+  gap: 10px;
+}
+
+.news-item {
+  border: 1px solid #edf1ff;
+  border-radius: 12px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+}
+
+.news-item img {
+  width: 120px;
+  height: 90px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f0f2fa;
+}
+
+.news-content h4 {
+  font-size: 14px;
+  color: #25356a;
+}
+
+.news-content p {
+  margin-top: 6px;
+  color: #7380a6;
+  line-height: 1.7;
+  font-size: 13px;
+}
+
+.news-content span {
+  display: inline-block;
+  margin-top: 6px;
+  color: #9ca5bf;
+  font-size: 12px;
+}
+
+@media (max-width: 1200px) {
+  .hero,
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .stats-grid,
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .card-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
