@@ -1,9 +1,14 @@
 ﻿<template>
-  <div class="designer-page">
-    <div class="page-title">设计师接单台</div>
+  <div class="designer-page order-theme">
+    <section class="head-panel">
+      <div>
+        <h2>设计师接单台</h2>
+        <p>从待接单池快速认领订单，并持续追踪我的订单进度。</p>
+      </div>
+    </section>
 
-    <el-card shadow="never" class="recommend-card">
-      <div slot="header" class="clearfix">
+    <el-card shadow="never" class="recommend-card panel-card">
+      <div slot="header" class="card-header">
         <span>热门款参考（热度排序）</span>
       </div>
       <el-row :gutter="12" v-if="hotList.length">
@@ -18,74 +23,116 @@
       <div v-else class="empty-tip">暂无热门款数据</div>
     </el-card>
 
-    <el-tabs v-model="activeTab">
-      <el-tab-pane label="待接单池" name="pool">
-        <el-table :data="poolList" border v-loading="poolLoading" style="width: 100%">
-          <el-table-column prop="orderNo" label="订单号" min-width="180" />
-          <el-table-column prop="userId" label="用户ID" width="120" />
-          <el-table-column prop="totalAmount" label="金额" width="120">
-            <template slot-scope="scope">{{ formatMoney(scope.row.totalAmount) }}</template>
-          </el-table-column>
-          <el-table-column prop="payStatus" label="支付状态" width="110" />
-          <el-table-column prop="orderStatus" label="履约状态" width="110" />
-          <el-table-column prop="designerStatus" label="接单状态" width="110" />
-          <el-table-column prop="addtime" label="下单时间" min-width="160" />
-          <el-table-column label="操作" width="140" fixed="right">
-            <template slot-scope="scope">
-              <el-button
-                type="primary"
-                size="mini"
-                :loading="claimLoadingOrderId === scope.row.id"
-                @click="claim(scope.row)"
-              >
-                认领
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+    <section class="panel-card tabs-panel">
+      <el-tabs v-model="activeTab">
+        <el-tab-pane label="待接单池" name="pool">
+          <el-table :data="poolList" border v-loading="poolLoading" style="width: 100%">
+            <el-table-column prop="orderNo" label="订单号" min-width="180" />
+            <el-table-column prop="userId" label="用户ID" width="120" />
+            <el-table-column prop="totalAmount" label="金额" width="120">
+              <template slot-scope="scope">￥{{ formatMoney(scope.row.totalAmount) }}</template>
+            </el-table-column>
+            <el-table-column prop="payStatus" label="支付状态" width="110">
+              <template slot-scope="scope">
+                <el-tag size="mini" :type="payTagType(scope.row.payStatus)">{{ scope.row.payStatus || '-' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="orderStatus" label="履约状态" width="120">
+              <template slot-scope="scope">
+                <span :class="['status-chip', orderStatusClass(scope.row.orderStatus)]">{{ scope.row.orderStatus || '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="designerStatus" label="接单状态" width="120" />
+            <el-table-column prop="addtime" label="下单时间" min-width="160" />
+            <el-table-column label="操作" width="140" fixed="right">
+              <template slot-scope="scope">
+                <el-button
+                  type="primary"
+                  size="mini"
+                  class="claim-btn"
+                  :loading="claimLoadingOrderId === scope.row.id"
+                  @click="claim(scope.row)"
+                >
+                  认领
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
 
-        <div class="pagination">
-          <el-pagination
-            @size-change="handlePoolSizeChange"
-            @current-change="handlePoolCurrentChange"
-            :current-page="poolPage"
-            :page-size="poolLimit"
-            :page-sizes="[10, 20, 50]"
-            layout="total, sizes, prev, pager, next"
-            :total="poolTotal"
-            background
-          />
-        </div>
-      </el-tab-pane>
+          <div class="pagination">
+            <el-pagination
+              @size-change="handlePoolSizeChange"
+              @current-change="handlePoolCurrentChange"
+              :current-page="poolPage"
+              :page-size="poolLimit"
+              :page-sizes="[10, 20, 50]"
+              layout="total, sizes, prev, pager, next"
+              :total="poolTotal"
+              background
+            />
+          </div>
+        </el-tab-pane>
 
-      <el-tab-pane label="我的订单" name="mine">
-        <el-table :data="mineList" border v-loading="mineLoading" style="width: 100%">
-          <el-table-column prop="orderNo" label="订单号" min-width="180" />
-          <el-table-column prop="userId" label="用户ID" width="120" />
-          <el-table-column prop="totalAmount" label="金额" width="120">
-            <template slot-scope="scope">{{ formatMoney(scope.row.totalAmount) }}</template>
-          </el-table-column>
-          <el-table-column prop="payStatus" label="支付状态" width="110" />
-          <el-table-column prop="orderStatus" label="履约状态" width="110" />
-          <el-table-column prop="designerStatus" label="接单状态" width="110" />
-          <el-table-column prop="designerTakeTime" label="认领时间" min-width="160" />
-          <el-table-column prop="addtime" label="下单时间" min-width="160" />
-        </el-table>
+        <el-tab-pane label="我的订单" name="mine">
+          <el-table :data="mineList" border v-loading="mineLoading" style="width: 100%">
+            <el-table-column prop="orderNo" label="订单号" min-width="180" />
+            <el-table-column prop="userId" label="用户ID" width="120" />
+            <el-table-column prop="totalAmount" label="金额" width="120">
+              <template slot-scope="scope">￥{{ formatMoney(scope.row.totalAmount) }}</template>
+            </el-table-column>
+            <el-table-column prop="payStatus" label="支付状态" width="110">
+              <template slot-scope="scope">
+                <el-tag size="mini" :type="payTagType(scope.row.payStatus)">{{ scope.row.payStatus || '-' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="orderStatus" label="履约状态" width="120">
+              <template slot-scope="scope">
+                <span :class="['status-chip', orderStatusClass(scope.row.orderStatus)]">{{ scope.row.orderStatus || '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="designerStatus" label="接单状态" width="120" />
+            <el-table-column prop="designerTakeTime" label="认领时间" min-width="160" />
+            <el-table-column prop="addtime" label="下单时间" min-width="160" />
+            <el-table-column label="操作" width="260" fixed="right">
+              <template slot-scope="scope">
+                <el-button
+                  v-if="canStartProduction(scope.row)"
+                  type="primary"
+                  size="mini"
+                  :loading="actionLoadingKey === `${scope.row.id}-start`"
+                  @click="startProduction(scope.row)"
+                >
+                  开始制作
+                </el-button>
+                <el-button
+                  v-if="canShip(scope.row)"
+                  type="success"
+                  size="mini"
+                  :loading="actionLoadingKey === `${scope.row.id}-ship`"
+                  @click="shipOrder(scope.row)"
+                >
+                  制作完成并发货
+                </el-button>
+                <span v-if="!canStartProduction(scope.row) && !canShip(scope.row)" class="noop-tip">当前状态无需操作</span>
+              </template>
+            </el-table-column>
+          </el-table>
 
-        <div class="pagination">
-          <el-pagination
-            @size-change="handleMineSizeChange"
-            @current-change="handleMineCurrentChange"
-            :current-page="minePage"
-            :page-size="mineLimit"
-            :page-sizes="[10, 20, 50]"
-            layout="total, sizes, prev, pager, next"
-            :total="mineTotal"
-            background
-          />
-        </div>
-      </el-tab-pane>
-    </el-tabs>
+          <div class="pagination">
+            <el-pagination
+              @size-change="handleMineSizeChange"
+              @current-change="handleMineCurrentChange"
+              :current-page="minePage"
+              :page-size="mineLimit"
+              :page-sizes="[10, 20, 50]"
+              layout="total, sizes, prev, pager, next"
+              :total="mineTotal"
+              background
+            />
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </section>
   </div>
 </template>
 
@@ -109,7 +156,8 @@ export default {
       mineLimit: 10,
       mineTotal: 0,
 
-      claimLoadingOrderId: null
+      claimLoadingOrderId: null,
+      actionLoadingKey: ''
     }
   },
   created() {
@@ -134,6 +182,25 @@ export default {
     },
     formatMoney(v) {
       return Number(v || 0).toFixed(2)
+    },
+    payTagType(status) {
+      if (status === '已支付') return 'success'
+      if (status === '未支付') return 'warning'
+      return 'info'
+    },
+    orderStatusClass(status) {
+      if (status === '待确认') return 'status-confirm'
+      if (status === '待生产' || status === '生产中') return 'status-progress'
+      if (status === '已发货') return 'status-ship'
+      if (status === '已完成') return 'status-done'
+      if (status === '已取消') return 'status-cancel'
+      return 'status-default'
+    },
+    canStartProduction(row) {
+      return row && row.orderStatus === '待生产'
+    },
+    canShip(row) {
+      return row && row.orderStatus === '生产中'
     },
     normalizeRows(rows = []) {
       return rows.map((row) => ({
@@ -230,12 +297,61 @@ export default {
       this.minePage = v
       this.loadMine()
     },
-    async claim(row) {
-      const ok = await this.$confirm(`确认认领订单 ${row.orderNo || row.id} 吗？`, '提示', {
+    async confirmAction(message) {
+      return this.$confirm(message, '提示', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => true).catch(() => false)
+      })
+        .then(() => true)
+        .catch(() => false)
+    },
+    async startProduction(row) {
+      const ok = await this.confirmAction(`确认开始制作订单 ${row.orderNo || row.id} 吗？`)
+      if (!ok) return
+
+      this.actionLoadingKey = `${row.id}-start`
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosorderDesignerStart,
+        method: 'post',
+        dataType: 'json',
+        params: {
+          orderId: row.id
+        }
+      })
+      this.actionLoadingKey = ''
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && res.msg) || '开始制作失败')
+        return
+      }
+      this.$message.success(res.msg || '已开始制作')
+      await this.loadMine()
+    },
+    async shipOrder(row) {
+      const ok = await this.confirmAction(`确认将订单 ${row.orderNo || row.id} 标记为已发货吗？`)
+      if (!ok) return
+
+      this.actionLoadingKey = `${row.id}-ship`
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosorderDesignerShip,
+        method: 'post',
+        dataType: 'json',
+        params: {
+          orderId: row.id
+        }
+      })
+      this.actionLoadingKey = ''
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && res.msg) || '发货操作失败')
+        return
+      }
+      this.$message.success(res.msg || '已标记发货')
+      await this.loadMine()
+    },
+    async claim(row) {
+      const ok = await this.confirmAction(`确认认领订单 ${row.orderNo || row.id} 吗？`)
 
       if (!ok) {
         return
@@ -266,26 +382,67 @@ export default {
 </script>
 
 <style scoped>
+.order-theme {
+  --order-primary: #5264ff;
+  --order-primary-soft: #edf1ff;
+  --order-text-main: #25356a;
+  --order-text-sub: #8590b2;
+  --order-border: #e7edff;
+  --order-shadow: 0 10px 24px rgba(68, 88, 150, 0.1);
+}
+
 .designer-page {
-  width: 1200px;
-  margin: 20px auto;
+  width: 100%;
+  display: grid;
+  gap: 12px;
 }
-.page-title {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: #1f2d3d;
+
+.panel-card,
+.head-panel,
+.tabs-panel {
+  border-radius: 16px;
+  border: 1px solid var(--order-border);
+  background: #fff;
+  box-shadow: var(--order-shadow);
 }
+
+.head-panel {
+  padding: 14px;
+}
+
+.head-panel h2 {
+  color: var(--order-text-main);
+  font-size: 24px;
+}
+
+.head-panel p {
+  margin-top: 6px;
+  color: var(--order-text-sub);
+}
+
 .recommend-card {
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
+
+.card-header {
+  font-weight: 700;
+  color: #334377;
+}
+
 .hot-item {
   border: 1px solid #ebeef5;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+.hot-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 20px rgba(78, 98, 161, 0.15);
+}
+
 .hot-cover {
   width: 100%;
   height: 180px;
@@ -293,25 +450,88 @@ export default {
   display: block;
   background: #f5f7fa;
 }
+
 .hot-name {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: #2f3d6f;
   padding: 10px 10px 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .hot-meta {
   font-size: 12px;
-  color: #909399;
+  color: #9099b5;
   padding: 0 10px 10px;
 }
+
 .empty-tip {
-  color: #909399;
+  color: #9099b5;
 }
+
+.tabs-panel {
+  padding: 12px;
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-confirm {
+  background: #f0f3ff;
+  color: #4a5c9f;
+}
+
+.status-progress {
+  background: #ebefff;
+  color: #3e52a8;
+}
+
+.status-ship {
+  background: #eaf5ff;
+  color: #3570a4;
+}
+
+.status-done {
+  background: #e9f8ef;
+  color: #2f7a4c;
+}
+
+.status-cancel {
+  background: #f3f4f6;
+  color: #7b8398;
+}
+
+.status-default {
+  background: #f4f6fb;
+  color: #687699;
+}
+
+.claim-btn {
+  min-width: 72px;
+  border-radius: 10px;
+}
+
+.noop-tip {
+  color: #8a95b7;
+  font-size: 12px;
+}
+
 .pagination {
   margin-top: 16px;
   text-align: right;
+}
+
+@media (max-width: 900px) {
+  .tabs-panel,
+  .head-panel {
+    padding: 12px;
+  }
 }
 </style>

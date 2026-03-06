@@ -1,73 +1,123 @@
-<template>
+﻿<template>
   <div class="order-page">
     <section class="header-panel">
-      <div>
+      <div class="header-title">
         <h2>我的订单</h2>
-        <p>可查看支付与履约进度，支持未支付订单继续支付或取消。</p>
+        <p>按下单流程查看状态，主操作只保留当前最需要的动作。</p>
       </div>
-      <el-radio-group v-model="activeFilter" size="small">
-        <el-radio-button label="all">全部</el-radio-button>
-        <el-radio-button label="unpaid">待支付</el-radio-button>
-        <el-radio-button label="progress">进行中</el-radio-button>
-        <el-radio-button label="done">已完成</el-radio-button>
-      </el-radio-group>
+      <div class="status-tabs">
+        <button
+          v-for="tab in filterTabs"
+          :key="tab.value"
+          type="button"
+          :class="['status-tab', { active: activeFilter === tab.value }]"
+          @click="activeFilter = tab.value"
+        >
+          <span>{{ tab.label }}</span>
+          <i>{{ tab.count }}</i>
+        </button>
+      </div>
     </section>
 
-    <el-empty v-if="!filteredList.length" description="当前筛选下暂无订单" :image-size="90" />
+    <el-empty v-if="!filteredList.length" description="当前筛选下暂无订单" :image-size="92" />
 
     <section v-else class="order-list">
       <article class="order-card" v-for="row in filteredList" :key="row.id">
-        <div class="order-head">
-          <div>
+        <div class="card-main">
+          <div class="card-main-left">
             <div class="order-no">订单号：{{ row.orderNo }}</div>
-            <div class="order-time">下单时间：{{ row.addtime || '-' }}</div>
+            <div class="order-meta">
+              <span>下单时间：{{ row.addtime || '-' }}</span>
+              <span>支付方式：{{ row.payType || '-' }}</span>
+              <span>设计进度：{{ row.designerStatus || '-' }}</span>
+            </div>
           </div>
-          <div class="order-amount">￥{{ formatMoney(row.totalAmount) }}</div>
-        </div>
-
-        <div class="tag-row">
-          <el-tag size="mini" :type="row.payStatus === PAY_PAID ? 'success' : 'warning'">{{ row.payStatus }}</el-tag>
-          <el-tag size="mini" type="info">{{ row.orderStatus }}</el-tag>
-          <el-tag size="mini">{{ row.payType || '-' }}</el-tag>
-        </div>
-
-        <div class="progress-line">
-          <div v-for="step in flowSteps" :key="step" :class="['node', { active: isStepActive(row.orderStatus, step) }]">
-            <span>{{ step }}</span>
+          <div class="card-main-right">
+            <span :class="['status-pill', statusKey(row)]">{{ statusLabel(row) }}</span>
+            <strong>￥{{ formatMoney(row.totalAmount) }}</strong>
           </div>
         </div>
 
-        <div class="items-preview" v-if="parseItems(row).length">
-          <div class="item" v-for="(item, idx) in parseItems(row).slice(0, 3)" :key="idx">
-            <span>{{ item.productName || '商品' }}</span>
-            <span>x{{ item.quantity || 1 }}</span>
-            <span>￥{{ formatMoney(item.amount || item.price) }}</span>
+        <div class="flow-panel" :class="{ canceled: row.orderStatus === ORDER_CANCELED }">
+          <div
+            v-for="(step, idx) in flowSteps"
+            :key="step.value"
+            :class="[
+              'flow-step',
+              {
+                done: isFlowDone(row, idx),
+                current: isFlowCurrent(row, idx)
+              }
+            ]"
+          >
+            <div class="dot">{{ idx + 1 }}</div>
+            <div class="label">{{ step.label }}</div>
           </div>
-          <div class="item-more" v-if="parseItems(row).length > 3">共 {{ parseItems(row).length }} 件商品</div>
         </div>
+
+        <div class="goods-panel" v-if="row.items.length">
+          <div class="goods-row" v-for="(item, idx) in visibleItems(row)" :key="`${row.id}-${idx}`">
+            <div class="goods-name">
+              {{ item.productName || item.product_name || '商品' }}
+              <small v-if="item.specs">· {{ item.specs }}</small>
+            </div>
+            <div class="goods-qty">x{{ item.quantity || 1 }}</div>
+            <div class="goods-amount">￥{{ formatMoney(itemAmount(item)) }}</div>
+          </div>
+          <el-button
+            v-if="row.items.length > 1"
+            type="text"
+            class="toggle-btn"
+            @click="toggleItems(row.id)"
+          >
+            {{ isExpanded(row.id) ? '收起商品' : `展开其余 ${row.items.length - 1} 件商品` }}
+          </el-button>
+        </div>
+        <div v-else class="empty-goods">该订单暂无可展示的商品明细</div>
 
         <div class="action-row">
-          <el-button size="mini" @click="showItems(row)">查看商品</el-button>
-          <el-button v-if="canPay(row)" type="primary" size="mini" @click="goPay(row)">去支付</el-button>
-          <el-button v-if="canPay(row)" type="success" size="mini" @click="mockFinishPay(row)">模拟支付成功</el-button>
-          <el-button v-if="canCancel(row)" type="danger" size="mini" @click="cancelOrder(row)">取消订单</el-button>
+          <template v-if="canPay(row)">
+            <el-button type="primary" size="mini" @click="goPay(row)">去支付</el-button>
+            <el-button type="success" size="mini" @click="mockFinishPay(row)">模拟支付成功</el-button>
+            <el-button plain size="mini" @click="cancelOrder(row)" v-if="canCancel(row)">取消订单</el-button>
+            <el-button size="mini" @click="openDetail(row)">查看详情</el-button>
+          </template>
+          <template v-else>
+            <el-button type="primary" plain size="mini" @click="openDetail(row)">查看详情</el-button>
+            <el-button size="mini" @click="showItems(row)">查看商品</el-button>
+          </template>
         </div>
       </article>
     </section>
 
     <el-dialog title="订单商品" :visible.sync="itemsVisible" width="700px">
       <el-table :data="currentItems" border>
-        <el-table-column prop="productName" label="商品" min-width="220" />
-        <el-table-column prop="specs" label="规格" width="100" />
-        <el-table-column prop="quantity" label="数量" width="80" />
+        <el-table-column prop="productName" label="商品" min-width="240" />
+        <el-table-column prop="specs" label="规格" width="120" />
+        <el-table-column prop="quantity" label="数量" width="90" />
         <el-table-column prop="price" label="单价" width="100">
-          <template slot-scope="scope">{{ formatMoney(scope.row.price) }}</template>
+          <template slot-scope="scope">￥{{ formatMoney(scope.row.price) }}</template>
         </el-table-column>
-        <el-table-column prop="amount" label="小计" width="100">
-          <template slot-scope="scope">{{ formatMoney(scope.row.amount) }}</template>
+        <el-table-column prop="amount" label="小计" width="110">
+          <template slot-scope="scope">￥{{ formatMoney(itemAmount(scope.row)) }}</template>
         </el-table-column>
       </el-table>
     </el-dialog>
+
+    <el-drawer title="订单详情" :visible.sync="detailVisible" size="480px">
+      <div v-if="currentOrder" class="detail-box">
+        <p><strong>订单号：</strong>{{ currentOrder.orderNo }}</p>
+        <p><strong>下单时间：</strong>{{ currentOrder.addtime || '-' }}</p>
+        <p><strong>支付状态：</strong>{{ currentOrder.payStatus }}</p>
+        <p><strong>履约状态：</strong>{{ currentOrder.orderStatus }}</p>
+        <p><strong>支付方式：</strong>{{ currentOrder.payType || '-' }}</p>
+        <p><strong>订单金额：</strong>￥{{ formatMoney(currentOrder.totalAmount) }}</p>
+        <div class="detail-flow">
+          <span v-for="step in flowSteps" :key="`detail-${step.value}`">{{ step.label }}</span>
+        </div>
+        <el-button size="mini" @click="showItems(currentOrder)">查看商品明细</el-button>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -80,7 +130,16 @@ const ORDER_PRODUCING = '生产中'
 const ORDER_SHIPPED = '已发货'
 const ORDER_FINISHED = '已完成'
 const ORDER_CANCELED = '已取消'
-const FLOW = [ORDER_PENDING_CONFIRM, ORDER_PENDING_PRODUCE, ORDER_PRODUCING, ORDER_SHIPPED, ORDER_FINISHED]
+
+const FLOW_STEPS = [
+  { value: ORDER_PENDING_CONFIRM, label: '待确认' },
+  { value: ORDER_PENDING_PRODUCE, label: '待生产' },
+  { value: ORDER_PRODUCING, label: '制作中' },
+  { value: ORDER_SHIPPED, label: '待收货' },
+  { value: ORDER_FINISHED, label: '已完成' }
+]
+
+const PROGRESS_STATUS = [ORDER_PENDING_CONFIRM, ORDER_PENDING_PRODUCE, ORDER_PRODUCING]
 
 export default {
   data() {
@@ -88,14 +147,19 @@ export default {
       PAY_UNPAID,
       PAY_PAID,
       ORDER_PENDING_CONFIRM,
+      ORDER_PENDING_PRODUCE,
+      ORDER_PRODUCING,
+      ORDER_SHIPPED,
       ORDER_FINISHED,
       ORDER_CANCELED,
       list: [],
       activeFilter: 'all',
-      flowSteps: FLOW,
+      flowSteps: FLOW_STEPS,
+      expandedMap: {},
       itemsVisible: false,
       currentItems: [],
       currentOrder: null,
+      detailVisible: false,
       payInfo: {},
       pollTimer: null,
       sessionUser: {
@@ -105,22 +169,42 @@ export default {
     }
   },
   computed: {
+    filterTabs() {
+      return [
+        { label: '全部', value: 'all', count: this.list.length },
+        { label: '待付款', value: 'unpaid', count: this.list.filter((row) => this.statusKey(row) === 'unpaid').length },
+        {
+          label: '制作中',
+          value: 'progress',
+          count: this.list.filter((row) => this.statusKey(row) === 'progress').length
+        },
+        {
+          label: '待收货',
+          value: 'shipping',
+          count: this.list.filter((row) => this.statusKey(row) === 'shipping').length
+        },
+        { label: '已完成', value: 'done', count: this.list.filter((row) => this.statusKey(row) === 'done').length }
+      ]
+    },
     filteredList() {
       if (this.activeFilter === 'all') {
         return this.list
       }
-      if (this.activeFilter === 'unpaid') {
-        return this.list.filter((row) => row.payStatus === PAY_UNPAID)
-      }
-      if (this.activeFilter === 'progress') {
-        return this.list.filter(
-          (row) => row.payStatus === PAY_PAID && ![ORDER_FINISHED, ORDER_CANCELED].includes(row.orderStatus)
-        )
-      }
-      if (this.activeFilter === 'done') {
-        return this.list.filter((row) => row.orderStatus === ORDER_FINISHED)
-      }
-      return this.list
+      return this.list.filter((row) => {
+        if (this.activeFilter === 'unpaid') {
+          return this.statusKey(row) === 'unpaid'
+        }
+        if (this.activeFilter === 'progress') {
+          return this.statusKey(row) === 'progress'
+        }
+        if (this.activeFilter === 'shipping') {
+          return this.statusKey(row) === 'shipping'
+        }
+        if (this.activeFilter === 'done') {
+          return this.statusKey(row) === 'done'
+        }
+        return true
+      })
     }
   },
   created() {
@@ -139,13 +223,7 @@ export default {
     formatMoney(v) {
       return Number(v || 0).toFixed(2)
     },
-    canPay(row) {
-      return (row.payStatus || '') === PAY_UNPAID
-    },
-    canCancel(row) {
-      return (row.payStatus || '') === PAY_UNPAID && (row.orderStatus || '') === ORDER_PENDING_CONFIRM
-    },
-    parseItems(row) {
+    normalizeItems(row) {
       const raw = row.itemsJson || row.items_json
       if (!raw) {
         return []
@@ -157,16 +235,78 @@ export default {
         return []
       }
     },
-    isStepActive(currentStatus, step) {
-      const currentIndex = FLOW.indexOf(currentStatus)
-      const stepIndex = FLOW.indexOf(step)
-      if (currentStatus === ORDER_CANCELED) {
+    itemAmount(item) {
+      if (item.amount != null) {
+        return item.amount
+      }
+      return Number(item.price || 0) * Number(item.quantity || 1)
+    },
+    visibleItems(row) {
+      if (this.isExpanded(row.id)) {
+        return row.items
+      }
+      return row.items.slice(0, 1)
+    },
+    isExpanded(orderId) {
+      return !!this.expandedMap[orderId]
+    },
+    toggleItems(orderId) {
+      this.$set(this.expandedMap, orderId, !this.expandedMap[orderId])
+    },
+    statusKey(row) {
+      const payStatus = row.payStatus || ''
+      const orderStatus = row.orderStatus || ''
+      if (orderStatus === ORDER_CANCELED) {
+        return 'canceled'
+      }
+      if (payStatus === PAY_UNPAID) {
+        return 'unpaid'
+      }
+      if (orderStatus === ORDER_FINISHED) {
+        return 'done'
+      }
+      if (orderStatus === ORDER_SHIPPED) {
+        return 'shipping'
+      }
+      if (PROGRESS_STATUS.includes(orderStatus)) {
+        return 'progress'
+      }
+      return 'unknown'
+    },
+    statusLabel(row) {
+      const key = this.statusKey(row)
+      if (key === 'unpaid') return '待付款'
+      if (key === 'progress') return '制作中'
+      if (key === 'shipping') return '待收货'
+      if (key === 'done') return '已完成'
+      if (key === 'canceled') return '已取消'
+      return '处理中'
+    },
+    flowIndex(row) {
+      return FLOW_STEPS.findIndex((step) => step.value === row.orderStatus)
+    },
+    isFlowDone(row, idx) {
+      const current = this.flowIndex(row)
+      if (row.orderStatus === ORDER_CANCELED) {
         return false
       }
-      if (currentIndex < 0) {
-        return stepIndex === 0
+      return current > idx
+    },
+    isFlowCurrent(row, idx) {
+      const current = this.flowIndex(row)
+      if (row.orderStatus === ORDER_CANCELED) {
+        return false
       }
-      return stepIndex <= currentIndex
+      if (current < 0) {
+        return idx === 0
+      }
+      return current === idx
+    },
+    canPay(row) {
+      return (row.payStatus || '') === PAY_UNPAID
+    },
+    canCancel(row) {
+      return (row.payStatus || '') === PAY_UNPAID && (row.orderStatus || '') === ORDER_PENDING_CONFIRM
     },
     async load() {
       const res = await this.$proxy.Request({
@@ -181,14 +321,18 @@ export default {
 
       const data = res.data || []
       const rows = Array.isArray(data) ? data : data.list || []
-      this.list = rows.map((r) => ({
-        ...r,
-        orderNo: r.orderNo || r.order_no || '',
-        totalAmount: r.totalAmount || r.total_amount || 0,
-        payStatus: r.payStatus || r.pay_status || PAY_UNPAID,
-        orderStatus: r.orderStatus || r.order_status || ORDER_PENDING_CONFIRM,
-        payType: r.payType || r.pay_type || '-'
-      }))
+      this.list = rows.map((r) => {
+        const normalized = {
+          ...r,
+          orderNo: r.orderNo || r.order_no || '',
+          totalAmount: r.totalAmount || r.total_amount || 0,
+          payStatus: r.payStatus || r.pay_status || PAY_UNPAID,
+          orderStatus: r.orderStatus || r.order_status || ORDER_PENDING_CONFIRM,
+          payType: r.payType || r.pay_type || '-',
+          designerStatus: r.designerStatus || r.designer_status || '-'
+        }
+        return { ...normalized, items: this.normalizeItems(normalized) }
+      })
     },
     async goPay(row) {
       const orderNo = row.orderNo || row.order_no
@@ -330,8 +474,12 @@ export default {
       this.load()
     },
     showItems(row) {
-      this.currentItems = this.parseItems(row)
+      this.currentItems = row.items || []
       this.itemsVisible = true
+    },
+    openDetail(row) {
+      this.currentOrder = row
+      this.detailVisible = true
     }
   }
 }
@@ -339,30 +487,82 @@ export default {
 
 <style scoped>
 .order-page {
+  --order-primary: #5264ff;
+  --order-primary-deep: #3346da;
+  --order-primary-soft: #edf1ff;
+  --order-text-main: #24356d;
+  --order-text-sub: #8591b4;
+  --order-border: #e7edff;
+  --order-shadow: 0 10px 24px rgba(68, 88, 150, 0.1);
   display: grid;
   gap: 14px;
 }
 
 .header-panel {
   border-radius: 16px;
-  border: 1px solid #e8edff;
+  border: 1px solid var(--order-border);
   background: #fff;
+  box-shadow: var(--order-shadow);
   padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  gap: 12px;
 }
 
-.header-panel h2 {
-  color: #273871;
+.header-title h2 {
+  color: var(--order-text-main);
   font-size: 26px;
 }
 
-.header-panel p {
+.header-title p {
   margin-top: 6px;
-  color: #7f8ab2;
+  color: var(--order-text-sub);
+}
+
+.status-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.status-tab {
+  border: 1px solid var(--order-border);
+  background: #fff;
+  color: #4b5f96;
+  border-radius: 12px;
+  height: 42px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.status-tab i {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--order-primary-soft);
+  color: #5163a0;
+  font-style: normal;
+  line-height: 18px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-tab.active {
+  border-color: rgba(82, 100, 255, 0.35);
+  background: linear-gradient(140deg, #5264ff 0%, #7c8dff 100%);
+  color: #fff;
+  box-shadow: 0 12px 20px rgba(82, 100, 255, 0.25);
+}
+
+.status-tab.active i {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 
 .order-list {
@@ -371,100 +571,258 @@ export default {
 }
 
 .order-card {
-  border-radius: 14px;
-  border: 1px solid #e8edff;
+  border-radius: 16px;
+  border: 1px solid var(--order-border);
   background: #fff;
+  box-shadow: var(--order-shadow);
   padding: 14px;
-  box-shadow: 0 10px 22px rgba(75, 96, 160, 0.08);
+  display: grid;
+  gap: 12px;
 }
 
-.order-head {
+.card-main {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
 }
 
 .order-no {
   font-size: 16px;
   font-weight: 700;
-  color: #24356d;
+  color: var(--order-text-main);
 }
 
-.order-time {
+.order-meta {
   margin-top: 6px;
-  color: #97a0bf;
+  color: var(--order-text-sub);
   font-size: 12px;
-}
-
-.order-amount {
-  color: #2a3c78;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.tag-row {
-  margin-top: 10px;
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.progress-line {
-  margin-top: 12px;
-  border-radius: 10px;
-  background: #f5f7ff;
-  padding: 8px;
+.card-main-right {
+  text-align: right;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  justify-items: flex-end;
   gap: 6px;
 }
 
-.node {
-  text-align: center;
-  border-radius: 8px;
-  background: #e8edff;
-  color: #7e89b0;
-  padding: 6px 4px;
-  font-size: 12px;
+.card-main-right strong {
+  color: #1f2f66;
+  font-size: 24px;
+  line-height: 1;
 }
 
-.node.active {
-  background: linear-gradient(140deg, #4d63ff 0%, #7488ff 100%);
+.status-pill {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-pill.unpaid {
+  background: #fff3df;
+  color: #b6750f;
+}
+
+.status-pill.progress {
+  background: #ecf0ff;
+  color: var(--order-primary-deep);
+}
+
+.status-pill.shipping {
+  background: #ebf5ff;
+  color: #2f6ca0;
+}
+
+.status-pill.done {
+  background: #e9f9ef;
+  color: #2f7a4c;
+}
+
+.status-pill.canceled {
+  background: #f3f4f6;
+  color: #7a859c;
+}
+
+.flow-panel {
+  border-radius: 12px;
+  background: #f8faff;
+  border: 1px solid #eef2ff;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.flow-step {
+  position: relative;
+  text-align: center;
+  color: #8491b8;
+}
+
+.flow-step .dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  margin: 0 auto;
+  border: 1px solid #dce4ff;
+  background: #fff;
+  line-height: 24px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.flow-step .label {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.flow-step::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: calc(50% + 17px);
+  width: calc(100% - 24px);
+  height: 2px;
+  background: #dfe5ff;
+}
+
+.flow-step:last-child::after {
+  display: none;
+}
+
+.flow-step.done .dot,
+.flow-step.current .dot {
+  border-color: transparent;
+  background: linear-gradient(140deg, #5264ff 0%, #7c8dff 100%);
   color: #fff;
 }
 
-.items-preview {
-  margin-top: 12px;
-  border-radius: 10px;
-  border: 1px solid #edf1ff;
-  padding: 10px;
-  display: grid;
-  gap: 8px;
+.flow-step.done,
+.flow-step.current {
+  color: #3950a2;
 }
 
-.item {
+.flow-step.done::after {
+  background: linear-gradient(140deg, #5264ff 0%, #7c8dff 100%);
+}
+
+.goods-panel {
+  border: 1px solid #edf1ff;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fcfdff;
+}
+
+.goods-row {
   display: grid;
-  grid-template-columns: 1fr 70px 100px;
+  grid-template-columns: 1fr 70px 110px;
   gap: 10px;
-  color: #5f6d9b;
+  align-items: center;
+  color: #536291;
   font-size: 13px;
 }
 
-.item-more {
-  color: #98a1bf;
+.goods-row + .goods-row {
+  margin-top: 8px;
+}
+
+.goods-name small {
+  color: #8e99bb;
   font-size: 12px;
 }
 
+.goods-qty {
+  text-align: right;
+}
+
+.goods-amount {
+  text-align: right;
+  color: #2f4489;
+  font-weight: 600;
+}
+
+.toggle-btn {
+  margin-top: 6px;
+  padding: 0;
+}
+
+.empty-goods {
+  border-radius: 10px;
+  border: 1px dashed #e5ebff;
+  color: #93a0c4;
+  font-size: 13px;
+  padding: 10px;
+}
+
 .action-row {
-  margin-top: 12px;
   display: flex;
-  gap: 8px;
+  justify-content: flex-end;
   flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-box {
+  padding: 0 4px;
+  display: grid;
+  gap: 8px;
+}
+
+.detail-box p {
+  color: #4f5f8f;
+}
+
+.detail-box strong {
+  color: #273973;
+}
+
+.detail-flow {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-flow span {
+  font-size: 12px;
+  color: #4b5f95;
+  border-radius: 999px;
+  background: #edf1ff;
+  padding: 4px 10px;
 }
 
 @media (max-width: 900px) {
-  .progress-line {
+  .status-tabs,
+  .flow-panel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-main {
+    flex-direction: column;
+  }
+
+  .card-main-right {
+    justify-items: flex-start;
+    text-align: left;
+  }
+
+  .goods-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .goods-qty,
+  .goods-amount {
+    text-align: left;
+  }
+
+  .action-row {
+    justify-content: flex-start;
   }
 }
 </style>
+
+

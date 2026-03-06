@@ -27,6 +27,8 @@
   cosorderDesignerPool: '/cosorder/designer/pool',
   cosorderDesignerClaim: '/cosorder/designer/claim',
   cosorderDesignerMine: '/cosorder/designer/mine',
+  cosorderDesignerStart: '/cosorder/designer/start',
+  cosorderDesignerShip: '/cosorder/designer/ship',
 
   // mock pay
   cosPayCreate: '/cospay/create',
@@ -35,3 +37,4 @@
 }
 
 export default Api
+
