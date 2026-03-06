@@ -1,0 +1,37 @@
+{
+  "origin": "http://localhost:8083",
+  "flow": [
+    {
+      "step": "open-home",
+      "url": "http://localhost:8083/#/index/home",
+      "snippet": "次元定制 ACG CUSTOM 首页 购物车 我的订单 登录 注册 搜索 系统简介 当遇到挫折或失败，你是看见失败还是看见机会?挫折是我们每个人成长的必经之路，它不是你想有就有，想没有就没有的。有句名言说的好，如果你想一生摆脱苦难，你就得是神或者是死尸。这句话形象地说明了挫折是伴随着人生的，是谁都逃不掉的。人生在世，从"
+    },
+    {
+      "step": "click-cart",
+      "url": "http://localhost:8083/#/index/coscart",
+      "snippet": "次元定制 ACG CUSTOM 首页 购物车 我的订单 登录 注册 购物车 商品 规格 数量 单价 小计 暂无数据 操作 已选 0 件，合计：￥0.00 去结算 购物车加载失败",
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\click-cart.png"
+    },
+    {
+      "step": "click-orders",
+      "url": "http://localhost:8083/#/index/cosorder",
+      "snippet": "次元定制 ACG CUSTOM 首页 购物车 我的订单 登录 注册 我的订单 订单号 订单金额 支付状态 履约状态 支付方式 下单时间 暂无数据 操作 购物车加载失败 订单加载失败",
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\click-orders.png"
+    },
+    {
+      "step": "click-login",
+      "url": "http://localhost:8083/#/login",
+      "snippet": "USER / LOGIN 私人西服定制登录 登录重置 注册用户 订单加载失败",
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\click-login.png"
+    },
+    {
+      "step": "click-register",
+      "url": "http://localhost:8083/#/register?role=yonghu&pageFlag=register",
+      "snippet": "USER / REGISTER 私人西服定制注册 点击上传头像 注册重置已有账户登录",
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\click-register.png"
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "at": "2026-03-05T08:39:04.987Z"
+}

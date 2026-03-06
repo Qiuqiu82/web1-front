@@ -1,0 +1,69 @@
+{
+  "origin": "http://localhost:8083",
+  "startedAt": "2026-03-05T08:32:50.892Z",
+  "pages": [
+    {
+      "route": "/#/index/home",
+      "url": "http://localhost:8083/#/index/home",
+      "ok": true,
+      "status": 200,
+      "title": "Web01 - Vue项目",
+      "bodyTextLen": 1234,
+      "hasVueRoot": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_home.png"
+    },
+    {
+      "route": "/#/index/coscart",
+      "url": "http://localhost:8083/#/index/coscart",
+      "ok": false,
+      "status": null,
+      "title": "Web01 - Vue项目",
+      "bodyTextLen": 97,
+      "hasVueRoot": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_coscart.png"
+    },
+    {
+      "route": "/#/index/cosorder",
+      "url": "http://localhost:8083/#/index/cosorder",
+      "ok": false,
+      "status": null,
+      "title": "Web01 - Vue项目",
+      "bodyTextLen": 99,
+      "hasVueRoot": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_cosorder.png"
+    },
+    {
+      "route": "/#/index/cosorder-admin",
+      "url": "http://localhost:8083/#/index/cosorder-admin",
+      "ok": false,
+      "status": null,
+      "title": "Web01 - Vue项目",
+      "bodyTextLen": 1266,
+      "hasVueRoot": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_cosorder_admin.png"
+    },
+    {
+      "route": "/#/login",
+      "url": "http://localhost:8083/#/login",
+      "ok": false,
+      "status": null,
+      "title": "Web01 - Vue项目",
+      "bodyTextLen": 54,
+      "hasVueRoot": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_login.png"
+    },
+    {
+      "route": "/#/register?role=yonghu&pageFlag=register",
+      "url": "http://localhost:8083/#/register?role=yonghu&pageFlag=register",
+      "ok": false,
+      "status": null,
+      "title": "Web01 - Vue项目",
+      "bodyTextLen": 57,
+      "hasVueRoot": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_register_role_yonghu_pageFlag_register.png"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "finishedAt": "2026-03-05T08:33:00.625Z"
+}

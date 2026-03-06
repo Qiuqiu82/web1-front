@@ -20,3 +20,6 @@ yarn-error.log*
 *.sln
 *.sw?
 
+# Playwright smoke test artifacts
+front/web01/playwright-smoke/
+
