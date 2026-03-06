@@ -3,62 +3,62 @@
     <div class="register-card">
       <div class="header">
         <h2>{{ pageTitle }}</h2>
-        <p>Create an account, then sign in to the matching workspace.</p>
+        <p>注册后即可进入对应端口进行使用。</p>
       </div>
 
       <el-form ref="registerForm" :model="registerForm" :rules="rules" label-position="top">
         <template v-if="tableName === 'yonghu'">
-          <el-form-item label="User Account" prop="yonghuzhanghao">
-            <el-input v-model.trim="registerForm.yonghuzhanghao" placeholder="Input user account" />
+          <el-form-item label="用户账号" prop="yonghuzhanghao">
+            <el-input v-model.trim="registerForm.yonghuzhanghao" placeholder="请输入用户账号" />
           </el-form-item>
-          <el-form-item label="User Name" prop="yonghuxingming">
-            <el-input v-model.trim="registerForm.yonghuxingming" placeholder="Input user name" />
+          <el-form-item label="用户姓名" prop="yonghuxingming">
+            <el-input v-model.trim="registerForm.yonghuxingming" placeholder="请输入用户姓名" />
           </el-form-item>
-          <el-form-item label="Gender" prop="xingbie">
-            <el-select v-model="registerForm.xingbie" placeholder="Select gender" style="width: 100%">
+          <el-form-item label="性别" prop="xingbie">
+            <el-select v-model="registerForm.xingbie" placeholder="请选择性别" style="width: 100%">
               <el-option v-for="item in yonghuxingbieOptions" :key="item" :label="item" :value="item" />
             </el-select>
           </el-form-item>
         </template>
 
         <template v-else>
-          <el-form-item label="Designer Account" prop="shejishizhanghao">
-            <el-input v-model.trim="registerForm.shejishizhanghao" placeholder="Input designer account" />
+          <el-form-item label="设计师账号" prop="shejishizhanghao">
+            <el-input v-model.trim="registerForm.shejishizhanghao" placeholder="请输入设计师账号" />
           </el-form-item>
-          <el-form-item label="Designer Name" prop="shejishixingming">
-            <el-input v-model.trim="registerForm.shejishixingming" placeholder="Input designer name" />
+          <el-form-item label="设计师姓名" prop="shejishixingming">
+            <el-input v-model.trim="registerForm.shejishixingming" placeholder="请输入设计师姓名" />
           </el-form-item>
-          <el-form-item label="Specialty" prop="zhuanchang">
-            <el-input v-model.trim="registerForm.zhuanchang" placeholder="Optional: armor / suit / dress" />
+          <el-form-item label="擅长方向" prop="zhuanchang">
+            <el-input v-model.trim="registerForm.zhuanchang" placeholder="可选：盔甲 / 制服 / 礼服" />
           </el-form-item>
-          <el-form-item label="Profile" prop="jianjie">
+          <el-form-item label="个人简介" prop="jianjie">
             <el-input
               v-model="registerForm.jianjie"
               type="textarea"
               :rows="3"
-              placeholder="Optional: short self introduction"
+              placeholder="可选：简要介绍设计经验"
             />
           </el-form-item>
         </template>
 
-        <el-form-item label="Password" prop="mima">
-          <el-input v-model.trim="registerForm.mima" type="password" show-password placeholder="Input password" />
+        <el-form-item label="密码" prop="mima">
+          <el-input v-model.trim="registerForm.mima" type="password" show-password placeholder="请输入密码" />
         </el-form-item>
-        <el-form-item label="Confirm Password" prop="mima2">
+        <el-form-item label="确认密码" prop="mima2">
           <el-input
             v-model.trim="registerForm.mima2"
             type="password"
             show-password
-            placeholder="Input password again"
+            placeholder="请再次输入密码"
           />
         </el-form-item>
-        <el-form-item label="Phone" prop="lianxifangshi">
-          <el-input v-model.trim="registerForm.lianxifangshi" placeholder="Input phone number" />
+        <el-form-item label="联系电话" prop="lianxifangshi">
+          <el-input v-model.trim="registerForm.lianxifangshi" placeholder="请输入手机号" />
         </el-form-item>
 
-        <el-form-item label="Avatar" prop="touxiang">
+        <el-form-item label="头像" prop="touxiang">
           <file-upload
-            tip="Upload avatar"
+            tip="上传头像"
             action="file/upload"
             :limit="1"
             :multiple="true"
@@ -68,9 +68,9 @@
         </el-form-item>
 
         <div class="btn-row">
-          <el-button type="primary" :loading="submitting" @click="submitForm('registerForm')">Register</el-button>
-          <el-button @click="resetForm('registerForm')">Reset</el-button>
-          <el-button type="text" @click="$router.push('/login')">Already have an account?</el-button>
+          <el-button type="primary" :loading="submitting" @click="submitForm('registerForm')">注册</el-button>
+          <el-button @click="resetForm('registerForm')">重置</el-button>
+          <el-button type="text" @click="$router.push('/login')">已有账号，去登录</el-button>
         </div>
       </el-form>
     </div>
@@ -83,7 +83,7 @@ export default {
     return {
       tableName: 'yonghu',
       submitting: false,
-      yonghuxingbieOptions: ['Male', 'Female'],
+      yonghuxingbieOptions: ['男', '女'],
       registerForm: {
         xingbie: '',
         yonghuzhanghao: '',
@@ -102,7 +102,7 @@ export default {
   },
   computed: {
     pageTitle() {
-      return this.tableName === 'shejishi' ? 'Designer Register' : 'User Register'
+      return this.tableName === 'shejishi' ? '设计师注册' : '用户注册'
     }
   },
   created() {
@@ -114,13 +114,13 @@ export default {
     buildRules() {
       const baseRules = {
         mima: [
-          { required: true, message: 'Please input password', trigger: 'blur' },
-          { min: 3, max: 20, message: 'Password length: 3-20', trigger: 'blur' }
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 3, max: 20, message: '密码长度为 3-20 位', trigger: 'blur' }
         ],
-        mima2: [{ required: true, message: 'Please input confirm password', trigger: 'blur' }],
+        mima2: [{ required: true, message: '请再次输入密码', trigger: 'blur' }],
         lianxifangshi: [
-          { required: true, message: 'Please input phone', trigger: 'blur' },
-          { pattern: /^1\d{10}$/, message: 'Please input valid phone', trigger: 'blur' }
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { pattern: /^1\d{10}$/, message: '请输入正确的手机号', trigger: 'blur' }
         ]
       }
 
@@ -128,10 +128,10 @@ export default {
         this.rules = {
           ...baseRules,
           shejishizhanghao: [
-            { required: true, message: 'Please input designer account', trigger: 'blur' },
-            { min: 3, max: 20, message: 'Account length: 3-20', trigger: 'blur' }
+            { required: true, message: '请输入设计师账号', trigger: 'blur' },
+            { min: 3, max: 20, message: '账号长度为 3-20 位', trigger: 'blur' }
           ],
-          shejishixingming: [{ required: true, message: 'Please input designer name', trigger: 'blur' }]
+          shejishixingming: [{ required: true, message: '请输入设计师姓名', trigger: 'blur' }]
         }
         return
       }
@@ -139,11 +139,11 @@ export default {
       this.rules = {
         ...baseRules,
         yonghuzhanghao: [
-          { required: true, message: 'Please input user account', trigger: 'blur' },
-          { min: 3, max: 20, message: 'Account length: 3-20', trigger: 'blur' }
+          { required: true, message: '请输入用户账号', trigger: 'blur' },
+          { min: 3, max: 20, message: '账号长度为 3-20 位', trigger: 'blur' }
         ],
-        yonghuxingming: [{ required: true, message: 'Please input user name', trigger: 'blur' }],
-        xingbie: [{ required: true, message: 'Please select gender', trigger: 'change' }]
+        yonghuxingming: [{ required: true, message: '请输入用户姓名', trigger: 'blur' }],
+        xingbie: [{ required: true, message: '请选择性别', trigger: 'change' }]
       }
     },
     handleAvatarChange(fileUrls) {
@@ -180,7 +180,7 @@ export default {
           return false
         }
         if (this.registerForm.mima !== this.registerForm.mima2) {
-          this.$message.error('Passwords do not match')
+          this.$message.error('两次输入的密码不一致')
           return false
         }
 
@@ -191,14 +191,14 @@ export default {
           .post(url, payload)
           .then((res) => {
             if (res.data.code === 0) {
-              this.$message.success('Register success, please login')
+              this.$message.success('注册成功，请登录')
               this.$router.push({ path: '/login', query: { role: this.tableName } })
             } else {
-              this.$message.error(res.data.msg || 'Register failed')
+              this.$message.error(res.data.msg || '注册失败')
             }
           })
           .catch(() => {
-            this.$message.error('Register request failed, please check backend')
+            this.$message.error('注册请求失败，请检查后端服务')
           })
           .finally(() => {
             this.submitting = false

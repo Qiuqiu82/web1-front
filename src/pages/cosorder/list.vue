@@ -2,27 +2,27 @@
   <div class="order-page">
     <section class="header-panel">
       <div>
-        <h2>My Orders</h2>
-        <p>Track payment and production status. You can pay or cancel unpaid orders.</p>
+        <h2>我的订单</h2>
+        <p>可查看支付与履约进度，支持未支付订单继续支付或取消。</p>
       </div>
       <el-radio-group v-model="activeFilter" size="small">
-        <el-radio-button label="all">All</el-radio-button>
-        <el-radio-button label="unpaid">Unpaid</el-radio-button>
-        <el-radio-button label="progress">In Progress</el-radio-button>
-        <el-radio-button label="done">Done</el-radio-button>
+        <el-radio-button label="all">全部</el-radio-button>
+        <el-radio-button label="unpaid">待支付</el-radio-button>
+        <el-radio-button label="progress">进行中</el-radio-button>
+        <el-radio-button label="done">已完成</el-radio-button>
       </el-radio-group>
     </section>
 
-    <el-empty v-if="!filteredList.length" description="No orders under current filter" :image-size="90" />
+    <el-empty v-if="!filteredList.length" description="当前筛选下暂无订单" :image-size="90" />
 
     <section v-else class="order-list">
       <article class="order-card" v-for="row in filteredList" :key="row.id">
         <div class="order-head">
           <div>
-            <div class="order-no">Order No: {{ row.orderNo }}</div>
-            <div class="order-time">Created At: {{ row.addtime || '-' }}</div>
+            <div class="order-no">订单号：{{ row.orderNo }}</div>
+            <div class="order-time">下单时间：{{ row.addtime || '-' }}</div>
           </div>
-          <div class="order-amount">${{ formatMoney(row.totalAmount) }}</div>
+          <div class="order-amount">￥{{ formatMoney(row.totalAmount) }}</div>
         </div>
 
         <div class="tag-row">
@@ -39,31 +39,31 @@
 
         <div class="items-preview" v-if="parseItems(row).length">
           <div class="item" v-for="(item, idx) in parseItems(row).slice(0, 3)" :key="idx">
-            <span>{{ item.productName || 'Product' }}</span>
+            <span>{{ item.productName || '商品' }}</span>
             <span>x{{ item.quantity || 1 }}</span>
-            <span>${{ formatMoney(item.amount || item.price) }}</span>
+            <span>￥{{ formatMoney(item.amount || item.price) }}</span>
           </div>
-          <div class="item-more" v-if="parseItems(row).length > 3">Total {{ parseItems(row).length }} products</div>
+          <div class="item-more" v-if="parseItems(row).length > 3">共 {{ parseItems(row).length }} 件商品</div>
         </div>
 
         <div class="action-row">
-          <el-button size="mini" @click="showItems(row)">View Items</el-button>
-          <el-button v-if="canPay(row)" type="primary" size="mini" @click="goPay(row)">Pay</el-button>
-          <el-button v-if="canPay(row)" type="success" size="mini" @click="mockFinishPay(row)">Mock Paid</el-button>
-          <el-button v-if="canCancel(row)" type="danger" size="mini" @click="cancelOrder(row)">Cancel</el-button>
+          <el-button size="mini" @click="showItems(row)">查看商品</el-button>
+          <el-button v-if="canPay(row)" type="primary" size="mini" @click="goPay(row)">去支付</el-button>
+          <el-button v-if="canPay(row)" type="success" size="mini" @click="mockFinishPay(row)">模拟支付成功</el-button>
+          <el-button v-if="canCancel(row)" type="danger" size="mini" @click="cancelOrder(row)">取消订单</el-button>
         </div>
       </article>
     </section>
 
-    <el-dialog title="Order Items" :visible.sync="itemsVisible" width="700px">
+    <el-dialog title="订单商品" :visible.sync="itemsVisible" width="700px">
       <el-table :data="currentItems" border>
-        <el-table-column prop="productName" label="Product" min-width="220" />
-        <el-table-column prop="specs" label="Spec" width="100" />
-        <el-table-column prop="quantity" label="Qty" width="80" />
-        <el-table-column prop="price" label="Price" width="100">
+        <el-table-column prop="productName" label="商品" min-width="220" />
+        <el-table-column prop="specs" label="规格" width="100" />
+        <el-table-column prop="quantity" label="数量" width="80" />
+        <el-table-column prop="price" label="单价" width="100">
           <template slot-scope="scope">{{ formatMoney(scope.row.price) }}</template>
         </el-table-column>
-        <el-table-column prop="amount" label="Subtotal" width="100">
+        <el-table-column prop="amount" label="小计" width="100">
           <template slot-scope="scope">{{ formatMoney(scope.row.amount) }}</template>
         </el-table-column>
       </el-table>
@@ -72,14 +72,14 @@
 </template>
 
 <script>
-const PAY_UNPAID = '\u672a\u652f\u4ed8'
-const PAY_PAID = '\u5df2\u652f\u4ed8'
-const ORDER_PENDING_CONFIRM = '\u5f85\u786e\u8ba4'
-const ORDER_PENDING_PRODUCE = '\u5f85\u751f\u4ea7'
-const ORDER_PRODUCING = '\u751f\u4ea7\u4e2d'
-const ORDER_SHIPPED = '\u5df2\u53d1\u8d27'
-const ORDER_FINISHED = '\u5df2\u5b8c\u6210'
-const ORDER_CANCELED = '\u5df2\u53d6\u6d88'
+const PAY_UNPAID = '未支付'
+const PAY_PAID = '已支付'
+const ORDER_PENDING_CONFIRM = '待确认'
+const ORDER_PENDING_PRODUCE = '待生产'
+const ORDER_PRODUCING = '生产中'
+const ORDER_SHIPPED = '已发货'
+const ORDER_FINISHED = '已完成'
+const ORDER_CANCELED = '已取消'
 const FLOW = [ORDER_PENDING_CONFIRM, ORDER_PENDING_PRODUCE, ORDER_PRODUCING, ORDER_SHIPPED, ORDER_FINISHED]
 
 export default {
@@ -175,7 +175,7 @@ export default {
         params: { page: 1, limit: 50 }
       })
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || 'Failed to load orders')
+        this.$message.error((res && res.msg) || '订单加载失败')
         return
       }
 
@@ -193,7 +193,7 @@ export default {
     async goPay(row) {
       const orderNo = row.orderNo || row.order_no
       if (!orderNo) {
-        this.$message.warning('Order number is missing')
+        this.$message.warning('订单号不存在')
         return
       }
       const userId = this.sessionUser.userId || Number(row.userId || row.user_id || 0)
@@ -206,7 +206,7 @@ export default {
         'yonghu'
 
       if (!localStorage.getItem('Token') || !userId) {
-        this.$message.warning('Please login before payment')
+        this.$message.warning('请先登录后再支付')
         this.$router.push('/login')
         return
       }
@@ -226,13 +226,13 @@ export default {
       })
 
       if (!res || res.code !== 0) {
-        this.$message.error((res && (res.msg || res.info)) || 'Failed to create pay order')
+        this.$message.error((res && (res.msg || res.info)) || '创建支付单失败')
         return
       }
 
       this.currentOrder = row
       this.payInfo = res.data || {}
-      this.$message.success('Pay order created. Waiting for payment.')
+      this.$message.success('支付单创建成功，请完成支付')
       this.startPoll(orderNo)
     },
     startPoll(orderNo) {
@@ -256,7 +256,7 @@ export default {
         if (payStatus === PAY_PAID) {
           this.stopPoll()
           this.load()
-          this.$message.success('Payment succeeded')
+          this.$message.success('支付成功')
         }
       }, 3000)
     },
@@ -269,7 +269,7 @@ export default {
     async mockFinishPay(row) {
       const rowOrderNo = row && (row.orderNo || row.order_no)
       if (!rowOrderNo) {
-        this.$message.warning('Order number is missing')
+        this.$message.warning('订单号不存在')
         return
       }
 
@@ -279,7 +279,7 @@ export default {
 
       const payOrderNo = this.payInfo.payOrderNo || this.payInfo.pay_order_no
       if (!payOrderNo) {
-        this.$message.warning('Pay order missing, click Pay first')
+        this.$message.warning('请先点击去支付，再模拟支付')
         return
       }
 
@@ -289,22 +289,22 @@ export default {
         params: { payOrderNo }
       })
       if (!mockRes || mockRes.code !== 0) {
-        this.$message.error((mockRes && (mockRes.msg || mockRes.info)) || 'Mock pay failed')
+        this.$message.error((mockRes && (mockRes.msg || mockRes.info)) || '模拟支付失败')
         return
       }
 
-      this.$message.success('Mock pay succeeded, refreshing status')
+      this.$message.success('模拟支付成功，正在刷新订单状态')
       this.startPoll(rowOrderNo)
     },
     async cancelOrder(row) {
       const orderId = row.id
       if (!orderId) {
-        this.$message.warning('Order id is missing')
+        this.$message.warning('订单ID不存在')
         return
       }
-      const ok = await this.$confirm('Cancel this order?', 'Notice', {
-        confirmButtonText: 'Confirm',
-        cancelButtonText: 'Cancel',
+      const ok = await this.$confirm('确认取消该订单吗？', '提示', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
         type: 'warning'
       })
         .then(() => true)
@@ -322,11 +322,11 @@ export default {
       })
 
       if (!res || res.code !== 0) {
-        this.$message.error((res && (res.msg || res.info)) || 'Cancel failed')
+        this.$message.error((res && (res.msg || res.info)) || '取消订单失败')
         return
       }
 
-      this.$message.success('Order canceled')
+      this.$message.success('订单已取消')
       this.load()
     },
     showItems(row) {

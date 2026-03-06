@@ -2,32 +2,32 @@
   <div class="cart-page">
     <section class="title-panel">
       <div>
-        <h2>Shopping Cart</h2>
-        <p>Confirm size and quantity, then create your order in one click.</p>
+        <h2>购物车</h2>
+        <p>确认尺码与数量后，可一键创建订单并进入支付流程。</p>
       </div>
-      <el-button round @click="$router.push('/index/browse')">Continue Browsing</el-button>
+      <el-button round @click="$router.push('/index/browse')">继续选款</el-button>
     </section>
 
-    <el-empty v-if="!list.length" description="Cart is empty. Add products from browse page first." :image-size="90">
-      <el-button type="primary" round @click="$router.push('/index/browse')">Go Browse</el-button>
+    <el-empty v-if="!list.length" description="购物车还是空的，先去款式中心挑选吧" :image-size="90">
+      <el-button type="primary" round @click="$router.push('/index/browse')">前往款式中心</el-button>
     </el-empty>
 
     <div v-else class="cart-layout">
       <section class="items-panel">
         <el-table :data="list" style="width: 100%" @selection-change="onSelectionChange" border class="cart-table">
           <el-table-column type="selection" width="52" />
-          <el-table-column label="Product" min-width="260">
+          <el-table-column label="商品" min-width="260">
             <template slot-scope="scope">
               <div class="product-cell">
                 <img :src="imgUrl(scope.row.productCover || scope.row.product_cover)" class="cover" />
                 <div class="meta">
-                  <div class="name">{{ scope.row.productName || scope.row.product_name || 'Unnamed product' }}</div>
-                  <div class="spec">Spec: {{ scope.row.specs || '-' }}</div>
+                  <div class="name">{{ scope.row.productName || scope.row.product_name || '未命名商品' }}</div>
+                  <div class="spec">规格：{{ scope.row.specs || '-' }}</div>
                 </div>
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="Qty" width="132">
+          <el-table-column label="数量" width="132">
             <template slot-scope="scope">
               <el-input-number
                 v-model="scope.row.quantity"
@@ -38,31 +38,31 @@
               />
             </template>
           </el-table-column>
-          <el-table-column label="Price" width="110">
-            <template slot-scope="scope">${{ formatMoney(scope.row.price) }}</template>
+          <el-table-column label="单价" width="110">
+            <template slot-scope="scope">￥{{ formatMoney(scope.row.price) }}</template>
           </el-table-column>
-          <el-table-column label="Subtotal" width="130">
+          <el-table-column label="小计" width="130">
             <template slot-scope="scope">
-              <strong class="amount">${{ formatMoney(scope.row.amount) }}</strong>
+              <strong class="amount">￥{{ formatMoney(scope.row.amount) }}</strong>
             </template>
           </el-table-column>
-          <el-table-column label="Action" width="90" fixed="right">
+          <el-table-column label="操作" width="90" fixed="right">
             <template slot-scope="scope">
-              <el-button type="text" class="danger" @click="removeItem(scope.row)">Delete</el-button>
+              <el-button type="text" class="danger" @click="removeItem(scope.row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
       </section>
 
       <aside class="summary-panel">
-        <h3>Order Summary</h3>
+        <h3>结算清单</h3>
         <div class="summary-row">
-          <span>Selected</span>
-          <strong>{{ selectedRows.length }} items</strong>
+          <span>已选商品</span>
+          <strong>{{ selectedRows.length }} 件</strong>
         </div>
         <div class="summary-row">
-          <span>Total</span>
-          <strong class="price">${{ totalAmount }}</strong>
+          <span>合计金额</span>
+          <strong class="price">￥{{ totalAmount }}</strong>
         </div>
 
         <div class="selected-list" v-if="selectedRows.length">
@@ -71,37 +71,37 @@
             <span>x{{ row.quantity }}</span>
           </div>
         </div>
-        <div class="selected-empty" v-else>Please select products to checkout.</div>
+        <div class="selected-empty" v-else>请选择需要结算的商品。</div>
 
-        <el-button type="primary" round class="checkout-btn" @click="openCheckout">Checkout</el-button>
+        <el-button type="primary" round class="checkout-btn" @click="openCheckout">去结算</el-button>
       </aside>
     </div>
 
-    <el-dialog title="Checkout Info" :visible.sync="checkoutVisible" width="540px">
+    <el-dialog title="填写订单信息" :visible.sync="checkoutVisible" width="540px">
       <el-form ref="checkoutForm" :model="checkoutForm" :rules="checkoutRules" label-width="90px">
-        <el-form-item label="Name" prop="contactName">
+        <el-form-item label="联系人" prop="contactName">
           <el-input v-model="checkoutForm.contactName" />
         </el-form-item>
-        <el-form-item label="Phone" prop="contactPhone">
+        <el-form-item label="联系电话" prop="contactPhone">
           <el-input v-model="checkoutForm.contactPhone" />
         </el-form-item>
-        <el-form-item label="Address" prop="address">
+        <el-form-item label="地址" prop="address">
           <el-input v-model="checkoutForm.address" />
         </el-form-item>
-        <el-form-item label="Pay Type">
+        <el-form-item label="支付方式">
           <el-select v-model="checkoutForm.payType" style="width: 100%">
-            <el-option label="Alipay" :value="PAY_ALIPAY" />
-            <el-option label="WeChat" :value="PAY_WECHAT" />
+            <el-option label="支付宝支付" :value="PAY_ALIPAY" />
+            <el-option label="微信支付" :value="PAY_WECHAT" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Remark">
+        <el-form-item label="备注">
           <el-input v-model="checkoutForm.remark" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <span slot="footer">
-        <el-button @click="checkoutVisible = false">Cancel</el-button>
+        <el-button @click="checkoutVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitOrder">
-          Submit Order
+          提交订单
         </el-button>
       </span>
     </el-dialog>
@@ -109,8 +109,8 @@
 </template>
 
 <script>
-const PAY_ALIPAY = '\u652f\u4ed8\u5b9d\u652f\u4ed8'
-const PAY_WECHAT = '\u5fae\u4fe1\u652f\u4ed8'
+const PAY_ALIPAY = '支付宝支付'
+const PAY_WECHAT = '微信支付'
 
 export default {
   data() {
@@ -129,9 +129,9 @@ export default {
         remark: ''
       },
       checkoutRules: {
-        contactName: [{ required: true, message: 'Please input contact name', trigger: 'blur' }],
-        contactPhone: [{ required: true, message: 'Please input contact phone', trigger: 'blur' }],
-        address: [{ required: true, message: 'Please input address', trigger: 'blur' }]
+        contactName: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+        contactPhone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }],
+        address: [{ required: true, message: '请输入地址', trigger: 'blur' }]
       }
     }
   },
@@ -159,7 +159,7 @@ export default {
         showLoading: false
       })
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || 'Failed to load cart')
+        this.$message.error((res && res.msg) || '购物车加载失败')
         return
       }
       const data = res.data || []
@@ -195,12 +195,12 @@ export default {
         }
       })
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || 'Failed to update quantity')
+        this.$message.error((res && res.msg) || '更新数量失败')
         this.load()
       }
     },
     removeItem(row) {
-      this.$confirm('Delete this product from cart?', 'Notice', { type: 'warning' })
+      this.$confirm('确认删除该商品吗？', '提示', { type: 'warning' })
         .then(async () => {
           const res = await this.$proxy.Request({
             url: this.$proxy.Api.coscartDelete,
@@ -209,7 +209,7 @@ export default {
             params: [row.id]
           })
           if (res && res.code === 0) {
-            this.$message.success('Deleted')
+            this.$message.success('删除成功')
             this.load()
           }
         })
@@ -217,7 +217,7 @@ export default {
     },
     openCheckout() {
       if (!this.selectedRows.length) {
-        this.$message.warning('Please select products first')
+        this.$message.warning('请先勾选商品')
         return
       }
       this.checkoutVisible = true
@@ -236,7 +236,7 @@ export default {
         .map((r) => Number(r.id))
         .filter(Boolean)
       if (!cartIds.length) {
-        this.$message.warning('Please select products first')
+        this.$message.warning('请先勾选商品')
         return
       }
 
@@ -259,11 +259,11 @@ export default {
       this.submitting = false
 
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || 'Failed to create order')
+        this.$message.error((res && res.msg) || '下单失败')
         return
       }
 
-      this.$message.success('Order created')
+      this.$message.success('下单成功')
       this.checkoutVisible = false
       this.selectedRows = []
       this.load()

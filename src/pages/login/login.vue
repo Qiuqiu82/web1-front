@@ -1,43 +1,42 @@
 <template>
   <div class="login-page">
     <div class="login-left">
-      <div class="badge">ATELIER SYSTEM</div>
-      <h1>Welcome to ACG Custom Platform</h1>
+      <div class="badge">定制工作台</div>
+      <h1>欢迎来到次元定制平台</h1>
       <p>
-        One login page supports three roles: admin collaboration, user ordering,
-        and designer order claiming.
+        一个登录页支持三种角色：管理员协同、用户下单、设计师接单。
       </p>
       <ul>
-        <li>Hot products sorted by popularity</li>
-        <li>Full order status tracking</li>
-        <li>Designer pool for fast claiming</li>
+        <li>热门款式按热度优先推荐</li>
+        <li>订单状态全链路可追踪</li>
+        <li>设计师接单池支持快速认领</li>
       </ul>
     </div>
 
     <div class="login-card">
-      <h2>Sign In</h2>
-      <p class="sub">Choose role, then input username and password</p>
+      <h2>登录</h2>
+      <p class="sub">请选择角色并输入账号密码</p>
 
       <el-form ref="loginForm" :model="loginForm" :rules="rules" label-position="top">
-        <el-form-item label="Username" prop="username">
+        <el-form-item label="账号" prop="username">
           <el-input
             v-model.trim="loginForm.username"
-            placeholder="Enter username"
+            placeholder="请输入账号"
             prefix-icon="el-icon-user"
           />
         </el-form-item>
 
-        <el-form-item label="Password" prop="password">
+        <el-form-item label="密码" prop="password">
           <el-input
             v-model.trim="loginForm.password"
             type="password"
             show-password
-            placeholder="Enter password"
+            placeholder="请输入密码"
             prefix-icon="el-icon-lock"
           />
         </el-form-item>
 
-        <el-form-item label="Role" prop="tableName">
+        <el-form-item label="角色" prop="tableName">
           <el-radio-group v-model="loginForm.tableName">
             <el-radio-button v-for="item in roles" :key="item.tableName" :label="item.tableName">
               {{ item.roleName }}
@@ -46,8 +45,8 @@
         </el-form-item>
 
         <el-form-item class="btn-row">
-          <el-button type="primary" :loading="submitting" @click="submitForm('loginForm')">Login</el-button>
-          <el-button @click="resetForm('loginForm')">Reset</el-button>
+          <el-button type="primary" :loading="submitting" @click="submitForm('loginForm')">登录</el-button>
+          <el-button @click="resetForm('loginForm')">重置</el-button>
         </el-form-item>
       </el-form>
 
@@ -55,10 +54,10 @@
         <router-link
           v-for="item in roles"
           :key="`register-${item.tableName}`"
-          v-if="item.hasFrontRegister === 'yes'"
+          v-if="item.hasFrontRegister === '是'"
           :to="{ path: '/register', query: { role: item.tableName, pageFlag: 'register' } }"
         >
-          Register {{ item.roleName }}
+          注册{{ item.roleName }}
         </router-link>
       </div>
     </div>
@@ -71,22 +70,22 @@ export default {
     return {
       roleMenus: [
         {
-          roleName: 'Admin',
+          roleName: '管理员',
           tableName: 'users',
-          hasFrontLogin: 'yes',
-          hasFrontRegister: 'no'
+          hasFrontLogin: '是',
+          hasFrontRegister: '否'
         },
         {
-          roleName: 'User',
+          roleName: '用户',
           tableName: 'yonghu',
-          hasFrontLogin: 'yes',
-          hasFrontRegister: 'yes'
+          hasFrontLogin: '是',
+          hasFrontRegister: '是'
         },
         {
-          roleName: 'Designer',
+          roleName: '设计师',
           tableName: 'shejishi',
-          hasFrontLogin: 'yes',
-          hasFrontRegister: 'yes'
+          hasFrontLogin: '是',
+          hasFrontRegister: '是'
         }
       ],
       roles: [],
@@ -98,14 +97,14 @@ export default {
         tableName: ''
       },
       rules: {
-        username: [{ required: true, message: 'Please input username', trigger: 'blur' }],
-        password: [{ required: true, message: 'Please input password', trigger: 'blur' }],
-        tableName: [{ required: true, message: 'Please choose role', trigger: 'change' }]
+        username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+        tableName: [{ required: true, message: '请选择角色', trigger: 'change' }]
       }
     }
   },
   created() {
-    this.roles = this.roleMenus.filter((item) => item.hasFrontLogin === 'yes')
+    this.roles = this.roleMenus.filter((item) => item.hasFrontLogin === '是')
     const roleFromQuery = this.$route.query.role
     if (roleFromQuery && this.roles.some((item) => item.tableName === roleFromQuery)) {
       this.loginForm.tableName = roleFromQuery
@@ -139,7 +138,7 @@ export default {
         loginRequest
           .then((res) => {
             if (res.data.code !== 0) {
-              this.$message.error(res.data.msg || 'Login failed')
+              this.$message.error(res.data.msg || '登录失败')
               return
             }
             const token = res.data.token
@@ -173,15 +172,15 @@ export default {
                 }
               })
               .catch(() => {
-                this.$message.warning('Login succeeded, but session fetch failed')
+                this.$message.warning('登录成功，但会话信息读取失败')
               })
               .then(() => {
                 this.$router.push(targetRoute)
-                this.$message.success('Login succeeded')
+                this.$message.success('登录成功')
               })
           })
           .catch(() => {
-            this.$message.error('Login request failed. Please check backend.')
+            this.$message.error('登录请求失败，请检查后端服务')
           })
           .finally(() => {
             this.submitting = false

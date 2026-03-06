@@ -2,52 +2,52 @@
   <div class="browse-page">
     <section class="filter-panel">
       <div>
-        <h2>Product Center</h2>
-        <p>Browse COS and Suit products with popularity-first sorting.</p>
+        <h2>款式中心</h2>
+        <p>支持 COS 与西服双分类浏览，默认按热度优先展示。</p>
       </div>
       <div class="filters">
         <el-radio-group v-model="activeType" size="small">
-          <el-radio-button label="cos">COS</el-radio-button>
-          <el-radio-button label="suit">Suit</el-radio-button>
+          <el-radio-button label="cos">COS服饰</el-radio-button>
+          <el-radio-button label="suit">西服款</el-radio-button>
         </el-radio-group>
         <el-input
           v-model="keyword"
           clearable
-          placeholder="Search product name, style, or fabric"
+          placeholder="搜索款式名、风格或面料"
           prefix-icon="el-icon-search"
           style="width: 260px"
           @keyup.enter.native="applyFilters"
         />
-        <el-button type="primary" @click="applyFilters">Filter</el-button>
+        <el-button type="primary" @click="applyFilters">筛选</el-button>
       </div>
     </section>
 
     <section class="result-meta">
-      <span>Type: {{ activeType === 'cos' ? 'COS' : 'Suit' }}</span>
-      <span>Count: {{ filteredList.length }}</span>
+      <span>当前分类：{{ activeType === 'cos' ? 'COS服饰' : '西服款' }}</span>
+      <span>结果数量：{{ filteredList.length }}</span>
     </section>
 
     <section v-loading="loading" class="list-grid" v-if="filteredList.length">
       <article class="item-card" v-for="item in filteredList" :key="`${activeType}-${item.id}`">
-        <img :src="coverUrl(item)" alt="cover" />
+        <img :src="coverUrl(item)" alt="款式图" />
         <div class="content">
-          <h3>{{ item.fuzhuangmingcheng || 'Unnamed Product' }}</h3>
-          <div class="desc">{{ item.fuzhuangkuanshi || 'Style pending' }}</div>
+          <h3>{{ item.fuzhuangmingcheng || '未命名款式' }}</h3>
+          <div class="desc">{{ item.fuzhuangkuanshi || '风格待完善' }}</div>
           <div class="tag-row">
-            <span>{{ item.mianliaoleibie || 'Selected fabric' }}</span>
-            <span>Heat {{ item.clicknum || 0 }}</span>
+            <span>{{ item.mianliaoleibie || '精选面料' }}</span>
+            <span>热度 {{ item.clicknum || 0 }}</span>
           </div>
           <div class="bottom-row">
-            <strong>${{ formatPrice(item) }}</strong>
+            <strong>￥{{ formatPrice(item) }}</strong>
             <el-button type="text" @click="goDetail(item)">
-              {{ activeType === 'cos' ? 'View Detail' : 'View Inspiration' }}
+              {{ activeType === 'cos' ? '查看详情' : '查看灵感' }}
             </el-button>
           </div>
         </div>
       </article>
     </section>
 
-    <el-empty v-else description="No matching products. Try a shorter keyword." :image-size="86" />
+    <el-empty v-else description="没有找到匹配款式，试试更短关键词" :image-size="86" />
   </div>
 </template>
 
@@ -111,7 +111,7 @@ export default {
         this.$router.push({ path: '/index/remaicosfuDetail', query: { detailObj: JSON.stringify(item) } })
         return
       }
-      this.$message.info('Suit detail page is under upgrade. This list remains available.')
+      this.$message.info('西服详情页正在升级，可先查看热门灵感列表。')
     },
     loadData() {
       this.loading = true

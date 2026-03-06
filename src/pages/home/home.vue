@@ -2,28 +2,27 @@
   <div class="home-page">
     <section class="hero">
       <div class="hero-main">
-        <div class="eyebrow">ACG CUSTOM FLOW</div>
-        <h1>Turn your costume ideas into wearable design pieces</h1>
+        <div class="eyebrow">次元定制全流程</div>
+        <h1>把你想象中的角色服装，做成可穿着的作品</h1>
         <p>
-          Unified workflow for users, admins, and designers. Browse popular products,
-          submit order details, and track every production stage.
+          打通用户下单、管理员协同、设计师接单三端流程。先看热门款式，再进入个性化定制，订单状态全程可追踪。
         </p>
 
         <div class="hero-actions">
-          <el-button type="primary" round @click="toBrowse('cos')">Browse COS</el-button>
-          <el-button round @click="toBrowse('suit')">Browse Suit</el-button>
+          <el-button type="primary" round @click="toBrowse('cos')">浏览 COS 款</el-button>
+          <el-button round @click="toBrowse('suit')">浏览西服款</el-button>
         </div>
 
         <div class="search-row">
           <el-input
             v-model="keyword"
             clearable
-            placeholder="Search by product name, style, or fabric"
+            placeholder="请输入款式名、风格或面料关键词"
             @keyup.enter.native="searchProduct"
           >
             <el-select slot="prepend" v-model="activeFeed" style="width: 104px">
-              <el-option label="COS" value="cos" />
-              <el-option label="Suit" value="suit" />
+              <el-option label="COS服" value="cos" />
+              <el-option label="西服" value="suit" />
             </el-select>
             <el-button slot="append" icon="el-icon-search" @click="searchProduct" />
           </el-input>
@@ -32,10 +31,10 @@
 
       <div class="hero-side">
         <div class="spotlight" v-for="item in hotCosList.slice(0, 3)" :key="item.id" @click="openRecommend(item, 'cos')">
-          <img :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="hot" />
+          <img :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="热门款" />
           <div class="spotlight-info">
-            <div class="name">{{ item.fuzhuangmingcheng || 'Hot Item' }}</div>
-            <div class="meta">Heat {{ item.clicknum || 0 }}</div>
+            <div class="name">{{ item.fuzhuangmingcheng || '热门款' }}</div>
+            <div class="meta">热度 {{ item.clicknum || 0 }}</div>
           </div>
         </div>
       </div>
@@ -56,29 +55,29 @@
     <section class="recommend-block">
       <div class="section-head">
         <div>
-          <h2>Trending Products</h2>
-          <p>Default sorted by popularity to speed up product discovery.</p>
+          <h2>热门推荐</h2>
+          <p>默认按热度排序，优先展示近期关注度更高的款式。</p>
         </div>
         <el-radio-group v-model="activeFeed" size="small">
-          <el-radio-button label="cos">COS Rank</el-radio-button>
-          <el-radio-button label="suit">Suit Rank</el-radio-button>
+          <el-radio-button label="cos">COS 热榜</el-radio-button>
+          <el-radio-button label="suit">西服热榜</el-radio-button>
         </el-radio-group>
       </div>
 
       <div class="card-grid">
         <article class="goods-card" v-for="item in feedList.slice(0, 8)" :key="`${activeFeed}-${item.id}`">
-          <img class="cover" :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="cover" />
+          <img class="cover" :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="款式图" />
           <div class="goods-content">
-            <h3>{{ item.fuzhuangmingcheng || 'Unnamed Product' }}</h3>
-            <div class="sub">{{ item.fuzhuangkuanshi || 'Style pending' }}</div>
+            <h3>{{ item.fuzhuangmingcheng || '未命名款式' }}</h3>
+            <div class="sub">{{ item.fuzhuangkuanshi || '风格待完善' }}</div>
             <div class="tags">
-              <span>{{ item.mianliaoleibie || 'Selected fabric' }}</span>
-              <span>Heat {{ item.clicknum || 0 }}</span>
+              <span>{{ item.mianliaoleibie || '精选面料' }}</span>
+              <span>热度 {{ item.clicknum || 0 }}</span>
             </div>
             <div class="bottom-row">
-              <strong>${{ formatPrice(item) }}</strong>
+              <strong>￥{{ formatPrice(item) }}</strong>
               <el-button type="text" @click="openRecommend(item, activeFeed)">
-                {{ activeFeed === 'cos' ? 'View Detail' : 'View Inspiration' }}
+                {{ activeFeed === 'cos' ? '查看详情' : '查看灵感' }}
               </el-button>
             </div>
           </div>
@@ -89,24 +88,24 @@
     <section class="content-grid">
       <el-card shadow="never" class="intro-card">
         <div slot="header" class="slot-title">
-          <span>{{ systemIntro.title || 'Brand Story' }}</span>
+          <span>{{ systemIntro.title || '品牌故事' }}</span>
         </div>
         <div class="intro-media">
-          <img :src="imgUrl(systemIntro.picture1)" alt="intro-1" />
-          <img :src="imgUrl(systemIntro.picture2)" alt="intro-2" />
+          <img :src="imgUrl(systemIntro.picture1)" alt="介绍图1" />
+          <img :src="imgUrl(systemIntro.picture2)" alt="介绍图2" />
         </div>
-        <div class="intro-content" v-html="systemIntro.content || 'Welcome to ACG custom platform.'" />
+        <div class="intro-content" v-html="systemIntro.content || '欢迎来到次元定制服装平台。'" />
       </el-card>
 
       <el-card shadow="never" class="news-card">
         <div slot="header" class="slot-title between">
-          <span>Latest News</span>
-          <el-button type="text" @click="toBrowse(activeFeed)">Go Browse</el-button>
+          <span>最新资讯</span>
+          <el-button type="text" @click="toBrowse(activeFeed)">前往款式中心</el-button>
         </div>
 
         <div class="news-list" v-if="newsList.length">
           <div class="news-item" v-for="item in newsList" :key="item.id">
-            <img :src="imgUrl(item.picture)" alt="news" />
+            <img :src="imgUrl(item.picture)" alt="资讯图" />
             <div class="news-content">
               <h4>{{ item.title }}</h4>
               <p>{{ summaryText(item.introduction, 52) }}</p>
@@ -115,7 +114,7 @@
           </div>
         </div>
 
-        <el-empty v-else description="No news yet" :image-size="76" />
+        <el-empty v-else description="暂无资讯" :image-size="76" />
       </el-card>
     </section>
   </div>
@@ -140,9 +139,9 @@ export default {
     },
     dashboardCards() {
       return [
-        { label: 'Hot COS', value: this.hotCosList.length, icon: 'el-icon-s-opportunity', bg: '#e9f1ff' },
-        { label: 'Hot Suit', value: this.hotSuitList.length, icon: 'el-icon-suitcase', bg: '#fdf0e9' },
-        { label: 'News', value: this.newsList.length, icon: 'el-icon-reading', bg: '#eef8ef' }
+        { label: 'COS 热门款', value: this.hotCosList.length, icon: 'el-icon-s-opportunity', bg: '#e9f1ff' },
+        { label: '西服热门款', value: this.hotSuitList.length, icon: 'el-icon-suitcase', bg: '#fdf0e9' },
+        { label: '平台资讯', value: this.newsList.length, icon: 'el-icon-reading', bg: '#eef8ef' }
       ]
     }
   },
@@ -166,7 +165,7 @@ export default {
     summaryText(text, limit = 60) {
       const plainText = String(text || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
       if (!plainText) {
-        return 'No content'
+        return '暂无内容'
       }
       return plainText.length > limit ? `${plainText.slice(0, limit)}...` : plainText
     },
@@ -191,7 +190,7 @@ export default {
         })
         return
       }
-      this.$message.info('Suit detail page is under upgrade. Browse list remains available.')
+      this.$message.info('西服详情页正在升级，可先在款式中心浏览。')
       this.$router.push({ path: '/index/browse', query: { type: 'suit' } })
     },
     loadSystemIntro() {

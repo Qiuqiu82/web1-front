@@ -5,10 +5,10 @@
 
     <header class="topbar">
       <div class="brand" @click="$router.push('/index/home')">
-        <div class="brand-mark">A</div>
+        <div class="brand-mark">裁</div>
         <div class="brand-text">
-          <div class="brand-cn">ACG Custom Atelier</div>
-          <div class="brand-en">COS &amp; SUIT ATELIER</div>
+          <div class="brand-cn">次元定制工坊</div>
+          <div class="brand-en">次元服装定制平台</div>
         </div>
       </div>
 
@@ -20,23 +20,23 @@
 
       <div class="actions">
         <el-button class="ghost-btn" icon="el-icon-shopping-cart-2" @click="$router.push('/index/coscart')">
-          Cart
+          购物车
         </el-button>
         <template v-if="isLoggedIn">
           <div class="user-chip">
             <i class="el-icon-user-solid" />
             <span>{{ displayName }}</span>
           </div>
-          <el-button type="text" class="logout-btn" @click="logout">Logout</el-button>
+          <el-button type="text" class="logout-btn" @click="logout">退出</el-button>
         </template>
         <template v-else>
-          <el-button type="primary" size="mini" round @click="$router.push('/login')">Login</el-button>
+          <el-button type="primary" size="mini" round @click="$router.push('/login')">登录</el-button>
           <el-button
             size="mini"
             round
             @click="$router.push({ path: '/register', query: { role: 'yonghu', pageFlag: 'register' } })"
           >
-            Register
+            注册
           </el-button>
         </template>
       </div>
@@ -64,19 +64,19 @@ export default {
       return !!localStorage.getItem('Token')
     },
     displayName() {
-      return localStorage.getItem('username') || localStorage.getItem('adminName') || localStorage.getItem('role') || 'Guest'
+      return localStorage.getItem('username') || localStorage.getItem('adminName') || localStorage.getItem('role') || '访客'
     },
     navMenus() {
       const baseMenus = [
-        { label: 'Home', path: '/index/home' },
-        { label: 'Browse', path: '/index/browse' },
-        { label: 'Orders', path: '/index/cosorder' }
+        { label: '首页', path: '/index/home' },
+        { label: '款式中心', path: '/index/browse' },
+        { label: '我的订单', path: '/index/cosorder' }
       ]
       if (this.isAdmin) {
-        baseMenus.push({ label: 'Admin Orders', path: '/index/cosorder-admin' })
+        baseMenus.push({ label: '订单协同', path: '/index/cosorder-admin' })
       }
       if (this.isDesigner) {
-        baseMenus.push({ label: 'Designer Desk', path: '/index/cosorder-designer' })
+        baseMenus.push({ label: '设计师接单', path: '/index/cosorder-designer' })
       }
       return baseMenus
     }
@@ -91,7 +91,7 @@ export default {
       localStorage.removeItem('adminName')
       localStorage.removeItem('userid')
       localStorage.removeItem('userId')
-      this.$message.success('Logged out')
+      this.$message.success('已退出登录')
       this.$router.push('/login')
     }
   }

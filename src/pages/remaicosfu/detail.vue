@@ -2,10 +2,10 @@
   <div class="cos-detail">
     <section class="head-panel">
       <div>
-        <h2>{{ detail.fuzhuangmingcheng || 'COS Detail' }}</h2>
-        <p>{{ detail.fuzhuangkuanshi || 'Style pending' }}</p>
+        <h2>{{ detail.fuzhuangmingcheng || 'COS 详情' }}</h2>
+        <p>{{ detail.fuzhuangkuanshi || '风格待完善' }}</p>
       </div>
-      <el-button round @click="$router.push('/index/browse')">Back to Browse</el-button>
+      <el-button round @click="$router.push('/index/browse')">返回款式中心</el-button>
     </section>
 
     <section class="detail-grid">
@@ -15,46 +15,46 @@
             <img :src="imgUrl(img)" class="banner-img" />
           </el-carousel-item>
         </el-carousel>
-        <el-empty v-else description="No images" :image-size="90" />
+        <el-empty v-else description="暂无图片" :image-size="90" />
       </div>
 
       <div class="info-card">
-        <div class="price">${{ Number(detail.fuzhuangjiage || 0).toFixed(2) }}</div>
-        <div class="meta-item"><span>Code</span><b>{{ detail.fuzhuangbianhao || '-' }}</b></div>
-        <div class="meta-item"><span>Style</span><b>{{ detail.fuzhuangkuanshi || '-' }}</b></div>
-        <div class="meta-item"><span>Fabric</span><b>{{ detail.mianliaoleibie || '-' }}</b></div>
-        <div class="meta-item"><span>Default Size</span><b>{{ detail.chima || '-' }}</b></div>
-        <div class="meta-item"><span>Heat</span><b>{{ detail.clicknum || 0 }}</b></div>
+        <div class="price">￥{{ Number(detail.fuzhuangjiage || 0).toFixed(2) }}</div>
+        <div class="meta-item"><span>服装编号</span><b>{{ detail.fuzhuangbianhao || '-' }}</b></div>
+        <div class="meta-item"><span>服装款式</span><b>{{ detail.fuzhuangkuanshi || '-' }}</b></div>
+        <div class="meta-item"><span>面料类别</span><b>{{ detail.mianliaoleibie || '-' }}</b></div>
+        <div class="meta-item"><span>默认尺码</span><b>{{ detail.chima || '-' }}</b></div>
+        <div class="meta-item"><span>热度</span><b>{{ detail.clicknum || 0 }}</b></div>
 
-        <el-button type="primary" class="buy-btn" @click="openCustomize">Customize Now</el-button>
+        <el-button type="primary" class="buy-btn" @click="openCustomize">立即定制</el-button>
       </div>
     </section>
 
     <section class="content-card">
-      <div class="title">Product Detail</div>
-      <div class="content" v-html="detail.fuzhuangxiangqing || 'No detail yet'" />
+      <div class="title">商品详情</div>
+      <div class="content" v-html="detail.fuzhuangxiangqing || '暂无详情'" />
     </section>
 
-    <el-dialog title="Add to Cart" :visible.sync="customizeDialogVisible" width="520px">
+    <el-dialog title="加入购物车" :visible.sync="customizeDialogVisible" width="520px">
       <el-form :model="cartForm" label-width="90px">
-        <el-form-item label="Product">
+        <el-form-item label="商品名称">
           <el-input :value="detail.fuzhuangmingcheng" disabled />
         </el-form-item>
-        <el-form-item label="Size">
-          <el-select v-model="cartForm.specs" placeholder="Choose size" style="width: 100%">
+        <el-form-item label="尺码">
+          <el-select v-model="cartForm.specs" placeholder="请选择尺码" style="width: 100%">
             <el-option v-for="s in sizeOptions" :key="s" :label="s" :value="s" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Qty">
+        <el-form-item label="数量">
           <el-input-number v-model="cartForm.quantity" :min="1" :max="99" />
         </el-form-item>
-        <el-form-item label="Remark">
-          <el-input v-model="cartForm.remark" type="textarea" :rows="3" placeholder="Optional" />
+        <el-form-item label="备注">
+          <el-input v-model="cartForm.remark" type="textarea" :rows="3" placeholder="可选" />
         </el-form-item>
       </el-form>
       <span slot="footer">
-        <el-button @click="customizeDialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="addToCart">Add to Cart</el-button>
+        <el-button @click="customizeDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addToCart">加入购物车</el-button>
       </span>
     </el-dialog>
   </div>
@@ -118,7 +118,7 @@ export default {
     },
     openCustomize() {
       if (!localStorage.getItem('Token')) {
-        this.$message.warning('Please login before adding to cart')
+        this.$message.warning('请先登录后再加入购物车')
         this.$router.push('/login')
         return
       }
@@ -140,7 +140,7 @@ export default {
         productId: this.detail.id,
         productName: this.detail.fuzhuangmingcheng,
         productCover: firstCover,
-        specs: this.cartForm.specs || this.detail.chima || 'Default',
+        specs: this.cartForm.specs || this.detail.chima || '默认',
         quantity,
         price,
         amount: (price * quantity).toFixed(2),
@@ -149,15 +149,15 @@ export default {
 
       this.$http.post('coscart/add', payload).then((res) => {
         if (res.data.code === 0) {
-          this.$message.success('Added to cart')
+          this.$message.success('已加入购物车')
           this.customizeDialogVisible = false
-          this.$confirm('Added to cart. Go to cart now?', 'Notice', {
+          this.$confirm('已加入购物车，是否前往购物车？', '提示', {
             type: 'success'
           })
             .then(() => this.$router.push('/index/coscart'))
             .catch(() => {})
         } else {
-          this.$message.error(res.data.msg || 'Failed to add cart')
+          this.$message.error(res.data.msg || '加入购物车失败')
         }
       })
     }

@@ -46,7 +46,6 @@ instance.interceptors.response.use(
       return responseData
     }
 
-    // 当前项目成功码通常是 0，兼容 200
     if (responseData && (responseData.code === 0 || responseData.code === 200)) {
       return responseData
     }
