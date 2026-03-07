@@ -83,6 +83,7 @@
             <el-button size="mini" @click="openDetail(row)">查看详情</el-button>
           </template>
           <template v-else>
+            <el-button v-if="canConfirmReceipt(row)" type="primary" size="mini" @click="confirmReceipt(row)">确认收货</el-button>
             <el-button type="primary" plain size="mini" @click="openDetail(row)">查看详情</el-button>
             <el-button size="mini" @click="showItems(row)">查看商品</el-button>
           </template>
@@ -115,6 +116,7 @@
         <div class="detail-flow">
           <span v-for="step in flowSteps" :key="`detail-${step.value}`">{{ step.label }}</span>
         </div>
+        <el-button v-if="canConfirmReceipt(currentOrder)" type="primary" size="mini" @click="confirmReceipt(currentOrder)">确认收货</el-button>
         <el-button size="mini" @click="showItems(currentOrder)">查看商品明细</el-button>
       </div>
     </el-drawer>
@@ -308,6 +310,12 @@ export default {
     canCancel(row) {
       return (row.payStatus || '') === PAY_UNPAID && (row.orderStatus || '') === ORDER_PENDING_CONFIRM
     },
+    canConfirmReceipt(row) {
+      if (!row) {
+        return false
+      }
+      return (row.payStatus || '') === PAY_PAID && (row.orderStatus || '') === ORDER_SHIPPED
+    },
     async load() {
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosorderPage,
@@ -471,6 +479,40 @@ export default {
       }
 
       this.$message.success('订单已取消')
+      this.load()
+    },
+    async confirmReceipt(row) {
+      const orderId = row && row.id
+      if (!orderId) {
+        this.$message.warning('订单ID不存在')
+        return
+      }
+
+      const ok = await this.$confirm('确认已收到货物并完成订单吗？', '提示', {
+        confirmButtonText: '确认收货',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => true)
+        .catch(() => false)
+
+      if (!ok) {
+        return
+      }
+
+      const res = await this.$proxy.Request({
+        url: `${this.$proxy.Api.cosorderConfirmReceiptPrefix}${orderId}`,
+        method: 'post',
+        dataType: 'json',
+        params: {}
+      })
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && (res.msg || res.info)) || '确认收货失败')
+        return
+      }
+
+      this.$message.success(res.msg || '确认收货成功')
       this.load()
     },
     showItems(row) {

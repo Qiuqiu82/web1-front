@@ -74,6 +74,7 @@ export default {
       ]
       if (this.isAdmin) {
         baseMenus.push({ label: '订单协同', path: '/index/cosorder-admin' })
+        baseMenus.push({ label: '素材管理', path: '/index/cosmaterial-admin' })
       }
       if (this.isDesigner) {
         baseMenus.push({ label: '设计师接单', path: '/index/cosorder-designer' })

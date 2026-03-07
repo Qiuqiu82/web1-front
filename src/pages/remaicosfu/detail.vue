@@ -45,6 +45,12 @@
             <el-option v-for="s in sizeOptions" :key="s" :label="s" :value="s" />
           </el-select>
         </el-form-item>
+        <el-form-item label="面料">
+          <el-select v-model="cartForm.materialName" placeholder="请选择面料" style="width: 100%" :disabled="!materialOptions.length">
+            <el-option v-for="m in materialOptions" :key="m" :label="m" :value="m" />
+          </el-select>
+          <div v-if="!materialOptions.length" class="material-tip">暂无约束面料，默认使用商品面料</div>
+        </el-form-item>
         <el-form-item label="数量">
           <el-input-number v-model="cartForm.quantity" :min="1" :max="99" />
         </el-form-item>
@@ -69,8 +75,10 @@ export default {
       detail: {},
       detailBanner: [],
       customizeDialogVisible: false,
+      materialOptions: [],
       cartForm: {
         specs: '',
+        materialName: '',
         quantity: 1,
         remark: ''
       }
@@ -113,16 +121,45 @@ export default {
             .split(',')
             .map((s) => s.trim())
             .filter((s) => !!s)
+          this.loadMaterialOptions()
         }
       })
     },
-    openCustomize() {
+    async loadMaterialOptions() {
+      const styleName = this.detail.fuzhuangkuanshi || ''
+      if (!styleName) {
+        this.materialOptions = this.detail.mianliaoleibie ? [this.detail.mianliaoleibie] : []
+        return
+      }
+
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosMaterialRuleByStyle,
+        method: 'get',
+        params: { styleName },
+        showLoading: false
+      })
+
+      const rows = (res && res.code === 0 && (res.data || [])) || []
+      const names = rows
+        .map((item) => item.materialName || item.material_name || '')
+        .map((name) => String(name).trim())
+        .filter((name) => !!name)
+
+      if (this.detail.mianliaoleibie) {
+        names.push(String(this.detail.mianliaoleibie).trim())
+      }
+
+      this.materialOptions = Array.from(new Set(names))
+    },
+    async openCustomize() {
       if (!localStorage.getItem('Token')) {
         this.$message.warning('请先登录后再加入购物车')
         this.$router.push('/login')
         return
       }
+      await this.loadMaterialOptions()
       this.cartForm.specs = this.detail.chima || this.sizeOptions[0] || 'M'
+      this.cartForm.materialName = this.materialOptions[0] || this.detail.mianliaoleibie || ''
       this.cartForm.quantity = 1
       this.cartForm.remark = ''
       this.customizeDialogVisible = true
@@ -140,7 +177,7 @@ export default {
         productId: this.detail.id,
         productName: this.detail.fuzhuangmingcheng,
         productCover: firstCover,
-        specs: this.cartForm.specs || this.detail.chima || '默认',
+        specs: `${this.cartForm.specs || this.detail.chima || '默认尺码'} / ${this.cartForm.materialName || this.detail.mianliaoleibie || '默认面料'}`,
         quantity,
         price,
         amount: (price * quantity).toFixed(2),
@@ -257,6 +294,12 @@ export default {
   margin-top: 10px;
   color: #525b7a;
   line-height: 1.85;
+}
+
+.material-tip {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #8b96ba;
 }
 
 @media (max-width: 1080px) {

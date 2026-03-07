@@ -329,16 +329,26 @@ export default {
       await this.loadMine()
     },
     async shipOrder(row) {
-      const ok = await this.confirmAction(`确认将订单 ${row.orderNo || row.id} 标记为已发货吗？`)
-      if (!ok) return
+      const promptRes = await this.$prompt('可填写交付说明、物流单号或素材链接（选填）', '制作完成并发货', {
+        confirmButtonText: '继续发货',
+        cancelButtonText: '取消',
+        inputPlaceholder: '例如：物流单号 + 交付说明',
+        inputType: 'textarea',
+        inputValue: ''
+      }).catch(() => null)
+      if (!promptRes) {
+        return
+      }
 
+      const deliveryRemark = (promptRes.value || '').trim()
       this.actionLoadingKey = `${row.id}-ship`
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosorderDesignerShip,
         method: 'post',
         dataType: 'json',
         params: {
-          orderId: row.id
+          orderId: row.id,
+          remark: deliveryRemark ? `交付说明：${deliveryRemark}` : '设计师发货'
         }
       })
       this.actionLoadingKey = ''

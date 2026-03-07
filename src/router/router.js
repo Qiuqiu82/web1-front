@@ -10,6 +10,7 @@ import CoscartList from '../pages/coscart/list'
 import CosorderList from '../pages/cosorder/list'
 import CosorderAdmin from '../pages/cosorder/admin'
 import CosorderDesigner from '../pages/cosorder/designer'
+import CosMaterialAdmin from '../pages/cosmaterial/admin'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -53,6 +54,10 @@ export default new VueRouter({
         {
           path: 'cosorder-designer',
           component: CosorderDesigner
+        },
+        {
+          path: 'cosmaterial-admin',
+          component: CosMaterialAdmin
         }
       ]
     },
