@@ -15,6 +15,11 @@ import ProfileCenter from '../pages/profile/index'
 import AdminLayout from '../pages/admin/layout'
 import AdminDashboard from '../pages/admin/dashboard'
 import AdminRolePermission from '../pages/admin/role-permission'
+import DesignerLayout from '../pages/designer/layout'
+import DesignerWorkbench from '../pages/designer/workbench'
+import DesignerCommunication from '../pages/designer/communication'
+import DesignerProfile from '../pages/designer/profile'
+import DesignerRevenue from '../pages/designer/revenue'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -57,7 +62,7 @@ export default new VueRouter({
         },
         {
           path: 'cosorder-designer',
-          component: CosorderDesigner
+          redirect: '/designer/orders'
         },
         {
           path: 'cosmaterial-admin',
@@ -89,6 +94,33 @@ export default new VueRouter({
         {
           path: 'orders',
           component: CosorderAdmin
+        }
+      ]
+    },
+    {
+      path: '/designer',
+      component: DesignerLayout,
+      redirect: '/designer/workbench',
+      children: [
+        {
+          path: 'workbench',
+          component: DesignerWorkbench
+        },
+        {
+          path: 'orders',
+          component: CosorderDesigner
+        },
+        {
+          path: 'communication',
+          component: DesignerCommunication
+        },
+        {
+          path: 'profile',
+          component: DesignerProfile
+        },
+        {
+          path: 'revenue',
+          component: DesignerRevenue
         }
       ]
     },

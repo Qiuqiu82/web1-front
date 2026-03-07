@@ -8,6 +8,7 @@ const Api = {
   usersPage: '/users/page',
   yonghuPage: '/yonghu/page',
   shejishiPage: '/shejishi/page',
+  shejishiSession: '/shejishi/session',
   commonCalCosorderTotalAmount: '/cal/cosorder/total_amount',
 
   // product

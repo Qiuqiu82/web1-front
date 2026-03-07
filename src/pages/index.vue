@@ -89,7 +89,7 @@ export default {
         menus.push({ label: '权限角色', path: '/admin/roles' })
       }
       if (this.isDesigner) {
-        menus.push({ label: '设计师订单', path: '/index/cosorder-designer' })
+        menus.push({ label: '设计师工作台', path: '/designer/workbench' })
       }
       return menus
     }

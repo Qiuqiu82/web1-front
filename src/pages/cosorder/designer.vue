@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="designer-page order-theme">
     <section class="head-panel">
       <div>
@@ -205,6 +205,7 @@ export default {
     normalizeRows(rows = []) {
       return rows.map((row) => ({
         ...row,
+        id: row.id || row.orderId || row.order_id || '',
         orderNo: row.orderNo || row.order_no || '',
         userId: row.userId || row.user_id || '',
         totalAmount: row.totalAmount || row.total_amount || 0,
@@ -213,6 +214,65 @@ export default {
         designerStatus: row.designerStatus || row.designer_status || '待接单',
         designerTakeTime: row.designerTakeTime || row.designer_take_time || '-'
       }))
+    },
+    parsePageData(rawData) {
+      const data = rawData || {}
+      const list = data.list || data.records || data.rows || (Array.isArray(data) ? data : [])
+      const total = Number(data.total || data.count || data.recordsTotal || (Array.isArray(list) ? list.length : 0))
+      return {
+        list: Array.isArray(list) ? list : [],
+        total
+      }
+    },
+    currentDesignerId() {
+      return localStorage.getItem('userId') || localStorage.getItem('userid') || undefined
+    },
+    formatNow() {
+      const date = new Date()
+      const year = date.getFullYear()
+      const month = `${date.getMonth() + 1}`.padStart(2, '0')
+      const day = `${date.getDate()}`.padStart(2, '0')
+      const hour = `${date.getHours()}`.padStart(2, '0')
+      const minute = `${date.getMinutes()}`.padStart(2, '0')
+      const second = `${date.getSeconds()}`.padStart(2, '0')
+      return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    },
+    isMojibakeMessage(msg) {
+      if (!msg) return false
+      const text = String(msg)
+      return /[�]|闂|鍊|鈧|绗|鐑|锟/.test(text)
+    },
+    safeMsg(msg, fallback) {
+      if (!msg) return fallback
+      return this.isMojibakeMessage(msg) ? fallback : msg
+    },
+    hasMineOrder(orderId) {
+      if (!orderId) return false
+      return this.mineList.some((item) => String(item.id) === String(orderId))
+    },
+    appendClaimedOrder(row) {
+      if (!row || this.hasMineOrder(row.id)) {
+        return
+      }
+      const optimistic = this.normalizeRows([
+        {
+          ...row,
+          designerStatus: '已认领',
+          designerTakeTime: this.formatNow()
+        }
+      ])[0]
+      this.mineList = [optimistic, ...this.mineList]
+      this.mineTotal = Number(this.mineTotal || 0) + 1
+    },
+    markMineOrderProducing(orderId) {
+      this.mineList = this.mineList.map((item) => {
+        if (String(item.id) !== String(orderId)) return item
+        return {
+          ...item,
+          orderStatus: '生产中',
+          designerStatus: '制作中'
+        }
+      })
     },
     coverUrl(item) {
       const raw = item.huawentuan || ''
@@ -248,17 +308,21 @@ export default {
         method: 'get',
         params: {
           page: this.poolPage,
-          limit: this.poolLimit
-        }
+          pageNum: this.poolPage,
+          limit: this.poolLimit,
+          pageSize: this.poolLimit,
+          designerId: this.currentDesignerId()
+        },
+        showError: false
       })
       this.poolLoading = false
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '待接单加载失败')
+        this.$message.error(this.safeMsg(res && res.msg, '待接单加载失败'))
         return
       }
-      const data = res.data || {}
-      this.poolList = this.normalizeRows(data.list || [])
-      this.poolTotal = Number(data.total || 0)
+      const { list, total } = this.parsePageData(res.data)
+      this.poolList = this.normalizeRows(list)
+      this.poolTotal = total
     },
     async loadMine() {
       this.mineLoading = true
@@ -267,17 +331,21 @@ export default {
         method: 'get',
         params: {
           page: this.minePage,
-          limit: this.mineLimit
-        }
+          pageNum: this.minePage,
+          limit: this.mineLimit,
+          pageSize: this.mineLimit,
+          designerId: this.currentDesignerId()
+        },
+        showError: false
       })
       this.mineLoading = false
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '我的订单加载失败')
+        this.$message.error(this.safeMsg(res && res.msg, '我的订单加载失败'))
         return
       }
-      const data = res.data || {}
-      this.mineList = this.normalizeRows(data.list || [])
-      this.mineTotal = Number(data.total || 0)
+      const { list, total } = this.parsePageData(res.data)
+      this.mineList = this.normalizeRows(list)
+      this.mineTotal = total
     },
     handlePoolSizeChange(v) {
       this.poolLimit = v
@@ -317,16 +385,23 @@ export default {
         dataType: 'json',
         params: {
           orderId: row.id
-        }
+        },
+        showError: false
       })
       this.actionLoadingKey = ''
 
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '开始制作失败')
+        this.$message.error(this.safeMsg(res && res.msg, '开始制作失败'))
         return
       }
-      this.$message.success(res.msg || '已开始制作')
+      this.$message.success(this.safeMsg(res.msg, '已开始制作'))
+      this.markMineOrderProducing(row.id)
       await this.loadMine()
+      if (!this.hasMineOrder(row.id)) {
+        const fallback = this.normalizeRows([{ ...row, orderStatus: '生产中', designerStatus: '制作中' }])[0]
+        this.mineList = [fallback, ...this.mineList]
+        this.mineTotal = Math.max(Number(this.mineTotal || 0), this.mineList.length)
+      }
     },
     async shipOrder(row) {
       const promptRes = await this.$prompt('可填写交付说明、物流单号或素材链接（选填）', '制作完成并发货', {
@@ -349,15 +424,16 @@ export default {
         params: {
           orderId: row.id,
           remark: deliveryRemark ? `交付说明：${deliveryRemark}` : '设计师发货'
-        }
+        },
+        showError: false
       })
       this.actionLoadingKey = ''
 
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '发货操作失败')
+        this.$message.error(this.safeMsg(res && res.msg, '发货操作失败'))
         return
       }
-      this.$message.success(res.msg || '已标记发货')
+      this.$message.success(this.safeMsg(res.msg, '已标记发货'))
       await this.loadMine()
     },
     async claim(row) {
@@ -368,24 +444,33 @@ export default {
       }
 
       this.claimLoadingOrderId = row.id
+      const designerId = this.currentDesignerId()
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosorderDesignerClaim,
         method: 'post',
         dataType: 'json',
         params: {
-          orderId: row.id
-        }
+          orderId: row.id,
+          id: row.id,
+          designerId
+        },
+        showError: false
       })
       this.claimLoadingOrderId = null
 
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '认领失败')
+        this.$message.error(this.safeMsg(res && res.msg, '认领失败'))
         return
       }
 
-      this.$message.success(res.msg || '认领成功')
+      this.$message.success(this.safeMsg(res.msg, '认领成功'))
+      this.activeTab = 'mine'
+      this.appendClaimedOrder(row)
       await this.loadPool()
       await this.loadMine()
+      if (!this.hasMineOrder(row.id)) {
+        this.appendClaimedOrder(row)
+      }
     }
   }
 }

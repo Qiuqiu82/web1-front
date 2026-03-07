@@ -154,7 +154,7 @@ export default {
 
             const targetRouteMap = {
               users: '/admin/dashboard',
-              shejishi: '/index/cosorder-designer',
+              shejishi: '/designer/workbench',
               yonghu: '/index/home'
             }
             const targetRoute = targetRouteMap[this.loginForm.tableName] || '/index/home'
