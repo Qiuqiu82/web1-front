@@ -4,6 +4,12 @@ const Api = {
   yonghuRegister: '/yonghu/register',
   shejishiLogin: '/shejishi/login',
 
+  // account statistics
+  usersPage: '/users/page',
+  yonghuPage: '/yonghu/page',
+  shejishiPage: '/shejishi/page',
+  commonCalCosorderTotalAmount: '/cal/cosorder/total_amount',
+
   // product
   remaicosfuList: '/remaicosfu/list',
   remaicosfuDetailPrefix: '/remaicosfu/detail/',
@@ -43,12 +49,12 @@ const Api = {
   cosMaterialRuleDelete: '/cosmaterial/rule/delete',
   cosMaterialRuleByStyle: '/cosmaterial/rule/by-style',
 
-
   // custom design
   cosCustomDesignSave: '/coscustomdesign/save',
   cosCustomDesignLatest: '/coscustomdesign/latest',
   cosCustomDesignDetailPrefix: '/coscustomdesign/detail/',
   cosCustomDesignDelete: '/coscustomdesign/delete',
+
   // profile center
   cosProfileAddressPage: '/cosprofile/address/page',
   cosProfileAddressSave: '/cosprofile/address/save',
@@ -62,6 +68,7 @@ const Api = {
   cosProfileBodyDelete: '/cosprofile/body/delete',
   cosProfileBodySetDefaultPrefix: '/cosprofile/body/set-default/',
   cosProfileBodyDefault: '/cosprofile/body/default',
+
   // mock pay
   cosPayCreate: '/cospay/create',
   cosPayStatus: '/cospay/status',
@@ -69,4 +76,3 @@ const Api = {
 }
 
 export default Api
-

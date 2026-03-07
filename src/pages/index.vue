@@ -85,8 +85,8 @@ export default {
         menus.push({ label: '个人中心', path: '/index/profile' })
       }
       if (this.isAdmin) {
-        menus.push({ label: '管理订单', path: '/index/cosorder-admin' })
-        menus.push({ label: '素材管理', path: '/index/cosmaterial-admin' })
+        menus.push({ label: '管理后台', path: '/admin/dashboard' })
+        menus.push({ label: '权限角色', path: '/admin/roles' })
       }
       if (this.isDesigner) {
         menus.push({ label: '设计师订单', path: '/index/cosorder-designer' })

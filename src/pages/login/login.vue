@@ -153,7 +153,7 @@ export default {
             }
 
             const targetRouteMap = {
-              users: '/index/cosorder-admin',
+              users: '/admin/dashboard',
               shejishi: '/index/cosorder-designer',
               yonghu: '/index/home'
             }
