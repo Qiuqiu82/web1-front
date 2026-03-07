@@ -1,9 +1,9 @@
-﻿<template>
+<template>
   <div class="order-page">
     <section class="header-panel">
       <div class="header-title">
         <h2>我的订单</h2>
-        <p>按下单流程查看状态，主操作只保留当前最需要的动作。</p>
+        <p>按清晰阶段跟踪订单进度，聚焦关键操作。</p>
       </div>
       <div class="status-tabs">
         <button
@@ -19,17 +19,17 @@
       </div>
     </section>
 
-    <el-empty v-if="!filteredList.length" description="当前筛选下暂无订单" :image-size="92" />
+    <el-empty v-if="!filteredList.length" description="该分栏暂无订单" :image-size="92" />
 
     <section v-else class="order-list">
       <article class="order-card" v-for="row in filteredList" :key="row.id">
         <div class="card-main">
           <div class="card-main-left">
-            <div class="order-no">订单号：{{ row.orderNo }}</div>
+            <div class="order-no">订单号： {{ row.orderNo }}</div>
             <div class="order-meta">
-              <span>下单时间：{{ row.addtime || '-' }}</span>
-              <span>支付方式：{{ row.payType || '-' }}</span>
-              <span>设计进度：{{ row.designerStatus || '-' }}</span>
+              <span>下单时间： {{ row.addtime || '-' }}</span>
+              <span>支付方式： {{ formatPayType(row.payType) }}</span>
+              <span>设计师状态： {{ row.designerStatus || '-' }}</span>
             </div>
           </div>
           <div class="card-main-right">
@@ -42,13 +42,7 @@
           <div
             v-for="(step, idx) in flowSteps"
             :key="step.value"
-            :class="[
-              'flow-step',
-              {
-                done: isFlowDone(row, idx),
-                current: isFlowCurrent(row, idx)
-              }
-            ]"
+            :class="['flow-step', { done: isFlowDone(row, idx), current: isFlowCurrent(row, idx) }]"
           >
             <div class="dot">{{ idx + 1 }}</div>
             <div class="label">{{ step.label }}</div>
@@ -64,16 +58,11 @@
             <div class="goods-qty">x{{ item.quantity || 1 }}</div>
             <div class="goods-amount">￥{{ formatMoney(itemAmount(item)) }}</div>
           </div>
-          <el-button
-            v-if="row.items.length > 1"
-            type="text"
-            class="toggle-btn"
-            @click="toggleItems(row.id)"
-          >
-            {{ isExpanded(row.id) ? '收起商品' : `展开其余 ${row.items.length - 1} 件商品` }}
+          <el-button v-if="row.items.length > 1" type="text" class="toggle-btn" @click="toggleItems(row.id)">
+            {{ isExpanded(row.id) ? '收起商品' : `展开 ${row.items.length - 1} 条` }}
           </el-button>
         </div>
-        <div v-else class="empty-goods">该订单暂无可展示的商品明细</div>
+        <div v-else class="empty-goods">当前订单暂无商品明细</div>
 
         <div class="action-row">
           <template v-if="canPay(row)">
@@ -99,44 +88,65 @@
         <el-table-column prop="price" label="单价" width="100">
           <template slot-scope="scope">￥{{ formatMoney(scope.row.price) }}</template>
         </el-table-column>
-        <el-table-column prop="amount" label="小计" width="110">
+        <el-table-column prop="amount" label="金额" width="110">
           <template slot-scope="scope">￥{{ formatMoney(itemAmount(scope.row)) }}</template>
         </el-table-column>
       </el-table>
     </el-dialog>
 
-    <el-drawer title="订单详情" :visible.sync="detailVisible" size="480px">
+    <el-drawer title="订单详情" :visible.sync="detailVisible" size="500px">
       <div v-if="currentOrder" class="detail-box">
-        <p><strong>订单号：</strong>{{ currentOrder.orderNo }}</p>
-        <p><strong>下单时间：</strong>{{ currentOrder.addtime || '-' }}</p>
-        <p><strong>支付状态：</strong>{{ currentOrder.payStatus }}</p>
-        <p><strong>履约状态：</strong>{{ currentOrder.orderStatus }}</p>
-        <p><strong>支付方式：</strong>{{ currentOrder.payType || '-' }}</p>
-        <p><strong>订单金额：</strong>￥{{ formatMoney(currentOrder.totalAmount) }}</p>
+        <p><strong>订单号：</strong> {{ currentOrder.orderNo }}</p>
+        <p><strong>下单时间：</strong> {{ currentOrder.addtime || '-' }}</p>
+        <p><strong>支付状态：</strong> {{ currentOrder.payStatus }}</p>
+        <p><strong>订单状态：</strong> {{ currentOrder.orderStatus }}</p>
+        <p><strong>支付方式：</strong> {{ formatPayType(currentOrder.payType) }}</p>
+        <p><strong>订单总额：</strong> ￥{{ formatMoney(currentOrder.totalAmount) }}</p>
+        <p><strong>收货人：</strong> {{ detailAddress.receiverName || currentOrder.contactName || '-' }}</p>
+        <p><strong>联系电话：</strong> {{ detailAddress.receiverPhone || currentOrder.contactPhone || '-' }}</p>
+        <p><strong>收货地址：</strong> {{ detailAddressText || currentOrder.address || '-' }}</p>
+        <p><strong>身材档案：</strong> {{ detailBody.profileName || '-' }}</p>
+        <p>
+          <strong>身材数据：</strong>
+          <span v-if="detailBody.profileName || detailBody.heightCm || detailBody.weightKg">
+            H{{ detailBody.heightCm || '-' }} / W{{ detailBody.weightKg || '-' }} /
+            腰围{{ detailBody.waistCm || '-' }} / 胸围{{ detailBody.bustCm || '-' }} /
+            臀围{{ detailBody.hipCm || '-' }} / 肩宽{{ detailBody.shoulderCm || '-' }}
+            <span v-if="detailBody.sizeCode"> · 尺码 {{ detailBody.sizeCode }}</span>
+          </span>
+          <span v-else>-</span>
+        </p>
         <div class="detail-flow">
           <span v-for="step in flowSteps" :key="`detail-${step.value}`">{{ step.label }}</span>
         </div>
-        <el-button v-if="canConfirmReceipt(currentOrder)" type="primary" size="mini" @click="confirmReceipt(currentOrder)">确认收货</el-button>
-        <el-button size="mini" @click="showItems(currentOrder)">查看商品明细</el-button>
+        <el-button
+          v-if="canConfirmReceipt(currentOrder)"
+          type="primary"
+          size="mini"
+          @click="confirmReceipt(currentOrder)"
+        >
+          确认收货
+        </el-button>
+        <el-button size="mini" @click="showItems(currentOrder)">查看商品</el-button>
       </div>
     </el-drawer>
   </div>
 </template>
 
 <script>
-const PAY_UNPAID = '未支付'
-const PAY_PAID = '已支付'
-const ORDER_PENDING_CONFIRM = '待确认'
-const ORDER_PENDING_PRODUCE = '待生产'
-const ORDER_PRODUCING = '生产中'
-const ORDER_SHIPPED = '已发货'
-const ORDER_FINISHED = '已完成'
-const ORDER_CANCELED = '已取消'
+const PAY_UNPAID = 'UNPAID'
+const PAY_PAID = 'PAID'
+const ORDER_PENDING_CONFIRM = 'WAIT_CONFIRM'
+const ORDER_PENDING_PRODUCE = 'WAIT_PRODUCE'
+const ORDER_PRODUCING = 'PRODUCING'
+const ORDER_SHIPPED = 'SHIPPED'
+const ORDER_FINISHED = 'DONE'
+const ORDER_CANCELED = 'CANCELED'
 
 const FLOW_STEPS = [
   { value: ORDER_PENDING_CONFIRM, label: '待确认' },
   { value: ORDER_PENDING_PRODUCE, label: '待生产' },
-  { value: ORDER_PRODUCING, label: '制作中' },
+  { value: ORDER_PRODUCING, label: '生产中' },
   { value: ORDER_SHIPPED, label: '待收货' },
   { value: ORDER_FINISHED, label: '已完成' }
 ]
@@ -175,16 +185,8 @@ export default {
       return [
         { label: '全部', value: 'all', count: this.list.length },
         { label: '待付款', value: 'unpaid', count: this.list.filter((row) => this.statusKey(row) === 'unpaid').length },
-        {
-          label: '制作中',
-          value: 'progress',
-          count: this.list.filter((row) => this.statusKey(row) === 'progress').length
-        },
-        {
-          label: '待收货',
-          value: 'shipping',
-          count: this.list.filter((row) => this.statusKey(row) === 'shipping').length
-        },
+        { label: '制作中', value: 'progress', count: this.list.filter((row) => this.statusKey(row) === 'progress').length },
+        { label: '待收货', value: 'shipping', count: this.list.filter((row) => this.statusKey(row) === 'shipping').length },
         { label: '已完成', value: 'done', count: this.list.filter((row) => this.statusKey(row) === 'done').length }
       ]
     },
@@ -193,20 +195,24 @@ export default {
         return this.list
       }
       return this.list.filter((row) => {
-        if (this.activeFilter === 'unpaid') {
-          return this.statusKey(row) === 'unpaid'
-        }
-        if (this.activeFilter === 'progress') {
-          return this.statusKey(row) === 'progress'
-        }
-        if (this.activeFilter === 'shipping') {
-          return this.statusKey(row) === 'shipping'
-        }
-        if (this.activeFilter === 'done') {
-          return this.statusKey(row) === 'done'
-        }
+        if (this.activeFilter === 'unpaid') return this.statusKey(row) === 'unpaid'
+        if (this.activeFilter === 'progress') return this.statusKey(row) === 'progress'
+        if (this.activeFilter === 'shipping') return this.statusKey(row) === 'shipping'
+        if (this.activeFilter === 'done') return this.statusKey(row) === 'done'
         return true
       })
+    },
+    detailAddress() {
+      if (!this.currentOrder) return {}
+      return this.parseSnapshot(this.currentOrder.addressSnapshotJson || this.currentOrder.address_snapshot_json)
+    },
+    detailAddressText() {
+      const snap = this.detailAddress
+      return `${snap.province || ''}${snap.city || ''}${snap.district || ''}${snap.detailAddress || ''}`
+    },
+    detailBody() {
+      if (!this.currentOrder) return {}
+      return this.parseSnapshot(this.currentOrder.bodyProfileSnapshotJson || this.currentOrder.body_profile_snapshot_json)
     }
   },
   created() {
@@ -225,11 +231,24 @@ export default {
     formatMoney(v) {
       return Number(v || 0).toFixed(2)
     },
+    formatPayType(payType) {
+      const text = String(payType || '').trim().toUpperCase()
+      if (!text || text === '-') return '-'
+      if (text === 'ALIPAY') return '支付宝'
+      if (text === 'WECHAT') return '微信'
+      return payType
+    },
+    parseSnapshot(raw) {
+      if (!raw) return {}
+      try {
+        return typeof raw === 'string' ? JSON.parse(raw) : raw
+      } catch (e) {
+        return {}
+      }
+    },
     normalizeItems(row) {
       const raw = row.itemsJson || row.items_json
-      if (!raw) {
-        return []
-      }
+      if (!raw) return []
       try {
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
         return Array.isArray(parsed) ? parsed : []
@@ -238,15 +257,11 @@ export default {
       }
     },
     itemAmount(item) {
-      if (item.amount != null) {
-        return item.amount
-      }
+      if (item.amount != null) return item.amount
       return Number(item.price || 0) * Number(item.quantity || 1)
     },
     visibleItems(row) {
-      if (this.isExpanded(row.id)) {
-        return row.items
-      }
+      if (this.isExpanded(row.id)) return row.items
       return row.items.slice(0, 1)
     },
     isExpanded(orderId) {
@@ -255,24 +270,36 @@ export default {
     toggleItems(orderId) {
       this.$set(this.expandedMap, orderId, !this.expandedMap[orderId])
     },
+    normalizeStatus(raw) {
+      const text = String(raw || '').trim()
+      const map = {
+        未支付: PAY_UNPAID,
+        已支付: PAY_PAID,
+        待确认: ORDER_PENDING_CONFIRM,
+        待生产: ORDER_PENDING_PRODUCE,
+        生产中: ORDER_PRODUCING,
+        已发货: ORDER_SHIPPED,
+        已完成: ORDER_FINISHED,
+        已取消: ORDER_CANCELED,
+        UNPAID: PAY_UNPAID,
+        PAID: PAY_PAID,
+        WAIT_CONFIRM: ORDER_PENDING_CONFIRM,
+        WAIT_PRODUCE: ORDER_PENDING_PRODUCE,
+        PRODUCING: ORDER_PRODUCING,
+        SHIPPED: ORDER_SHIPPED,
+        DONE: ORDER_FINISHED,
+        CANCELED: ORDER_CANCELED
+      }
+      return map[text] || text
+    },
     statusKey(row) {
-      const payStatus = row.payStatus || ''
-      const orderStatus = row.orderStatus || ''
-      if (orderStatus === ORDER_CANCELED) {
-        return 'canceled'
-      }
-      if (payStatus === PAY_UNPAID) {
-        return 'unpaid'
-      }
-      if (orderStatus === ORDER_FINISHED) {
-        return 'done'
-      }
-      if (orderStatus === ORDER_SHIPPED) {
-        return 'shipping'
-      }
-      if (PROGRESS_STATUS.includes(orderStatus)) {
-        return 'progress'
-      }
+      const payStatus = this.normalizeStatus(row.payStatus)
+      const orderStatus = this.normalizeStatus(row.orderStatus)
+      if (orderStatus === ORDER_CANCELED) return 'canceled'
+      if (payStatus === PAY_UNPAID) return 'unpaid'
+      if (orderStatus === ORDER_FINISHED) return 'done'
+      if (orderStatus === ORDER_SHIPPED) return 'shipping'
+      if (PROGRESS_STATUS.includes(orderStatus)) return 'progress'
       return 'unknown'
     },
     statusLabel(row) {
@@ -285,36 +312,28 @@ export default {
       return '处理中'
     },
     flowIndex(row) {
-      return FLOW_STEPS.findIndex((step) => step.value === row.orderStatus)
+      return FLOW_STEPS.findIndex((step) => step.value === this.normalizeStatus(row.orderStatus))
     },
     isFlowDone(row, idx) {
       const current = this.flowIndex(row)
-      if (row.orderStatus === ORDER_CANCELED) {
-        return false
-      }
+      if (this.normalizeStatus(row.orderStatus) === ORDER_CANCELED) return false
       return current > idx
     },
     isFlowCurrent(row, idx) {
       const current = this.flowIndex(row)
-      if (row.orderStatus === ORDER_CANCELED) {
-        return false
-      }
-      if (current < 0) {
-        return idx === 0
-      }
+      if (this.normalizeStatus(row.orderStatus) === ORDER_CANCELED) return false
+      if (current < 0) return idx === 0
       return current === idx
     },
     canPay(row) {
-      return (row.payStatus || '') === PAY_UNPAID
+      return this.normalizeStatus(row.payStatus) === PAY_UNPAID
     },
     canCancel(row) {
-      return (row.payStatus || '') === PAY_UNPAID && (row.orderStatus || '') === ORDER_PENDING_CONFIRM
+      return this.normalizeStatus(row.payStatus) === PAY_UNPAID && this.normalizeStatus(row.orderStatus) === ORDER_PENDING_CONFIRM
     },
     canConfirmReceipt(row) {
-      if (!row) {
-        return false
-      }
-      return (row.payStatus || '') === PAY_PAID && (row.orderStatus || '') === ORDER_SHIPPED
+      if (!row) return false
+      return this.normalizeStatus(row.payStatus) === PAY_PAID && this.normalizeStatus(row.orderStatus) === ORDER_SHIPPED
     },
     async load() {
       const res = await this.$proxy.Request({
@@ -323,7 +342,7 @@ export default {
         params: { page: 1, limit: 50 }
       })
       if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '订单加载失败')
+        this.$message.error((res && res.msg) || '加载订单失败')
         return
       }
 
@@ -334,10 +353,12 @@ export default {
           ...r,
           orderNo: r.orderNo || r.order_no || '',
           totalAmount: r.totalAmount || r.total_amount || 0,
-          payStatus: r.payStatus || r.pay_status || PAY_UNPAID,
-          orderStatus: r.orderStatus || r.order_status || ORDER_PENDING_CONFIRM,
+          payStatus: this.normalizeStatus(r.payStatus || r.pay_status || PAY_UNPAID),
+          orderStatus: this.normalizeStatus(r.orderStatus || r.order_status || ORDER_PENDING_CONFIRM),
           payType: r.payType || r.pay_type || '-',
-          designerStatus: r.designerStatus || r.designer_status || '-'
+          designerStatus: r.designerStatus || r.designer_status || '-',
+          addressSnapshotJson: r.addressSnapshotJson || r.address_snapshot_json || '',
+          bodyProfileSnapshotJson: r.bodyProfileSnapshotJson || r.body_profile_snapshot_json || ''
         }
         return { ...normalized, items: this.normalizeItems(normalized) }
       })
@@ -345,7 +366,7 @@ export default {
     async goPay(row) {
       const orderNo = row.orderNo || row.order_no
       if (!orderNo) {
-        this.$message.warning('订单号不存在')
+        this.$message.warning('订单号缺失')
         return
       }
       const userId = this.sessionUser.userId || Number(row.userId || row.user_id || 0)
@@ -358,7 +379,7 @@ export default {
         'yonghu'
 
       if (!localStorage.getItem('Token') || !userId) {
-        this.$message.warning('请先登录后再支付')
+        this.$message.warning('请先登录')
         this.$router.push('/login')
         return
       }
@@ -378,13 +399,13 @@ export default {
       })
 
       if (!res || res.code !== 0) {
-        this.$message.error((res && (res.msg || res.info)) || '创建支付单失败')
+        this.$message.error((res && (res.msg || res.info)) || '创建支付订单失败')
         return
       }
 
       this.currentOrder = row
       this.payInfo = res.data || {}
-      this.$message.success('支付单创建成功，请完成支付')
+      this.$message.success('支付订单已创建')
       this.startPoll(orderNo)
     },
     startPoll(orderNo) {
@@ -401,10 +422,9 @@ export default {
           showLoading: false
         })
 
-        if (!statusRes || statusRes.code !== 0) {
-          return
-        }
-        const payStatus = (statusRes.data && (statusRes.data.payStatus || statusRes.data.pay_status)) || ''
+        if (!statusRes || statusRes.code !== 0) return
+        const payStatusRaw = (statusRes.data && (statusRes.data.payStatus || statusRes.data.pay_status)) || ''
+        const payStatus = this.normalizeStatus(payStatusRaw)
         if (payStatus === PAY_PAID) {
           this.stopPoll()
           this.load()
@@ -421,7 +441,7 @@ export default {
     async mockFinishPay(row) {
       const rowOrderNo = row && (row.orderNo || row.order_no)
       if (!rowOrderNo) {
-        this.$message.warning('订单号不存在')
+        this.$message.warning('订单号缺失')
         return
       }
 
@@ -431,7 +451,7 @@ export default {
 
       const payOrderNo = this.payInfo.payOrderNo || this.payInfo.pay_order_no
       if (!payOrderNo) {
-        this.$message.warning('请先点击去支付，再模拟支付')
+        this.$message.warning('请先点击去支付')
         return
       }
 
@@ -445,26 +465,24 @@ export default {
         return
       }
 
-      this.$message.success('模拟支付成功，正在刷新订单状态')
+      this.$message.success('模拟支付成功，正在刷新')
       this.startPoll(rowOrderNo)
     },
     async cancelOrder(row) {
       const orderId = row.id
       if (!orderId) {
-        this.$message.warning('订单ID不存在')
+        this.$message.warning('订单ID缺失')
         return
       }
       const ok = await this.$confirm('确认取消该订单吗？', '提示', {
-        confirmButtonText: '确认',
+        confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
         .then(() => true)
         .catch(() => false)
 
-      if (!ok) {
-        return
-      }
+      if (!ok) return
 
       const res = await this.$proxy.Request({
         url: `${this.$proxy.Api.cosorderCancelPrefix}${orderId}`,
@@ -484,21 +502,19 @@ export default {
     async confirmReceipt(row) {
       const orderId = row && row.id
       if (!orderId) {
-        this.$message.warning('订单ID不存在')
+        this.$message.warning('订单ID缺失')
         return
       }
 
-      const ok = await this.$confirm('确认已收到货物并完成订单吗？', '提示', {
-        confirmButtonText: '确认收货',
-        cancelButtonText: '取消',
+      const ok = await this.$confirm('确认已收货吗？', '提示', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消订单',
         type: 'warning'
       })
         .then(() => true)
         .catch(() => false)
 
-      if (!ok) {
-        return
-      }
+      if (!ok) return
 
       const res = await this.$proxy.Request({
         url: `${this.$proxy.Api.cosorderConfirmReceiptPrefix}${orderId}`,
@@ -512,7 +528,7 @@ export default {
         return
       }
 
-      this.$message.success(res.msg || '确认收货成功')
+      this.$message.success(res.msg || '已确认收货')
       this.load()
     },
     showItems(row) {
@@ -866,5 +882,3 @@ export default {
   }
 }
 </style>
-
-

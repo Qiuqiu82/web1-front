@@ -5,10 +5,10 @@
 
     <header class="topbar">
       <div class="brand" @click="$router.push('/index/home')">
-        <div class="brand-mark">裁</div>
+        <div class="brand-mark">定</div>
         <div class="brand-text">
-          <div class="brand-cn">次元定制工坊</div>
-          <div class="brand-en">次元服装定制平台</div>
+          <div class="brand-cn">角色扮演定制服装工坊</div>
+          <div class="brand-en">个性化定制平台</div>
         </div>
       </div>
 
@@ -19,7 +19,12 @@
       </nav>
 
       <div class="actions">
-        <el-button class="ghost-btn" icon="el-icon-shopping-cart-2" @click="$router.push('/index/coscart')">
+        <el-button
+          v-if="isUser"
+          class="ghost-btn"
+          icon="el-icon-shopping-cart-2"
+          @click="$router.push('/index/coscart')"
+        >
           购物车
         </el-button>
         <template v-if="isLoggedIn">
@@ -27,7 +32,7 @@
             <i class="el-icon-user-solid" />
             <span>{{ displayName }}</span>
           </div>
-          <el-button type="text" class="logout-btn" @click="logout">退出</el-button>
+          <el-button type="text" class="logout-btn" @click="logout">退出登录</el-button>
         </template>
         <template v-else>
           <el-button type="primary" size="mini" round @click="$router.push('/login')">登录</el-button>
@@ -52,34 +57,41 @@
 export default {
   name: 'Index',
   computed: {
+    tableName() {
+      return localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
+    },
     isAdmin() {
-      const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
-      return tableName === 'users'
+      return this.tableName === 'users'
     },
     isDesigner() {
-      const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
-      return tableName === 'shejishi'
+      return this.tableName === 'shejishi'
+    },
+    isUser() {
+      return this.tableName === 'yonghu'
     },
     isLoggedIn() {
       return !!localStorage.getItem('Token')
     },
     displayName() {
-      return localStorage.getItem('username') || localStorage.getItem('adminName') || localStorage.getItem('role') || '访客'
+      return localStorage.getItem('username') || localStorage.getItem('adminName') || '访客'
     },
     navMenus() {
-      const baseMenus = [
+      const menus = [
         { label: '首页', path: '/index/home' },
-        { label: '款式中心', path: '/index/browse' },
+        { label: '服装浏览', path: '/index/browse' },
         { label: '我的订单', path: '/index/cosorder' }
       ]
+      if (this.isUser) {
+        menus.push({ label: '个人中心', path: '/index/profile' })
+      }
       if (this.isAdmin) {
-        baseMenus.push({ label: '订单协同', path: '/index/cosorder-admin' })
-        baseMenus.push({ label: '素材管理', path: '/index/cosmaterial-admin' })
+        menus.push({ label: '管理订单', path: '/index/cosorder-admin' })
+        menus.push({ label: '素材管理', path: '/index/cosmaterial-admin' })
       }
       if (this.isDesigner) {
-        baseMenus.push({ label: '设计师接单', path: '/index/cosorder-designer' })
+        menus.push({ label: '设计师订单', path: '/index/cosorder-designer' })
       }
-      return baseMenus
+      return menus
     }
   },
   methods: {

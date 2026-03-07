@@ -2,10 +2,10 @@
   <div class="cos-detail">
     <section class="head-panel">
       <div>
-        <h2>{{ detail.fuzhuangmingcheng || 'COS 详情' }}</h2>
-        <p>{{ detail.fuzhuangkuanshi || '风格待完善' }}</p>
+        <h2>{{ detail.fuzhuangmingcheng || '服装详情' }}</h2>
+        <p>{{ detail.fuzhuangkuanshi || '款式待定' }}</p>
       </div>
-      <el-button round @click="$router.push('/index/browse')">返回款式中心</el-button>
+      <el-button round @click="$router.push('/index/browse')">返回浏览</el-button>
     </section>
 
     <section class="detail-grid">
@@ -20,10 +20,9 @@
 
       <div class="info-card">
         <div class="price">￥{{ Number(detail.fuzhuangjiage || 0).toFixed(2) }}</div>
-        <div class="meta-item"><span>服装编号</span><b>{{ detail.fuzhuangbianhao || '-' }}</b></div>
-        <div class="meta-item"><span>服装款式</span><b>{{ detail.fuzhuangkuanshi || '-' }}</b></div>
-        <div class="meta-item"><span>面料类别</span><b>{{ detail.mianliaoleibie || '-' }}</b></div>
-        <div class="meta-item"><span>默认尺码</span><b>{{ detail.chima || '-' }}</b></div>
+        <div class="meta-item"><span>编号</span><b>{{ detail.fuzhuangbianhao || '-' }}</b></div>
+        <div class="meta-item"><span>款式</span><b>{{ detail.fuzhuangkuanshi || '-' }}</b></div>
+        <div class="meta-item"><span>面料</span><b>{{ detail.mianliaoleibie || '-' }}</b></div>
         <div class="meta-item"><span>热度</span><b>{{ detail.clicknum || 0 }}</b></div>
 
         <el-button type="primary" class="buy-btn" @click="openCustomize">立即定制</el-button>
@@ -35,11 +34,11 @@
       <div class="content" v-html="detail.fuzhuangxiangqing || '暂无详情'" />
     </section>
 
-    <el-dialog title="结构化定制参数" :visible.sync="customizeDialogVisible" width="760px">
-      <el-form :model="cartForm" label-width="100px" class="custom-form">
+    <el-dialog title="定制信息" :visible.sync="customizeDialogVisible" width="800px">
+      <el-form :model="cartForm" label-width="110px" class="custom-form">
         <el-row :gutter="12">
           <el-col :span="12">
-            <el-form-item label="商品名称">
+            <el-form-item label="商品">
               <el-input :value="detail.fuzhuangmingcheng" disabled />
             </el-form-item>
           </el-col>
@@ -53,7 +52,7 @@
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="尺码">
-              <el-select v-model="cartForm.sizeCode" placeholder="请选择尺码" style="width: 100%">
+              <el-select v-model="cartForm.sizeCode" placeholder="选择尺码" style="width: 100%">
                 <el-option v-for="s in sizeOptions" :key="s" :label="s" :value="s" />
               </el-select>
             </el-form-item>
@@ -62,27 +61,48 @@
             <el-form-item label="面料">
               <el-select
                 v-model="cartForm.materialName"
-                placeholder="请选择面料"
+                placeholder="选择面料"
                 style="width: 100%"
                 :disabled="!materialOptions.length"
               >
                 <el-option v-for="m in materialOptions" :key="m" :label="m" :value="m" />
               </el-select>
-              <div v-if="!materialOptions.length" class="material-tip">暂无约束面料，默认使用商品面料</div>
+              <div v-if="!materialOptions.length" class="material-tip">当前无面料限制，将使用商品默认面料。</div>
             </el-form-item>
           </el-col>
         </el-row>
 
+        <el-form-item label="身材档案">
+          <div class="body-row">
+            <el-select v-model="selectedBodyProfileId" placeholder="选择档案" style="width: calc(100% - 140px)">
+              <el-option
+                v-for="item in bodyProfileOptions"
+                :key="item.id"
+                :label="bodyProfileLabel(item)"
+                :value="item.id"
+              />
+            </el-select>
+            <el-button type="text" @click="$router.push('/index/profile')">管理档案</el-button>
+          </div>
+          <div class="body-tip" v-if="selectedBodySnapshot.profileName">
+            {{ selectedBodySnapshot.profileName }} ·
+            身高{{ selectedBodySnapshot.heightCm }} / 体重{{ selectedBodySnapshot.weightKg }} /
+            腰围{{ selectedBodySnapshot.waistCm }} / 胸围{{ selectedBodySnapshot.bustCm }} /
+            臀围{{ selectedBodySnapshot.hipCm }} / 肩宽{{ selectedBodySnapshot.shoulderCm }}
+          </div>
+          <div v-else class="body-tip">未选择身材档案，仍可继续下单。</div>
+        </el-form-item>
+
         <el-row :gutter="12">
           <el-col :span="12">
-            <el-form-item label="廓形偏好">
+            <el-form-item label="版型轮廓">
               <el-select v-model="cartForm.silhouette" style="width: 100%">
                 <el-option v-for="item in silhouetteOptions" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="松量偏好">
+            <el-form-item label="穿着松量">
               <el-select v-model="cartForm.fitType" style="width: 100%">
                 <el-option v-for="item in fitTypeOptions" :key="item" :label="item" :value="item" />
               </el-select>
@@ -90,40 +110,40 @@
           </el-col>
         </el-row>
 
-        <el-form-item label="色系">
-          <el-input v-model="cartForm.colorTheme" placeholder="例如：冷白蓝、酒红金、黑银" />
+        <el-form-item label="配色主题">
+          <el-input v-model="cartForm.colorTheme" placeholder="例如：蓝白、酒红金、黑银" />
         </el-form-item>
 
-        <el-form-item label="工艺偏好">
+        <el-form-item label="工艺标签">
           <el-checkbox-group v-model="cartForm.craftTags">
             <el-checkbox v-for="item in craftTagOptions" :key="item" :label="item" />
           </el-checkbox-group>
         </el-form-item>
 
-        <el-form-item label="配件偏好">
+        <el-form-item label="配件标签">
           <el-checkbox-group v-model="cartForm.accessoryTags">
             <el-checkbox v-for="item in accessoryTagOptions" :key="item" :label="item" />
           </el-checkbox-group>
         </el-form-item>
 
-        <el-form-item label="参考图链接">
+        <el-form-item label="参考图片链接">
           <el-input
             v-model="cartForm.referenceImages"
             type="textarea"
             :rows="2"
-            placeholder="可粘贴多个 URL，支持逗号或换行分隔"
+            placeholder="多个链接请用逗号或换行分隔"
           />
         </el-form-item>
 
-        <el-form-item label="补充说明">
-          <el-input v-model="cartForm.remark" type="textarea" :rows="3" placeholder="例如角色版本、舞台需求、交期偏好" />
+        <el-form-item label="备注">
+          <el-input v-model="cartForm.remark" type="textarea" :rows="3" placeholder="补充你的定制需求" />
         </el-form-item>
 
         <div class="summary-box">
-          <div class="summary-title">定制摘要（下单快照）</div>
+          <div class="summary-title">快照摘要</div>
           <div class="summary-text">{{ designSummary }}</div>
           <div class="summary-tip" v-if="draftState.id">
-            草稿ID：{{ draftState.id }} · 版本：{{ draftState.versionNo }}
+            草稿编号： {{ draftState.id }} · 版本： {{ draftState.versionNo }}
           </div>
         </div>
       </el-form>
@@ -138,6 +158,8 @@
 </template>
 
 <script>
+const SIZE_OPTIONS = ['S', 'M', 'L', 'XL']
+
 export default {
   data() {
     return {
@@ -147,20 +169,22 @@ export default {
       detailBanner: [],
       customizeDialogVisible: false,
       materialOptions: [],
+      bodyProfileOptions: [],
+      selectedBodyProfileId: null,
       draftSaving: false,
       draftState: {
         id: null,
         versionNo: 1
       },
-      silhouetteOptions: ['修身', '合体', '宽松', 'A字', '直筒'],
-      fitTypeOptions: ['合体', '宽松', '高弹贴身', '舞台活动量优先'],
-      craftTagOptions: ['包边', '滚边', '暗扣', '隐形拉链', '撞色拼接', '立体褶量'],
-      accessoryTagOptions: ['披肩', '腰封', '袖章', '蝴蝶结', '金属扣件', '可拆卸配饰'],
+      silhouetteOptions: ['修身', '常规', '宽松', '伞摆', '直筒'],
+      fitTypeOptions: ['常规', '宽松', '弹力', '舞台友好'],
+      craftTagOptions: ['包边', '滚边', '暗扣', '隐形拉链', '拼色', '褶裥'],
+      accessoryTagOptions: ['披风', '腰带', '臂章', '蝴蝶结', '金属扣', '可拆卸'],
       cartForm: {
-        sizeCode: '',
+        sizeCode: 'M',
         materialName: '',
-        silhouette: '合体',
-        fitType: '合体',
+        silhouette: '常规',
+        fitType: '常规',
         colorTheme: '',
         craftTags: [],
         accessoryTags: [],
@@ -172,26 +196,38 @@ export default {
   },
   computed: {
     sizeOptions() {
-      const raw = this.detail.chima || ''
-      const arr = raw
-        .split(/[,/]/)
-        .map((s) => s.trim())
-        .filter((s) => !!s)
-      return arr.length ? arr : ['S', 'M', 'L', 'XL']
+      return SIZE_OPTIONS
+    },
+    selectedBodyProfile() {
+      return this.bodyProfileOptions.find((item) => Number(item.id) === Number(this.selectedBodyProfileId)) || null
+    },
+    selectedBodySnapshot() {
+      const item = this.selectedBodyProfile
+      if (!item) {
+        return {}
+      }
+      return {
+        profileName: item.profileName,
+        heightCm: item.heightCm,
+        weightKg: item.weightKg,
+        waistCm: item.waistCm,
+        bustCm: item.bustCm,
+        hipCm: item.hipCm,
+        shoulderCm: item.shoulderCm,
+        sizeCode: this.cartForm.sizeCode
+      }
     },
     designSummary() {
       const parts = []
       if (this.cartForm.sizeCode) parts.push(`尺码:${this.cartForm.sizeCode}`)
       if (this.cartForm.materialName) parts.push(`面料:${this.cartForm.materialName}`)
-      if (this.cartForm.silhouette) parts.push(`廓形:${this.cartForm.silhouette}`)
+      if (this.selectedBodySnapshot.profileName) parts.push(`身材:${this.selectedBodySnapshot.profileName}`)
+      if (this.cartForm.silhouette) parts.push(`版型轮廓:${this.cartForm.silhouette}`)
       if (this.cartForm.fitType) parts.push(`松量:${this.cartForm.fitType}`)
-      if (this.cartForm.colorTheme) parts.push(`色系:${this.cartForm.colorTheme}`)
-      if (this.cartForm.craftTags.length) parts.push(`工艺:${this.cartForm.craftTags.join('、')}`)
-      if (this.cartForm.accessoryTags.length) parts.push(`配件:${this.cartForm.accessoryTags.join('、')}`)
-      if (!parts.length) {
-        return '默认定制'
-      }
-      return parts.join(' / ')
+      if (this.cartForm.colorTheme) parts.push(`配色:${this.cartForm.colorTheme}`)
+      if (this.cartForm.craftTags.length) parts.push(`工艺:${this.cartForm.craftTags.join('|')}`)
+      if (this.cartForm.accessoryTags.length) parts.push(`配件:${this.cartForm.accessoryTags.join('|')}`)
+      return parts.length ? parts.join(' / ') : '默认定制'
     }
   },
   created() {
@@ -212,6 +248,29 @@ export default {
     imgUrl(img) {
       if (!img) return ''
       return img.startsWith('http') ? img : this.baseUrl + img
+    },
+    bodyProfileLabel(item) {
+      return `${item.profileName} (${item.heightCm}cm / ${item.weightKg}kg)`
+    },
+    normalizeBodyProfileRow(row) {
+      return {
+        id: row.id,
+        profileName: row.profileName || row.profile_name || '默认档案',
+        heightCm: Number(row.heightCm != null ? row.heightCm : row.height_cm || 0),
+        weightKg: Number(row.weightKg != null ? row.weightKg : row.weight_kg || 0),
+        waistCm: Number(row.waistCm != null ? row.waistCm : row.waist_cm || 0),
+        bustCm: Number(row.bustCm != null ? row.bustCm : row.bust_cm || 0),
+        hipCm: Number(row.hipCm != null ? row.hipCm : row.hip_cm || 0),
+        shoulderCm: Number(row.shoulderCm != null ? row.shoulderCm : row.shoulder_cm || 0),
+        isDefault: Number(row.isDefault != null ? row.isDefault : row.is_default || 0)
+      }
+    },
+    ensureSizeCode(sizeCode) {
+      const safe = String(sizeCode || '').trim().toUpperCase()
+      if (this.sizeOptions.includes(safe)) {
+        return safe
+      }
+      return 'M'
     },
     loadDetail(id) {
       this.$http.get(`${this.tablename}/detail/${id}`).then((res) => {
@@ -251,11 +310,37 @@ export default {
 
       this.materialOptions = Array.from(new Set(names))
     },
+    async loadBodyProfiles() {
+      const [pageRes, defaultRes] = await Promise.all([
+        this.$proxy.Request({
+          url: this.$proxy.Api.cosProfileBodyPage,
+          method: 'get',
+          showLoading: false,
+          params: { page: 1, limit: 100 }
+        }),
+        this.$proxy.Request({
+          url: this.$proxy.Api.cosProfileBodyDefault,
+          method: 'get',
+          showLoading: false
+        })
+      ])
+
+      const rows = (pageRes && pageRes.code === 0 && pageRes.data && (pageRes.data.list || pageRes.data)) || []
+      this.bodyProfileOptions = (Array.isArray(rows) ? rows : []).map(this.normalizeBodyProfileRow)
+
+      const defaultRow = defaultRes && defaultRes.code === 0 ? defaultRes.data : null
+      if (defaultRow && defaultRow.id) {
+        this.selectedBodyProfileId = Number(defaultRow.id)
+        return
+      }
+      const localDefault = this.bodyProfileOptions.find((item) => Number(item.isDefault) === 1)
+      this.selectedBodyProfileId = localDefault ? Number(localDefault.id) : this.bodyProfileOptions[0] && Number(this.bodyProfileOptions[0].id)
+    },
     resetFormDefaults() {
-      this.cartForm.sizeCode = this.detail.chima || this.sizeOptions[0] || 'M'
+      this.cartForm.sizeCode = 'M'
       this.cartForm.materialName = this.materialOptions[0] || this.detail.mianliaoleibie || ''
-      this.cartForm.silhouette = '合体'
-      this.cartForm.fitType = '合体'
+      this.cartForm.silhouette = '常规'
+      this.cartForm.fitType = '常规'
       this.cartForm.colorTheme = ''
       this.cartForm.craftTags = []
       this.cartForm.accessoryTags = []
@@ -266,12 +351,13 @@ export default {
     },
     async openCustomize() {
       if (!localStorage.getItem('Token')) {
-        this.$message.warning('请先登录后再加入购物车')
+        this.$message.warning('请先登录')
         this.$router.push('/login')
         return
       }
       await this.loadMaterialOptions()
       this.resetFormDefaults()
+      await this.loadBodyProfiles()
       await this.loadLatestDraft()
       this.customizeDialogVisible = true
     },
@@ -307,7 +393,7 @@ export default {
         payload = {}
       }
 
-      this.cartForm.sizeCode = payload.sizeCode || draft.sizeCode || this.cartForm.sizeCode
+      this.cartForm.sizeCode = this.ensureSizeCode(payload.sizeCode || draft.sizeCode || this.cartForm.sizeCode)
       this.cartForm.materialName = payload.materialName || draft.materialName || this.cartForm.materialName
       this.cartForm.silhouette = payload.silhouette || draft.silhouette || this.cartForm.silhouette
       this.cartForm.fitType = payload.fitType || draft.fitType || this.cartForm.fitType
@@ -328,6 +414,11 @@ export default {
         ? payload.referenceImages.join(',')
         : draft.referenceImages || ''
       this.cartForm.remark = payload.customNote || draft.customNote || ''
+
+      const profileId = payload.bodyProfileId || (payload.bodyProfileSnapshot && payload.bodyProfileSnapshot.id)
+      if (profileId) {
+        this.selectedBodyProfileId = Number(profileId)
+      }
     },
     async loadLatestDraft() {
       const productId = this.detail.id
@@ -352,7 +443,20 @@ export default {
         .map((s) => s.trim())
         .filter((s) => !!s)
     },
+    buildBodyProfileSnapshot() {
+      const body = this.selectedBodySnapshot
+      if (!body || !body.profileName) {
+        return {
+          sizeCode: this.cartForm.sizeCode
+        }
+      }
+      return {
+        ...body,
+        sizeCode: this.cartForm.sizeCode
+      }
+    },
     buildDesignPayload() {
+      const bodyProfileSnapshot = this.buildBodyProfileSnapshot()
       return {
         productId: this.detail.id,
         productName: this.detail.fuzhuangmingcheng || '',
@@ -367,12 +471,15 @@ export default {
         referenceImages: this.parseMultiInput(this.cartForm.referenceImages),
         customNote: this.cartForm.remark,
         summary: this.designSummary,
+        bodyProfileId: this.selectedBodyProfileId || null,
+        bodyProfileSnapshot,
         snapshotAt: new Date().toISOString()
       }
     },
     async saveDraft(showMessage = true) {
+      this.cartForm.sizeCode = this.ensureSizeCode(this.cartForm.sizeCode)
       if (!this.cartForm.sizeCode) {
-        this.$message.warning('请先选择尺码')
+        this.$message.warning('请选择尺码')
         return null
       }
 
@@ -397,7 +504,7 @@ export default {
           accessoryTags: this.cartForm.accessoryTags,
           referenceImages: this.parseMultiInput(this.cartForm.referenceImages),
           customNote: this.cartForm.remark,
-          status: '草稿',
+          status: 'Draft',
           designPayload: payload
         }
       })
@@ -405,7 +512,7 @@ export default {
 
       if (!res || res.code !== 0) {
         if (showMessage) {
-          this.$message.error((res && res.msg) || '草稿保存失败')
+          this.$message.error((res && res.msg) || '保存草稿失败')
         }
         return null
       }
@@ -424,12 +531,14 @@ export default {
       const userId = Number(localStorage.getItem('userid') || localStorage.getItem('userId') || 0)
       const userTable = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || 'yonghu'
       if (!userId) {
-        this.$message.warning('请先登录后再加入购物车')
+        this.$message.warning('请先登录')
         this.$router.push('/login')
         return
       }
+
+      this.cartForm.sizeCode = this.ensureSizeCode(this.cartForm.sizeCode)
       if (!this.cartForm.sizeCode) {
-        this.$message.warning('请先选择尺码')
+        this.$message.warning('请选择尺码')
         return
       }
 
@@ -579,10 +688,18 @@ export default {
   padding-right: 8px;
 }
 
-.material-tip {
+.material-tip,
+.body-tip {
   margin-top: 6px;
   font-size: 12px;
   color: #8b96ba;
+  line-height: 1.6;
+}
+
+.body-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .summary-box {
