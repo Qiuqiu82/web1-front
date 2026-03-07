@@ -43,6 +43,12 @@ const Api = {
   cosMaterialRuleDelete: '/cosmaterial/rule/delete',
   cosMaterialRuleByStyle: '/cosmaterial/rule/by-style',
 
+
+  // custom design
+  cosCustomDesignSave: '/coscustomdesign/save',
+  cosCustomDesignLatest: '/coscustomdesign/latest',
+  cosCustomDesignDetailPrefix: '/coscustomdesign/detail/',
+  cosCustomDesignDelete: '/coscustomdesign/delete',
   // mock pay
   cosPayCreate: '/cospay/create',
   cosPayStatus: '/cospay/status',
