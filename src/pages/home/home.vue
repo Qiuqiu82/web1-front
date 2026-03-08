@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="home-page">
     <section class="hero">
       <div class="hero-main">
@@ -9,8 +9,8 @@
         </p>
 
         <div class="hero-actions">
-          <el-button type="primary" round @click="toBrowse('cos')">浏览 COS 款</el-button>
-          <el-button round @click="toBrowse('suit')">浏览西服款</el-button>
+          <el-button type="primary" round @click="toBrowse('cos')">浏览 COS 款式</el-button>
+          <el-button round @click="toBrowse('suit')">浏览西服款式</el-button>
         </div>
 
         <div class="search-row">
@@ -21,8 +21,8 @@
             @keyup.enter.native="searchProduct"
           >
             <el-select slot="prepend" v-model="activeFeed" style="width: 104px">
-              <el-option label="COS服" value="cos" />
-              <el-option label="西服" value="suit" />
+              <el-option label="COS款" value="cos" />
+              <el-option label="瑗挎湇" value="suit" />
             </el-select>
             <el-button slot="append" icon="el-icon-search" @click="searchProduct" />
           </el-input>
@@ -31,10 +31,10 @@
 
       <div class="hero-side">
         <div class="spotlight" v-for="item in hotCosList.slice(0, 3)" :key="item.id" @click="openRecommend(item, 'cos')">
-          <img :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="热门款" />
+          <img :src="imgUrl((item.huawentuan || '').split(',')[0])" alt="热门款式" />
           <div class="spotlight-info">
-            <div class="name">{{ item.fuzhuangmingcheng || '热门款' }}</div>
-            <div class="meta">热度 {{ item.clicknum || 0 }}</div>
+            <div class="name">{{ item.fuzhuangmingcheng || '热门款式' }}</div>
+            <div class="meta">鐑害 {{ item.clicknum || 0 }}</div>
           </div>
         </div>
       </div>
@@ -55,12 +55,12 @@
     <section class="recommend-block">
       <div class="section-head">
         <div>
-          <h2>热门推荐</h2>
+          <h2>鐑棬鎺ㄨ崘</h2>
           <p>默认按热度排序，优先展示近期关注度更高的款式。</p>
         </div>
         <el-radio-group v-model="activeFeed" size="small">
-          <el-radio-button label="cos">COS 热榜</el-radio-button>
-          <el-radio-button label="suit">西服热榜</el-radio-button>
+          <el-radio-button label="cos">COS 鐑</el-radio-button>
+          <el-radio-button label="suit">瑗挎湇鐑</el-radio-button>
         </el-radio-group>
       </div>
 
@@ -72,12 +72,12 @@
             <div class="sub">{{ item.fuzhuangkuanshi || '风格待完善' }}</div>
             <div class="tags">
               <span>{{ item.mianliaoleibie || '精选面料' }}</span>
-              <span>热度 {{ item.clicknum || 0 }}</span>
+              <span>鐑害 {{ item.clicknum || 0 }}</span>
             </div>
             <div class="bottom-row">
-              <strong>￥{{ formatPrice(item) }}</strong>
+              <strong>¥{{ formatPrice(item) }}</strong>
               <el-button type="text" @click="openRecommend(item, activeFeed)">
-                {{ activeFeed === 'cos' ? '查看详情' : '查看灵感' }}
+                {{ activeFeed === 'cos' ? '鏌ョ湅璇︽儏' : '鏌ョ湅鐏垫劅' }}
               </el-button>
             </div>
           </div>
@@ -88,11 +88,11 @@
     <section class="content-grid">
       <el-card shadow="never" class="intro-card">
         <div slot="header" class="slot-title">
-          <span>{{ systemIntro.title || '品牌故事' }}</span>
+          <span>{{ systemIntro.title || '鍝佺墝鏁呬簨' }}</span>
         </div>
         <div class="intro-media">
-          <img :src="imgUrl(systemIntro.picture1)" alt="介绍图1" />
-          <img :src="imgUrl(systemIntro.picture2)" alt="介绍图2" />
+          <img :src="imgUrl(systemIntro.picture1)" alt="介绍图" />
+          <img :src="imgUrl(systemIntro.picture2)" alt="介绍图" />
         </div>
         <div class="intro-content" v-html="systemIntro.content || '欢迎来到次元定制服装平台。'" />
       </el-card>
@@ -100,7 +100,7 @@
       <el-card shadow="never" class="news-card">
         <div slot="header" class="slot-title between">
           <span>最新资讯</span>
-          <el-button type="text" @click="toBrowse(activeFeed)">前往款式中心</el-button>
+          <el-button type="text" @click="toBrowse(activeFeed)">鍓嶅線娆惧紡涓績</el-button>
         </div>
 
         <div class="news-list" v-if="newsList.length">
@@ -114,7 +114,7 @@
           </div>
         </div>
 
-        <el-empty v-else description="暂无资讯" :image-size="76" />
+        <el-empty v-else description="鏆傛棤璧勮" :image-size="76" />
       </el-card>
     </section>
   </div>
@@ -165,7 +165,7 @@ export default {
     summaryText(text, limit = 60) {
       const plainText = String(text || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
       if (!plainText) {
-        return '暂无内容'
+        return '鏆傛棤鍐呭'
       }
       return plainText.length > limit ? `${plainText.slice(0, limit)}...` : plainText
     },
@@ -184,10 +184,20 @@ export default {
     },
     openRecommend(item, type) {
       if (type === 'cos') {
-        this.$router.push({
+        const target = {
           path: '/index/remaicosfuDetail',
           query: { detailObj: JSON.stringify(item) }
-        })
+        }
+        if (!localStorage.getItem('Token')) {
+          this.$message.info('查看详情前请先登录或注册')
+          this.$authDialogBus.$emit('open', {
+            mode: 'login',
+            role: 'yonghu',
+            redirect: target
+          })
+          return
+        }
+        this.$router.push(target)
         return
       }
       this.$message.info('西服详情页正在升级，可先在款式中心浏览。')

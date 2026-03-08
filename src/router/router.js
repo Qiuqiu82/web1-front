@@ -8,6 +8,7 @@ import Login from '../pages/login/login'
 import Register from '../pages/register/register'
 import CoscartList from '../pages/coscart/list'
 import CosorderList from '../pages/cosorder/list'
+import CosorderCommunication from '../pages/cosorder/communication'
 import CosorderAdmin from '../pages/cosorder/admin'
 import CosorderDesigner from '../pages/cosorder/designer'
 import CosMaterialAdmin from '../pages/cosmaterial/admin'
@@ -55,6 +56,10 @@ export default new VueRouter({
         {
           path: 'cosorder',
           component: CosorderList
+        },
+        {
+          path: 'cosorder-comm',
+          component: CosorderCommunication
         },
         {
           path: 'cosorder-admin',

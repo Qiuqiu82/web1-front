@@ -1,21 +1,28 @@
-<template>
+﻿<template>
   <div class="layout-shell">
     <div class="bg-orb orb-left" />
     <div class="bg-orb orb-right" />
 
     <header class="topbar">
       <div class="brand" @click="$router.push('/index/home')">
-        <div class="brand-mark">定</div>
+        <div class="brand-mark">衣</div>
         <div class="brand-text">
           <div class="brand-cn">角色扮演定制服装工坊</div>
-          <div class="brand-en">个性化定制平台</div>
+          <div class="brand-en">CUSTOM ATELIER PLATFORM</div>
         </div>
       </div>
 
       <nav class="menu">
-        <router-link v-for="item in navMenus" :key="item.path" :to="item.path" class="menu-item">
+        <a
+          v-for="item in navMenus"
+          :key="item.path"
+          href="javascript:void(0)"
+          class="menu-item"
+          :class="{ active: isMenuActive(item) }"
+          @click="handleMenuClick(item)"
+        >
           {{ item.label }}
-        </router-link>
+        </a>
       </nav>
 
       <div class="actions">
@@ -35,14 +42,8 @@
           <el-button type="text" class="logout-btn" @click="logout">退出登录</el-button>
         </template>
         <template v-else>
-          <el-button type="primary" size="mini" round @click="$router.push('/login')">登录</el-button>
-          <el-button
-            size="mini"
-            round
-            @click="$router.push({ path: '/register', query: { role: 'yonghu', pageFlag: 'register' } })"
-          >
-            注册
-          </el-button>
+          <el-button type="primary" size="mini" round @click="openAuth('login', 'yonghu')">登录</el-button>
+          <el-button size="mini" round @click="openAuth('register', 'yonghu')">注册</el-button>
         </template>
       </div>
     </header>
@@ -50,14 +51,40 @@
     <main class="page-wrap">
       <router-view />
     </main>
+
+    <auth-dialog
+      :visible.sync="authDialog.visible"
+      :mode="authDialog.mode"
+      :default-role="authDialog.role"
+      :redirect="authDialog.redirect"
+      @success="handleAuthSuccess"
+      @close="clearAuthRedirect"
+    />
   </div>
 </template>
 
 <script>
+import AuthDialog from '@/components/AuthDialog'
+
 export default {
   name: 'Index',
+  components: {
+    AuthDialog
+  },
+  data() {
+    return {
+      authVersion: 0,
+      authDialog: {
+        visible: false,
+        mode: 'login',
+        role: 'yonghu',
+        redirect: null
+      }
+    }
+  },
   computed: {
     tableName() {
+      this.authVersion
       return localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
     },
     isAdmin() {
@@ -70,31 +97,71 @@ export default {
       return this.tableName === 'yonghu'
     },
     isLoggedIn() {
+      this.authVersion
       return !!localStorage.getItem('Token')
     },
     displayName() {
+      this.authVersion
       return localStorage.getItem('username') || localStorage.getItem('adminName') || '访客'
     },
     navMenus() {
       const menus = [
         { label: '首页', path: '/index/home' },
         { label: '服装浏览', path: '/index/browse' },
-        { label: '我的订单', path: '/index/cosorder' }
+        { label: '我的订单', path: '/index/cosorder', requiresAuth: true, roleHint: 'yonghu' }
       ]
       if (this.isUser) {
-        menus.push({ label: '个人中心', path: '/index/profile' })
+        menus.push({ label: '个人中心', path: '/index/profile', requiresAuth: true, roleHint: 'yonghu' })
       }
       if (this.isAdmin) {
-        menus.push({ label: '管理后台', path: '/admin/dashboard' })
-        menus.push({ label: '权限角色', path: '/admin/roles' })
+        menus.push({ label: '管理后台', path: '/admin/dashboard', requiresAuth: true, roleHint: 'users' })
+        menus.push({ label: '权限角色', path: '/admin/roles', requiresAuth: true, roleHint: 'users' })
       }
       if (this.isDesigner) {
-        menus.push({ label: '设计师工作台', path: '/designer/workbench' })
+        menus.push({ label: '设计师工作台', path: '/designer/workbench', requiresAuth: true, roleHint: 'shejishi' })
       }
       return menus
     }
   },
+  created() {
+    this.$authDialogBus.$on('open', this.handleBusOpen)
+    this.$authDialogBus.$on('close', this.closeAuthDialog)
+  },
+  beforeDestroy() {
+    this.$authDialogBus.$off('open', this.handleBusOpen)
+    this.$authDialogBus.$off('close', this.closeAuthDialog)
+  },
   methods: {
+    isMenuActive(item) {
+      return this.$route.path === item.path
+    },
+    handleMenuClick(item) {
+      if (item.requiresAuth && !this.isLoggedIn) {
+        this.openAuth('login', item.roleHint || 'yonghu', { path: item.path })
+        return
+      }
+      this.$router.push(item.path)
+    },
+    handleBusOpen(payload = {}) {
+      this.openAuth(payload.mode || 'login', payload.role || 'yonghu', payload.redirect || null)
+    },
+    openAuth(mode = 'login', role = 'yonghu', redirect = null) {
+      this.authDialog = {
+        visible: true,
+        mode,
+        role,
+        redirect
+      }
+    },
+    closeAuthDialog() {
+      this.authDialog.visible = false
+    },
+    clearAuthRedirect() {
+      this.authDialog.redirect = null
+    },
+    handleAuthSuccess() {
+      this.authVersion += 1
+    },
     logout() {
       localStorage.removeItem('Token')
       localStorage.removeItem('UserTableName')
@@ -104,8 +171,9 @@ export default {
       localStorage.removeItem('adminName')
       localStorage.removeItem('userid')
       localStorage.removeItem('userId')
+      this.authVersion += 1
       this.$message.success('已退出登录')
-      this.$router.push('/login')
+      this.$router.push('/index/home')
     }
   }
 }
@@ -217,7 +285,7 @@ export default {
   color: #4455d4;
 }
 
-.menu-item.router-link-active {
+.menu-item.active {
   background: linear-gradient(140deg, #5264ff 0%, #7385ff 100%);
   color: #fff;
   box-shadow: 0 8px 16px rgba(82, 100, 255, 0.28);

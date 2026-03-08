@@ -74,6 +74,7 @@
           <template v-else>
             <el-button v-if="canConfirmReceipt(row)" type="primary" size="mini" @click="confirmReceipt(row)">确认收货</el-button>
             <el-button type="primary" plain size="mini" @click="openDetail(row)">查看详情</el-button>
+            <el-button v-if="canCommunicate(row)" size="mini" @click="openCommunication(row)">订单沟通</el-button>
             <el-button size="mini" @click="showItems(row)">查看商品</el-button>
           </template>
         </div>
@@ -127,48 +128,10 @@
         >
           确认收货
         </el-button>
-        <el-button size="mini" @click="showItems(currentOrder)">查看商品</el-button>
-
-        <section class="detail-comm">
-          <el-tabs v-model="commTab">
-            <el-tab-pane label="订单沟通" name="messages">
-              <div v-if="commMessages.length" class="comm-list">
-                <div v-for="msg in commMessages" :key="msg.id" :class="['comm-item', { mine: isMineCommMessage(msg) }]">
-                  <div class="comm-head">
-                    <span>{{ msg.senderName || roleText(msg.senderRole) }}</span>
-                    <small>{{ msg.addtime || '-' }}</small>
-                  </div>
-                  <div class="comm-body">{{ msg.content }}</div>
-                </div>
-              </div>
-              <el-empty v-else description="暂无沟通消息" :image-size="70" />
-
-              <el-input
-                v-model.trim="commDraft"
-                type="textarea"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-                placeholder="输入消息内容，回车发送，Shift+回车换行"
-                @keydown.native="handleCommKeydown"
-              />
-              <div class="comm-actions">
-                <el-button size="mini" @click="loadCommData">刷新沟通</el-button>
-                <el-button type="primary" size="mini" :loading="commSending" @click="sendCommMessage">发送消息</el-button>
-              </div>
-            </el-tab-pane>
-            <el-tab-pane label="交付记录" name="delivery">
-              <div v-if="commDelivery.length" class="delivery-list">
-                <div v-for="(item, idx) in commDelivery" :key="`${item.time}-${idx}`" class="delivery-item">
-                  <div class="delivery-title">{{ item.title || '-' }}</div>
-                  <div class="delivery-desc">{{ item.content || '-' }}</div>
-                  <div class="delivery-meta">{{ item.operatorRole || '-' }} · {{ item.operatorName || '-' }} · {{ item.time || '-' }}</div>
-                </div>
-              </div>
-              <el-empty v-else description="暂无交付记录" :image-size="70" />
-            </el-tab-pane>
-          </el-tabs>
-        </section>
+        <div class="detail-actions">
+          <el-button size="mini" @click="showItems(currentOrder)">查看商品</el-button>
+          <el-button v-if="canCommunicate(currentOrder)" type="primary" plain size="mini" @click="openCommunication(currentOrder)">前往沟通页</el-button>
+        </div>
       </div>
     </el-drawer>
   </div>
@@ -381,6 +344,10 @@ export default {
       if (!row) return false
       return this.normalizeStatus(row.payStatus) === PAY_PAID && this.normalizeStatus(row.orderStatus) === ORDER_SHIPPED
     },
+    canCommunicate(row) {
+      if (!row) return false
+      return this.normalizeStatus(row.payStatus) === PAY_PAID && this.normalizeStatus(row.orderStatus) !== ORDER_CANCELED
+    },
     async load() {
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosorderPage,
@@ -581,6 +548,66 @@ export default {
       this.currentItems = row.items || []
       this.itemsVisible = true
     },
+    getCommSessionList() {
+      return this.list.filter((row) => row && row.id)
+    },
+    selectCommSession(row) {
+      if (!row || !row.id) return
+      this.currentOrder = row
+      this.commTab = 'messages'
+      this.commDraft = ''
+      this.loadCommData()
+    },
+    currentCommPartnerName() {
+      const row = this.currentOrder || {}
+      return row.designerName || row.designer_name || '设计师'
+    },
+    commAvatarText(row) {
+      const base = String((row && (row.orderNo || row.order_no || row.id)) || '会话')
+      return base.slice(-2)
+    },
+    commSessionTitle(row) {
+      return row.orderNo || row.order_no || `订单${row.id}`
+    },
+    commSessionStatus(row) {
+      return this.statusLabel(row)
+    },
+    commSessionPreview(row) {
+      if (this.currentOrder && row.id === this.currentOrder.id && this.commMessages.length) {
+        const last = this.commMessages[this.commMessages.length - 1]
+        const prefix = last.senderName || this.roleText(last.senderRole)
+        return `${prefix}：${last.content}`
+      }
+      if (row.designerStatus && row.designerStatus !== '-') {
+        return `设计师状态：${row.designerStatus}`
+      }
+      return '可在这里和设计师确认定制细节'
+    },
+    commSessionTime(row) {
+      return row.addtime || '-'
+    },
+    commRoleBadge(role) {
+      const text = String(role || '').toUpperCase()
+      if (text === 'USER') return '我'
+      if (text === 'DESIGNER') return '设'
+      return '聊'
+    },
+    messageTime(value) {
+      const text = String(value || '')
+      if (!text) return '--:--'
+      return text.length >= 16 ? text.slice(11, 16) : text
+    },
+    messageDayKey(value) {
+      const text = String(value || '')
+      return text.length >= 10 ? text.slice(0, 10) : text || '未知时间'
+    },
+    messageDayLabel(value) {
+      return this.messageDayKey(value) || '最近消息'
+    },
+    showCommDateDivider(index) {
+      if (index === 0) return true
+      return this.messageDayKey(this.commMessages[index].addtime) !== this.messageDayKey(this.commMessages[index - 1].addtime)
+    },
     normalizeCommMessages(rows = []) {
       return rows.map((row) => ({
         id: row.id,
@@ -669,8 +696,14 @@ export default {
     openDetail(row) {
       this.currentOrder = row
       this.detailVisible = true
-      this.commTab = 'messages'
-      this.loadCommData()
+    },
+    openCommunication(row) {
+      const orderId = row && row.id
+      if (!orderId) {
+        this.$message.warning('订单ID缺失')
+        return
+      }
+      this.$router.push({ path: '/index/cosorder-comm', query: { orderId } })
     }
   }
 }
@@ -985,81 +1018,466 @@ export default {
   padding: 4px 10px;
 }
 
-.detail-comm {
+.detail-actions {
   margin-top: 8px;
-  border: 1px solid #edf1ff;
-  border-radius: 12px;
-  padding: 10px;
-  background: #fbfcff;
-}
-
-.comm-list {
-  max-height: 240px;
-  overflow-y: auto;
-  display: grid;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.comm-item {
-  border: 1px solid #e5ebff;
-  border-radius: 10px;
-  padding: 8px;
-}
-
-.comm-item.mine {
-  border-color: #cad6ff;
-  background: #f3f6ff;
-}
-
-.comm-head {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-comm {
+  margin-top: 12px;
+}
+
+.comm-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 560px;
+  border: 1px solid var(--order-border);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(110, 126, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, #f9fbff 0%, #f3f6ff 100%);
+  box-shadow: 0 18px 42px rgba(75, 95, 171, 0.12);
+  overflow: hidden;
+}
+
+.comm-sidebar {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 14px;
+  padding: 22px 18px;
+  background: rgba(255, 255, 255, 0.84);
+  border-right: 1px solid rgba(109, 126, 233, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.comm-sidebar-head,
+.comm-chat-head,
+.comm-delivery-head,
+.delivery-topline {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  color: #7080ad;
+  gap: 12px;
+}
+
+.comm-kicker {
+  margin: 0;
+  color: #8c98bc;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.comm-sidebar-head h3,
+.comm-chat-head h3,
+.comm-delivery-head h4 {
+  margin: 6px 0 0;
+  color: var(--order-text-main);
+}
+
+.comm-count {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--order-primary-deep);
+  background: var(--order-primary-soft);
+  font-weight: 700;
+}
+
+.comm-sidebar-tip,
+.comm-chat-sub,
+.comm-delivery-head p {
+  color: #7f8cb2;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.comm-session-list {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.comm-session-item {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: rgba(240, 244, 255, 0.88);
+  padding: 14px 12px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.comm-session-item:hover,
+.comm-session-item.active {
+  transform: translateY(-1px);
+  border-color: rgba(92, 109, 233, 0.22);
+  box-shadow: 0 14px 28px rgba(87, 107, 186, 0.12);
+  background: #ffffff;
+}
+
+.comm-avatar,
+.comm-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #596cff 0%, #8fa4ff 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 10px 20px rgba(89, 108, 255, 0.22);
+}
+
+.comm-session-copy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.comm-session-copy strong,
+.comm-message-name,
+.delivery-card strong {
+  color: var(--order-text-main);
+}
+
+.comm-session-copy small,
+.delivery-desc,
+.delivery-meta {
+  color: #7c89af;
+  line-height: 1.6;
+}
+
+.comm-session-copy small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comm-session-copy em {
+  font-style: normal;
+  color: var(--order-primary-deep);
   font-size: 12px;
 }
 
-.comm-body {
-  margin-top: 4px;
-  color: #334a89;
-  line-height: 1.5;
+.comm-session-time,
+.comm-message-time {
+  color: #9ba7c6;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
-.comm-actions {
+.comm-chat-panel {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.comm-chat-head {
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid rgba(109, 126, 233, 0.12);
+}
+
+.comm-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(236, 241, 255, 0.92);
+}
+
+.comm-mode-btn {
+  border: 0;
+  background: transparent;
+  color: #6677a6;
+  font-size: 13px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.comm-mode-btn.active {
+  background: linear-gradient(135deg, #5d6dff 0%, #7b8cff 100%);
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(93, 109, 255, 0.2);
+}
+
+.comm-chat-main,
+.comm-delivery-panel {
+  min-height: 0;
+  display: grid;
+}
+
+.comm-chat-main {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.comm-message-list,
+.delivery-list {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 26px 18px;
+}
+
+.comm-message-list {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.comm-date-divider {
+  display: flex;
+  justify-content: center;
+}
+
+.comm-date-divider span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(229, 235, 255, 0.9);
+  color: #7b88ac;
+  font-size: 12px;
+}
+
+.comm-message-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.comm-message-row.mine {
+  justify-content: flex-end;
+}
+
+.comm-message-row.mine .comm-bubble-wrap {
+  align-items: flex-end;
+}
+
+.comm-message-row.mine .comm-bubble {
+  border-radius: 22px 22px 8px 22px;
+  background: linear-gradient(135deg, #5668ff 0%, #7c90ff 100%);
+  color: #fff;
+  box-shadow: 0 16px 26px rgba(93, 109, 255, 0.2);
+}
+
+.comm-bubble-wrap {
+  max-width: min(78%, 520px);
+  display: grid;
+  gap: 6px;
+}
+
+.comm-message-name {
+  font-size: 12px;
+}
+
+.comm-bubble {
+  border-radius: 22px 22px 22px 8px;
+  padding: 14px 16px;
+  background: #ffffff;
+  color: #33467c;
+  line-height: 1.7;
+  word-break: break-word;
+  box-shadow: 0 12px 26px rgba(109, 126, 185, 0.08);
+}
+
+.comm-composer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 18px 26px 24px;
+  border-top: 1px solid rgba(109, 126, 233, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.comm-refresh-btn,
+.comm-send-btn {
+  border: 0;
+  cursor: pointer;
+}
+
+.comm-refresh-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  color: var(--order-primary-deep);
+  background: var(--order-primary-soft);
+}
+
+.comm-input-box {
+  min-width: 0;
+  border-radius: 22px;
+  background: rgba(241, 244, 255, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(112, 130, 234, 0.14);
+  padding: 14px 16px 10px;
+}
+
+.comm-input-box textarea {
+  width: 100%;
+  min-height: 84px;
+  max-height: 140px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--order-text-main);
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.comm-input-box textarea::placeholder {
+  color: #97a3c3;
+}
+
+.comm-input-foot {
   margin-top: 8px;
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
+  color: #96a2c1;
+  font-size: 12px;
+}
+
+.comm-send-btn {
+  min-width: 84px;
+  height: 50px;
+  padding: 0 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #5567ff 0%, #7c91ff 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 18px 28px rgba(91, 108, 255, 0.22);
+}
+
+.comm-send-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.comm-delivery-panel {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.comm-delivery-head {
+  padding: 22px 26px 0;
 }
 
 .delivery-list {
   display: grid;
-  gap: 8px;
+  gap: 14px;
+  align-content: start;
 }
 
 .delivery-item {
-  border: 1px solid #e6ecff;
-  border-radius: 10px;
-  padding: 8px;
-  background: #fff;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
 }
 
-.delivery-title {
-  color: #33498a;
-  font-weight: 700;
-  font-size: 13px;
+.delivery-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 14px;
+  flex-shrink: 0;
+}
+
+.delivery-dot.status {
+  background: #6d7ff1;
+  box-shadow: 0 0 0 6px rgba(109, 127, 241, 0.14);
+}
+
+.delivery-dot.delivery {
+  background: #2ab47d;
+  box-shadow: 0 0 0 6px rgba(42, 180, 125, 0.14);
+}
+
+.delivery-card {
+  flex: 1;
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 22px rgba(104, 121, 183, 0.08);
 }
 
 .delivery-desc {
-  margin-top: 4px;
-  color: #6676a4;
-  font-size: 13px;
+  margin-top: 8px;
 }
 
 .delivery-meta {
-  margin-top: 4px;
-  color: #95a2c5;
+  margin-top: 8px;
   font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .comm-shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .comm-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(109, 126, 233, 0.12);
+  }
+
+  .comm-session-list {
+    max-height: 260px;
+  }
+
+  .comm-chat-head,
+  .comm-composer,
+  .comm-delivery-head {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .comm-message-list,
+  .delivery-list {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .comm-chat-head,
+  .comm-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .comm-mode-switch {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .comm-mode-btn {
+    flex: 1;
+  }
+
+  .comm-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .comm-refresh-btn,
+  .comm-send-btn {
+    width: 100%;
+  }
+
+  .comm-bubble-wrap {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 900px) {

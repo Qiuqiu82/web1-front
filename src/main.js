@@ -1,4 +1,4 @@
-import Vue from 'vue'
+﻿import Vue from 'vue'
 import VueRouter from 'vue-router'
 import VueResource from 'vue-resource'
 import ElementUI from 'element-ui'
@@ -19,6 +19,7 @@ import Editor from '@/components/Editor'
 import store from './store'
 import Api from './utils/Api'
 import Request from './utils/Request'
+import authDialogBus from './utils/authDialogBus'
 
 Vue.config.productionTip = false
 
@@ -28,6 +29,7 @@ Vue.prototype.isAuth = isAuth
 Vue.prototype.getCurDateTime = getCurDateTime
 Vue.prototype.getCurDate = getCurDate
 Vue.prototype.$proxy = { Api, Request }
+Vue.prototype.$authDialogBus = authDialogBus
 
 Vue.use(VueRouter)
 Vue.use(VueResource)
@@ -46,7 +48,12 @@ Vue.http.headers.common['Token'] = localStorage.getItem('Token')
 Vue.http.interceptors.push(function(request, next) {
   next((response) => {
     if (response.data.code == 401 || response.data.code == 403) {
-      this.$router.replace('/login').catch(() => {})
+      const currentPath = (router.currentRoute && router.currentRoute.path) || ''
+      if (currentPath.indexOf('/index') === 0) {
+        authDialogBus.$emit('open', { mode: 'login', role: 'yonghu' })
+      } else {
+        router.replace('/login').catch(() => {})
+      }
     } else {
       return response
     }
