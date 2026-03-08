@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="designer-workbench-page">
     <section class="bench-hero board-card">
       <div class="hero-copy">
@@ -320,14 +320,40 @@ export default {
     formatMoney(v) {
       return Number(v || 0).toFixed(2)
     },
+    parseDateValue(input) {
+      if (input === undefined || input === null || input === '') return null
+      if (input instanceof Date) {
+        return Number.isNaN(input.getTime()) ? null : input
+      }
+      if (typeof input === 'number') {
+        const time = input < 10000000000 ? input * 1000 : input
+        const date = new Date(time)
+        return Number.isNaN(date.getTime()) ? null : date
+      }
+      const text = String(input).trim()
+      if (!text) return null
+      if (/^\d{10,13}$/.test(text)) {
+        const time = text.length === 10 ? Number(text) * 1000 : Number(text)
+        const date = new Date(time)
+        return Number.isNaN(date.getTime()) ? null : date
+      }
+      const match = text.match(/\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2})?/)
+      if (match) {
+        const normalized = match[0].replace('T', ' ')
+        const date = new Date(normalized.replace(/-/g, '/'))
+        if (!Number.isNaN(date.getTime())) {
+          return date
+        }
+      }
+      const fallback = new Date(text.replace('T', ' ').replace(/-/g, '/'))
+      if (!Number.isNaN(fallback.getTime())) {
+        return fallback
+      }
+      return null
+    },
     parseDayKey(input) {
-      if (!input) return ''
-      const text = String(input)
-      const match = text.match(/\d{4}-\d{2}-\d{2}/)
-      if (match) return match[0]
-      const date = new Date(text.replace(/-/g, '/'))
-      if (Number.isNaN(date.getTime())) return ''
-      return this.dayKey(date)
+      const date = this.parseDateValue(input)
+      return date ? this.dayKey(date) : ''
     },
     dayKey(date) {
       const year = date.getFullYear()
@@ -383,7 +409,10 @@ export default {
       this.kpi.poolCount = this.poolTotal || this.poolList.length
       this.kpi.inProgressCount = mineRows.filter((item) => ['待生产', '生产中'].includes(item.orderStatus)).length
       this.kpi.toShipCount = mineRows.filter((item) => item.orderStatus === '生产中').length
-      this.kpi.todayClaimCount = mineRows.filter((item) => this.parseDayKey(item.designerTakeTime) === today).length
+      this.kpi.todayClaimCount = mineRows.filter((item) => {
+        const claimDay = this.parseDayKey(item.designerTakeTime)
+        return claimDay && claimDay === today
+      }).length
       this.kpi.completedAmount = mineRows
         .filter((item) => item.orderStatus === '已完成')
         .reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)

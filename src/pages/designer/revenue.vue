@@ -1,67 +1,138 @@
 <template>
   <div class="designer-revenue-page">
-    <section class="head-card panel-card">
-      <div>
-        <h2>收益看板</h2>
-        <p>基于现有订单数据生成估算收益，后续接入真实收益流水接口可无缝替换。</p>
+    <section class="hero-card">
+      <div class="hero-copy">
+        <span class="section-kicker">收益看板</span>
+        <h2>当前以“设计师名下已支付订单成交额”为口径，观察阶段表现与履约节奏</h2>
+        <p>
+          本轮收益仍是经营视角的订单金额，不代表最终结算收入。
+          你可以在这里查看累计规模、近 7 日趋势和按订单拆分的流水明细，为后续真实结算模块预留统一口径。
+        </p>
+        <div class="hero-actions">
+          <el-button type="primary" icon="el-icon-refresh" :loading="loading" @click="loadData">刷新看板</el-button>
+          <el-button icon="el-icon-s-order" @click="$router.push('/designer/orders')">查看订单管理</el-button>
+        </div>
       </div>
-      <el-button icon="el-icon-refresh" size="mini" :loading="loading" @click="loadData">刷新</el-button>
+      <div class="hero-side">
+        <div class="formula-card">
+          <span class="formula-label">当前口径说明</span>
+          <strong>仅统计已支付且未取消的本人订单</strong>
+          <p>累计金额、进行中金额、已完成金额与本月订单数全部来自后端聚合接口。</p>
+        </div>
+      </div>
     </section>
 
-    <section class="kpi-grid">
-      <article class="kpi-card panel-card">
-        <div class="kpi-label">累计订单额</div>
-        <div class="kpi-value">¥{{ formatMoney(kpi.totalAmount) }}</div>
-      </article>
-      <article class="kpi-card panel-card">
-        <div class="kpi-label">已完成订单额</div>
-        <div class="kpi-value">¥{{ formatMoney(kpi.completedAmount) }}</div>
-      </article>
-      <article class="kpi-card panel-card">
-        <div class="kpi-label">进行中订单额</div>
-        <div class="kpi-value">¥{{ formatMoney(kpi.inProgressAmount) }}</div>
-      </article>
-      <article class="kpi-card panel-card">
-        <div class="kpi-label">本月订单数</div>
-        <div class="kpi-value">{{ kpi.monthCount }}</div>
+    <section class="summary-grid">
+      <article v-for="item in summaryCards" :key="item.label" class="summary-card">
+        <div class="summary-icon" :style="{ background: item.bg }">
+          <i :class="item.icon"></i>
+        </div>
+        <div>
+          <div class="summary-label">{{ item.label }}</div>
+          <div class="summary-value">{{ item.value }}</div>
+          <div class="summary-sub">{{ item.sub }}</div>
+        </div>
       </article>
     </section>
 
-    <section class="content-grid">
-      <article class="panel-card trend-card">
-        <div class="panel-title">近 7 日金额趋势（估算）</div>
-        <div v-if="trendData.length" class="trend-list">
-          <div class="trend-row" v-for="item in trendData" :key="item.key">
-            <div class="trend-label">{{ item.label }}</div>
+    <section class="chart-grid">
+      <article class="panel-card trend-panel">
+        <div class="panel-head">
+          <div>
+            <h3>近 7 日订单金额趋势</h3>
+            <p>按天聚合设计师名下已支付订单金额。</p>
+          </div>
+          <span class="head-note">金额单位：元</span>
+        </div>
+        <div v-if="trendList.length" class="trend-list">
+          <div v-for="item in trendList" :key="`amount-${item.date}`" class="trend-row">
+            <span class="trend-date">{{ formatShortDate(item.date) }}</span>
             <div class="trend-track">
-              <div class="trend-fill" :style="{ width: `${Math.max((item.amount / trendMax) * 100, 4)}%` }" />
+              <div class="trend-fill amount-fill" :style="{ width: `${item.amountPercent}%` }"></div>
             </div>
-            <div class="trend-value">¥{{ formatMoney(item.amount) }}</div>
+            <strong class="trend-value">¥{{ formatMoney(item.amount) }}</strong>
           </div>
         </div>
-        <div v-else class="empty-tip">暂无趋势数据</div>
+        <el-empty v-else description="近 7 日暂无金额数据" :image-size="88" />
       </article>
 
-      <article class="panel-card flow-card">
-        <div class="panel-title-row">
-          <div class="panel-title">收益流水（估算）</div>
-          <el-tag size="mini" type="warning">估算口径</el-tag>
+      <article class="panel-card trend-panel secondary-panel">
+        <div class="panel-head">
+          <div>
+            <h3>近 7 日订单数量趋势</h3>
+            <p>用于观察近期接单与推进节奏。</p>
+          </div>
+          <span class="head-note">单位：单</span>
         </div>
-
-        <el-table :data="flowRows" border size="small" style="width: 100%">
-          <el-table-column prop="orderNo" label="订单号" min-width="170" />
-          <el-table-column prop="addtime" label="时间" min-width="140" />
-          <el-table-column prop="orderStatus" label="状态" width="110" />
-          <el-table-column label="订单金额" min-width="110">
-            <template slot-scope="scope">¥{{ formatMoney(scope.row.totalAmount) }}</template>
-          </el-table-column>
-          <el-table-column label="估算收益" min-width="110">
-            <template slot-scope="scope">¥{{ formatMoney(scope.row.estimateIncome) }}</template>
-          </el-table-column>
-        </el-table>
-
-        <div class="empty-tip" v-if="!flowRows.length">暂无流水数据</div>
+        <div v-if="trendList.length" class="trend-list">
+          <div v-for="item in trendList" :key="`count-${item.date}`" class="trend-row">
+            <span class="trend-date">{{ formatShortDate(item.date) }}</span>
+            <div class="trend-track secondary-track">
+              <div class="trend-fill count-fill" :style="{ width: `${item.countPercent}%` }"></div>
+            </div>
+            <strong class="trend-value">{{ item.count }}</strong>
+          </div>
+        </div>
+        <el-empty v-else description="近 7 日暂无订单数量数据" :image-size="88" />
       </article>
+    </section>
+
+    <section class="panel-card flow-panel">
+      <div class="panel-head flow-head">
+        <div>
+          <h3>收益流水明细</h3>
+          <p>按订单维度查看时间、状态、金额与设计师处理状态。</p>
+        </div>
+        <div class="toolbar-actions">
+          <el-input
+            v-model.trim="filters.orderNo"
+            size="small"
+            clearable
+            placeholder="搜索订单号"
+            class="toolbar-input"
+            @keyup.enter.native="handleFilter"
+            @clear="handleFilter"
+          />
+          <el-button size="small" type="primary" icon="el-icon-search" @click="handleFilter">查询</el-button>
+        </div>
+      </div>
+
+      <el-table v-loading="loading" :data="flowList" class="flow-table">
+        <el-table-column label="订单号" min-width="180">
+          <template slot-scope="scope">
+            <span class="order-no">{{ scope.row.orderNo || '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="时间" min-width="170" prop="addtime" />
+        <el-table-column label="订单状态" width="120">
+          <template slot-scope="scope">
+            <el-tag :type="orderStatusType(scope.row.orderStatus)" size="mini">{{ scope.row.orderStatus || '-' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="金额" width="130">
+          <template slot-scope="scope">
+            <strong class="amount-text">¥{{ formatMoney(scope.row.totalAmount) }}</strong>
+          </template>
+        </el-table-column>
+        <el-table-column label="设计师状态" width="130">
+          <template slot-scope="scope">
+            <el-tag :type="designerStatusType(scope.row.designerStatus)" size="mini" effect="plain">{{ scope.row.designerStatus || '-' }}</el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-wrap">
+        <el-pagination
+          background
+          layout="total, sizes, prev, pager, next"
+          :current-page="filters.page"
+          :page-size="filters.limit"
+          :page-sizes="[8, 10, 20]"
+          :total="flowTotal"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </section>
   </div>
 </template>
@@ -72,24 +143,54 @@ export default {
   data() {
     return {
       loading: false,
-      orders: [],
-      trendData: [],
-      flowRows: [],
-      kpi: {
+      summary: {
         totalAmount: 0,
         completedAmount: 0,
         inProgressAmount: 0,
-        monthCount: 0
+        monthOrderCount: 0
+      },
+      trendList: [],
+      flowList: [],
+      flowTotal: 0,
+      filters: {
+        page: 1,
+        limit: 8,
+        orderNo: ''
       }
     }
   },
   computed: {
-    trendMax() {
-      if (!this.trendData.length) {
-        return 1
-      }
-      const max = Math.max(...this.trendData.map((item) => item.amount || 0))
-      return max > 0 ? max : 1
+    summaryCards() {
+      return [
+        {
+          label: '累计订单金额',
+          value: `¥${this.formatMoney(this.summary.totalAmount)}`,
+          sub: '当前设计师名下已支付订单累计成交额',
+          icon: 'el-icon-coin',
+          bg: 'linear-gradient(135deg, rgba(79, 110, 247, 0.16), rgba(85, 199, 255, 0.2))'
+        },
+        {
+          label: '已完成订单金额',
+          value: `¥${this.formatMoney(this.summary.completedAmount)}`,
+          sub: '订单状态已完成的累计金额',
+          icon: 'el-icon-circle-check',
+          bg: 'linear-gradient(135deg, rgba(92, 172, 121, 0.16), rgba(163, 230, 193, 0.22))'
+        },
+        {
+          label: '进行中订单金额',
+          value: `¥${this.formatMoney(this.summary.inProgressAmount)}`,
+          sub: '待确认、待生产、生产中、已发货阶段的金额',
+          icon: 'el-icon-loading',
+          bg: 'linear-gradient(135deg, rgba(94, 114, 228, 0.18), rgba(140, 170, 255, 0.22))'
+        },
+        {
+          label: '本月订单数',
+          value: this.summary.monthOrderCount,
+          sub: '本月新增的已支付订单数量',
+          icon: 'el-icon-date',
+          bg: 'linear-gradient(135deg, rgba(100, 149, 237, 0.16), rgba(163, 202, 255, 0.2))'
+        }
+      ]
     }
   },
   created() {
@@ -99,287 +200,434 @@ export default {
     formatMoney(value) {
       return Number(value || 0).toFixed(2)
     },
-    dayKey(date) {
-      const year = date.getFullYear()
-      const month = `${date.getMonth() + 1}`.padStart(2, '0')
-      const day = `${date.getDate()}`.padStart(2, '0')
-      return `${year}-${month}-${day}`
+    parseNumber(value, fallback = 0) {
+      const num = Number(value)
+      return Number.isFinite(num) ? num : fallback
     },
-    parseDate(input) {
-      if (!input) {
-        return null
+    safeText(...values) {
+      for (let i = 0; i < values.length; i += 1) {
+        const value = values[i]
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return String(value).trim()
+        }
       }
-      const text = String(input)
-      const date = new Date(text.replace(/-/g, '/'))
-      if (!Number.isNaN(date.getTime())) {
-        return date
-      }
-      const byText = text.match(/\d{4}-\d{2}-\d{2}/)
-      if (!byText) {
-        return null
-      }
-      const fallback = new Date(byText[0].replace(/-/g, '/'))
-      return Number.isNaN(fallback.getTime()) ? null : fallback
+      return ''
     },
-    normalizeRows(rows = []) {
-      return rows.map((row) => ({
-        id: row.id,
-        orderNo: row.orderNo || row.order_no || '',
-        orderStatus: row.orderStatus || row.order_status || '',
-        addtime: row.addtime || '',
-        totalAmount: Number(row.totalAmount || row.total_amount || 0)
+    orderStatusType(status) {
+      if (status === '已完成') return 'success'
+      if (status === '已发货') return 'primary'
+      if (status === '生产中' || status === '待生产') return 'warning'
+      if (status === '已取消') return 'info'
+      return ''
+    },
+    designerStatusType(status) {
+      if (status === '已交付') return 'success'
+      if (status === '生产中') return 'warning'
+      if (status === '已认领') return 'primary'
+      return 'info'
+    },
+    formatShortDate(dateText) {
+      const text = this.safeText(dateText)
+      if (!text) return '-'
+      return text.slice(5)
+    },
+    normalizeTrend(rows = []) {
+      const amountMax = Math.max(...rows.map((item) => this.parseNumber(item.amount, 0)), 0)
+      const countMax = Math.max(...rows.map((item) => this.parseNumber(item.count, 0)), 0)
+      return rows.map((item) => {
+        const amount = this.parseNumber(item.amount, 0)
+        const count = this.parseNumber(item.count, 0)
+        return {
+          date: this.safeText(item.date),
+          amount,
+          count,
+          amountPercent: amountMax > 0 ? Math.max((amount / amountMax) * 100, 6) : 0,
+          countPercent: countMax > 0 ? Math.max((count / countMax) * 100, 6) : 0
+        }
+      })
+    },
+    normalizeFlow(rows = []) {
+      return rows.map((item) => ({
+        id: item.id,
+        orderNo: this.safeText(item.orderNo, item.order_no),
+        addtime: this.safeText(item.addtime),
+        orderStatus: this.safeText(item.orderStatus, item.order_status),
+        totalAmount: this.parseNumber(this.safeText(item.totalAmount, item.total_amount), 0),
+        designerStatus: this.safeText(item.designerStatus, item.designer_status)
       }))
     },
-    buildTrendRows() {
-      const result = []
-      const now = new Date()
-      for (let i = 6; i >= 0; i -= 1) {
-        const date = new Date(now)
-        date.setDate(now.getDate() - i)
-        result.push({
-          key: this.dayKey(date),
-          label: `${date.getMonth() + 1}/${date.getDate()}`,
-          amount: 0,
-          count: 0
-        })
+    async loadSummary() {
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.designerRevenueSummary,
+        method: 'get',
+        showLoading: false,
+        showError: false
+      })
+      const data = (res && res.data) || {}
+      this.summary = {
+        totalAmount: this.parseNumber(data.totalAmount, 0),
+        completedAmount: this.parseNumber(data.completedAmount, 0),
+        inProgressAmount: this.parseNumber(data.inProgressAmount, 0),
+        monthOrderCount: this.parseNumber(data.monthOrderCount, 0)
       }
-      return result
+      return !!res
+    },
+    async loadTrend() {
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.designerRevenueTrend,
+        method: 'get',
+        showLoading: false,
+        showError: false
+      })
+      this.trendList = this.normalizeTrend((res && res.data) || [])
+      return !!res
+    },
+    async loadFlow() {
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.designerRevenueFlowPage,
+        method: 'get',
+        showLoading: false,
+        showError: false,
+        params: {
+          page: this.filters.page,
+          limit: this.filters.limit,
+          orderNo: this.filters.orderNo
+        }
+      })
+      const data = (res && res.data) || {}
+      this.flowList = this.normalizeFlow(data.list || [])
+      this.flowTotal = this.parseNumber(data.total, 0)
+      return !!res
     },
     async loadData() {
       this.loading = true
       try {
-        const res = await this.$proxy.Request({
-          url: this.$proxy.Api.cosorderDesignerMine,
-          method: 'get',
-          showLoading: false,
-          showError: false,
-          params: { page: 1, limit: 500 }
-        })
-
-        if (!res || res.code !== 0) {
-          this.$message.warning('收益数据加载失败，已显示空状态')
-          this.orders = []
-          this.trendData = []
-          this.flowRows = []
-          this.kpi = {
-            totalAmount: 0,
-            completedAmount: 0,
-            inProgressAmount: 0,
-            monthCount: 0
-          }
-          return
+        const [summaryOk, trendOk, flowOk] = await Promise.all([this.loadSummary(), this.loadTrend(), this.loadFlow()])
+        if (!summaryOk || !trendOk || !flowOk) {
+          this.$message.warning('部分收益数据加载失败，已展示当前可用内容')
         }
-
-        const rows = this.normalizeRows((res.data && res.data.list) || [])
-        this.orders = rows
-
-        const now = new Date()
-        const currentMonth = `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, '0')}`
-
-        const totalAmount = rows.reduce((sum, row) => sum + Number(row.totalAmount || 0), 0)
-        const completedAmount = rows
-          .filter((row) => row.orderStatus === '已完成')
-          .reduce((sum, row) => sum + Number(row.totalAmount || 0), 0)
-        const inProgressAmount = rows
-          .filter((row) => ['待生产', '生产中', '已发货'].includes(row.orderStatus))
-          .reduce((sum, row) => sum + Number(row.totalAmount || 0), 0)
-        const monthCount = rows.filter((row) => {
-          const date = this.parseDate(row.addtime)
-          if (!date) {
-            return false
-          }
-          const key = `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`
-          return key === currentMonth
-        }).length
-
-        this.kpi = {
-          totalAmount,
-          completedAmount,
-          inProgressAmount,
-          monthCount
-        }
-
-        const trendSeed = this.buildTrendRows()
-        const trendMap = trendSeed.reduce((acc, item) => {
-          acc[item.key] = item
-          return acc
-        }, {})
-        rows.forEach((row) => {
-          const date = this.parseDate(row.addtime)
-          if (!date) {
-            return
-          }
-          const key = this.dayKey(date)
-          if (trendMap[key]) {
-            trendMap[key].amount += Number(row.totalAmount || 0)
-            trendMap[key].count += 1
-          }
-        })
-        this.trendData = trendSeed
-
-        this.flowRows = [...rows]
-          .sort((a, b) => {
-            const timeA = this.parseDate(a.addtime)
-            const timeB = this.parseDate(b.addtime)
-            return (timeB ? timeB.getTime() : 0) - (timeA ? timeA.getTime() : 0)
-          })
-          .slice(0, 20)
-          .map((row) => ({
-            ...row,
-            estimateIncome: Number(row.totalAmount || 0) * 0.35
-          }))
       } finally {
         this.loading = false
       }
+    },
+    handleFilter() {
+      this.filters.page = 1
+      this.loadFlow()
+    },
+    handleSizeChange(size) {
+      this.filters.limit = size
+      this.filters.page = 1
+      this.loadFlow()
+    },
+    handleCurrentChange(page) {
+      this.filters.page = page
+      this.loadFlow()
     }
   }
 }
-</script>
-
-<style scoped>
+</script><style scoped>
 .designer-revenue-page {
+  --revenue-primary: #4f6ef7;
+  --revenue-secondary: #7d89ff;
+  --revenue-accent: #55c7ff;
+  --revenue-surface: #ffffff;
+  --revenue-border: rgba(102, 126, 234, 0.12);
+  --revenue-bg: #eef4ff;
+  --revenue-text: #24324a;
+  --revenue-muted: #6f7d96;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hero-card,
+.summary-card,
+.panel-card {
+  background: var(--revenue-surface);
+  border: 1px solid var(--revenue-border);
+  border-radius: 24px;
+  box-shadow: 0 18px 44px rgba(61, 86, 178, 0.08);
+}
+
+.hero-card {
   display: grid;
+  grid-template-columns: minmax(0, 1.5fr) 320px;
+  gap: 22px;
+  padding: 28px;
+  background: linear-gradient(135deg, rgba(79, 110, 247, 0.96), rgba(99, 120, 248, 0.92) 58%, rgba(85, 199, 255, 0.88));
+  color: #fff;
+}
+
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.hero-copy h2 {
+  margin: 16px 0 12px;
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.hero-copy p {
+  margin: 0;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.hero-actions {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+}
+
+.hero-side {
+  display: flex;
+  align-items: stretch;
+}
+
+.formula-card {
+  width: 100%;
+  border-radius: 24px;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.formula-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.formula-card strong {
+  display: block;
+  font-size: 22px;
+  line-height: 1.4;
+}
+
+.formula-card p {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.84);
+  line-height: 1.8;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+}
+
+.summary-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--revenue-primary);
+  font-size: 22px;
+}
+
+.summary-label {
+  font-size: 13px;
+  color: var(--revenue-muted);
+}
+
+.summary-value {
+  margin: 6px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--revenue-text);
+}
+
+.summary-sub {
+  font-size: 12px;
+  color: var(--revenue-muted);
+  line-height: 1.7;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
 }
 
 .panel-card {
-  border-radius: 16px;
-  border: 1px solid #e5ebff;
-  background: #fff;
-  box-shadow: 0 10px 24px rgba(75, 93, 154, 0.1);
+  padding: 22px;
 }
 
-.head-card {
-  padding: 16px;
+.panel-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
-.head-card h2 {
-  color: #26366e;
-  font-size: 24px;
+.panel-head h3 {
+  margin: 0 0 8px;
+  color: var(--revenue-text);
+  font-size: 22px;
 }
 
-.head-card p {
-  margin-top: 6px;
-  color: #8290ba;
+.panel-head p {
+  margin: 0;
+  color: var(--revenue-muted);
+  line-height: 1.7;
 }
 
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.kpi-card {
-  padding: 16px;
-}
-
-.kpi-label {
-  color: #8793b7;
-  font-size: 13px;
-}
-
-.kpi-value {
-  margin-top: 8px;
-  color: #283d86;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.trend-card,
-.flow-card {
-  padding: 16px;
-}
-
-.panel-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.panel-title {
-  color: #2f4486;
-  font-size: 16px;
-  font-weight: 700;
+.head-note {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--revenue-bg);
+  color: var(--revenue-primary);
+  font-size: 12px;
 }
 
 .trend-list {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .trend-row {
   display: grid;
-  grid-template-columns: 60px 1fr 120px;
+  grid-template-columns: 62px minmax(0, 1fr) 96px;
+  gap: 12px;
   align-items: center;
-  gap: 8px;
 }
 
-.trend-label {
-  color: #5d6c99;
+.trend-date {
   font-size: 13px;
+  color: var(--revenue-muted);
 }
 
 .trend-track {
-  height: 10px;
+  height: 12px;
   border-radius: 999px;
-  background: #edf1ff;
+  background: rgba(79, 110, 247, 0.08);
   overflow: hidden;
+}
+
+.secondary-track {
+  background: rgba(85, 199, 255, 0.1);
 }
 
 .trend-fill {
   height: 100%;
+  min-width: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, #6073de 0%, #7f95f0 100%);
+}
+
+.amount-fill {
+  background: linear-gradient(90deg, #4f6ef7, #8ec2ff);
+}
+
+.count-fill {
+  background: linear-gradient(90deg, #55c7ff, #9d8cff);
 }
 
 .trend-value {
-  color: #445587;
+  color: var(--revenue-text);
   text-align: right;
-  font-weight: 600;
-  font-size: 12px;
 }
 
-.empty-tip {
-  color: #99a4c3;
-  text-align: center;
-  padding: 16px 0;
+.flow-head {
+  gap: 18px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-input {
+  width: 220px;
+}
+
+.order-no {
+  color: var(--revenue-text);
+  font-weight: 600;
+}
+
+.amount-text {
+  color: var(--revenue-primary);
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
 }
 
 @media (max-width: 1200px) {
-  .kpi-grid {
+  .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 900px) {
-  .head-card,
-  .kpi-card,
-  .trend-card,
-  .flow-card {
-    padding: 12px;
-  }
-
-  .head-card {
-    flex-wrap: wrap;
-  }
-
-  .kpi-grid {
+  .hero-card {
     grid-template-columns: 1fr;
   }
 
+  .panel-head,
+  .flow-head {
+    flex-direction: column;
+  }
+
+  .toolbar-input {
+    width: 100%;
+  }
+
+  .pagination-wrap {
+    justify-content: flex-start;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card,
+  .summary-card,
+  .panel-card {
+    border-radius: 20px;
+  }
+
+  .hero-card,
+  .panel-card,
+  .summary-card {
+    padding: 18px;
+  }
+
   .trend-row {
-    grid-template-columns: 56px 1fr 90px;
+    grid-template-columns: 58px minmax(0, 1fr) 82px;
   }
 }
 </style>

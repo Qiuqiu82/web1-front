@@ -9,6 +9,7 @@ const Api = {
   yonghuPage: '/yonghu/page',
   shejishiPage: '/shejishi/page',
   shejishiSession: '/shejishi/session',
+  shejishiUpdateMyProfile: '/shejishi/update-my-profile',
   commonCalCosorderTotalAmount: '/cal/cosorder/total_amount',
 
   // product
@@ -59,6 +60,18 @@ const Api = {
   cosCustomDesignLatest: '/coscustomdesign/latest',
   cosCustomDesignDetailPrefix: '/coscustomdesign/detail/',
   cosCustomDesignDelete: '/coscustomdesign/delete',
+
+  // designer portfolio and revenue
+  designerPortfolioPage: '/designer/portfolio/page',
+  designerPortfolioSave: '/designer/portfolio/save',
+  designerPortfolioUpdate: '/designer/portfolio/update',
+  designerPortfolioDelete: '/designer/portfolio/delete',
+  designerPortfolioOrderOptions: '/designer/portfolio/order-options',
+  designerPortfolioLinkOrder: '/designer/portfolio/link-order',
+  designerPortfolioUnlinkOrder: '/designer/portfolio/unlink-order',
+  designerRevenueSummary: '/designer/revenue/summary',
+  designerRevenueTrend: '/designer/revenue/trend',
+  designerRevenueFlowPage: '/designer/revenue/flow/page',
 
   // profile center
   cosProfileAddressPage: '/cosprofile/address/page',
