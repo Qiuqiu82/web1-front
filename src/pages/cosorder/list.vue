@@ -128,6 +128,47 @@
           确认收货
         </el-button>
         <el-button size="mini" @click="showItems(currentOrder)">查看商品</el-button>
+
+        <section class="detail-comm">
+          <el-tabs v-model="commTab">
+            <el-tab-pane label="订单沟通" name="messages">
+              <div v-if="commMessages.length" class="comm-list">
+                <div v-for="msg in commMessages" :key="msg.id" :class="['comm-item', { mine: isMineCommMessage(msg) }]">
+                  <div class="comm-head">
+                    <span>{{ msg.senderName || roleText(msg.senderRole) }}</span>
+                    <small>{{ msg.addtime || '-' }}</small>
+                  </div>
+                  <div class="comm-body">{{ msg.content }}</div>
+                </div>
+              </div>
+              <el-empty v-else description="暂无沟通消息" :image-size="70" />
+
+              <el-input
+                v-model.trim="commDraft"
+                type="textarea"
+                :rows="3"
+                maxlength="500"
+                show-word-limit
+                placeholder="输入消息内容，回车发送，Shift+回车换行"
+                @keydown.native="handleCommKeydown"
+              />
+              <div class="comm-actions">
+                <el-button size="mini" @click="loadCommData">刷新沟通</el-button>
+                <el-button type="primary" size="mini" :loading="commSending" @click="sendCommMessage">发送消息</el-button>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="交付记录" name="delivery">
+              <div v-if="commDelivery.length" class="delivery-list">
+                <div v-for="(item, idx) in commDelivery" :key="`${item.time}-${idx}`" class="delivery-item">
+                  <div class="delivery-title">{{ item.title || '-' }}</div>
+                  <div class="delivery-desc">{{ item.content || '-' }}</div>
+                  <div class="delivery-meta">{{ item.operatorRole || '-' }} · {{ item.operatorName || '-' }} · {{ item.time || '-' }}</div>
+                </div>
+              </div>
+              <el-empty v-else description="暂无交付记录" :image-size="70" />
+            </el-tab-pane>
+          </el-tabs>
+        </section>
       </div>
     </el-drawer>
   </div>
@@ -172,6 +213,11 @@ export default {
       currentItems: [],
       currentOrder: null,
       detailVisible: false,
+      commTab: 'messages',
+      commMessages: [],
+      commDelivery: [],
+      commDraft: '',
+      commSending: false,
       payInfo: {},
       pollTimer: null,
       sessionUser: {
@@ -535,9 +581,96 @@ export default {
       this.currentItems = row.items || []
       this.itemsVisible = true
     },
+    normalizeCommMessages(rows = []) {
+      return rows.map((row) => ({
+        id: row.id,
+        senderRole: row.senderRole || row.sender_role || '',
+        senderName: row.senderName || row.sender_name || '',
+        content: row.content || '',
+        addtime: row.addtime || row.addTime || ''
+      }))
+    },
+    roleText(role) {
+      const text = String(role || '').toUpperCase()
+      if (text === 'DESIGNER') return '设计师'
+      if (text === 'USER') return '用户'
+      return role || '-'
+    },
+    isMineCommMessage(msg) {
+      return String(msg.senderRole || '').toUpperCase() === 'USER'
+    },
+    async loadCommData() {
+      const orderId = this.currentOrder && this.currentOrder.id
+      if (!orderId) {
+        this.commMessages = []
+        this.commDelivery = []
+        return
+      }
+
+      const [msgRes, deliveryRes] = await Promise.all([
+        this.$proxy.Request({
+          url: this.$proxy.Api.cosorderCommMessagePage,
+          method: 'get',
+          showLoading: false,
+          showError: false,
+          params: { orderId, page: 1, limit: 200 }
+        }),
+        this.$proxy.Request({
+          url: this.$proxy.Api.cosorderCommDelivery,
+          method: 'get',
+          showLoading: false,
+          showError: false,
+          params: { orderId }
+        })
+      ])
+
+      this.commMessages = msgRes && msgRes.code === 0 ? this.normalizeCommMessages((msgRes.data && msgRes.data.list) || []) : []
+      this.commDelivery = deliveryRes && deliveryRes.code === 0 ? (deliveryRes.data || []) : []
+    },
+    async sendCommMessage() {
+      const orderId = this.currentOrder && this.currentOrder.id
+      if (!orderId) {
+        this.$message.warning('订单ID缺失')
+        return
+      }
+      if (!this.commDraft) {
+        this.$message.warning('请输入消息内容')
+        return
+      }
+
+      this.commSending = true
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosorderCommSend,
+        method: 'post',
+        dataType: 'json',
+        showError: false,
+        params: {
+          orderId,
+          content: this.commDraft,
+          messageType: 'TEXT'
+        }
+      })
+      this.commSending = false
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && res.msg) || '消息发送失败')
+        return
+      }
+
+      this.commDraft = ''
+      await this.loadCommData()
+    },
+    handleCommKeydown(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        this.sendCommMessage()
+      }
+    },
     openDetail(row) {
       this.currentOrder = row
       this.detailVisible = true
+      this.commTab = 'messages'
+      this.loadCommData()
     }
   }
 }
@@ -850,6 +983,83 @@ export default {
   border-radius: 999px;
   background: #edf1ff;
   padding: 4px 10px;
+}
+
+.detail-comm {
+  margin-top: 8px;
+  border: 1px solid #edf1ff;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fbfcff;
+}
+
+.comm-list {
+  max-height: 240px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.comm-item {
+  border: 1px solid #e5ebff;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.comm-item.mine {
+  border-color: #cad6ff;
+  background: #f3f6ff;
+}
+
+.comm-head {
+  display: flex;
+  justify-content: space-between;
+  color: #7080ad;
+  font-size: 12px;
+}
+
+.comm-body {
+  margin-top: 4px;
+  color: #334a89;
+  line-height: 1.5;
+}
+
+.comm-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.delivery-list {
+  display: grid;
+  gap: 8px;
+}
+
+.delivery-item {
+  border: 1px solid #e6ecff;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fff;
+}
+
+.delivery-title {
+  color: #33498a;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.delivery-desc {
+  margin-top: 4px;
+  color: #6676a4;
+  font-size: 13px;
+}
+
+.delivery-meta {
+  margin-top: 4px;
+  color: #95a2c5;
+  font-size: 12px;
 }
 
 @media (max-width: 900px) {

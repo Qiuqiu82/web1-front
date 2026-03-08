@@ -3,72 +3,114 @@
     <section class="head-card panel-card">
       <div>
         <h2>用户沟通</h2>
-        <p>基于订单会话进行沟通管理，本期先提供会话与订单上下文骨架。</p>
+        <p>围绕订单会话统一管理消息与交付记录。</p>
       </div>
-      <el-input
-        v-model.trim="keyword"
-        size="small"
-        clearable
-        class="search-input"
-        placeholder="搜索订单号 / 用户ID"
-      />
+      <div class="head-actions">
+        <el-input
+          v-model.trim="keyword"
+          size="small"
+          clearable
+          class="search-input"
+          placeholder="搜索订单号 / 用户ID"
+          @clear="loadSessions"
+          @keyup.enter.native="loadSessions"
+        />
+        <el-button size="small" icon="el-icon-search" @click="loadSessions">搜索</el-button>
+        <el-button size="small" icon="el-icon-refresh" :loading="sessionLoading" @click="refreshCurrent">刷新</el-button>
+      </div>
     </section>
 
     <section class="content-grid">
       <article class="panel-card list-card">
         <div class="panel-title">会话列表</div>
-        <div v-if="filteredOrders.length" class="conversation-list">
+        <div v-if="sessionList.length" class="conversation-list">
           <div
-            v-for="item in filteredOrders"
-            :key="item.id"
+            v-for="item in filteredSessions"
+            :key="item.orderId"
             class="conversation-item"
-            :class="{ active: selectedOrder && selectedOrder.id === item.id }"
-            @click="selectedOrder = item"
+            :class="{ active: selectedSession && selectedSession.orderId === item.orderId }"
+            @click="selectSession(item)"
           >
             <div class="conversation-top">
-              <span class="order-no">{{ item.orderNo || `订单${item.id}` }}</span>
+              <span class="order-no">{{ item.orderNo || `订单${item.orderId}` }}</span>
               <span class="status-tag">{{ item.orderStatus || '-' }}</span>
             </div>
             <div class="conversation-sub">用户ID：{{ item.userId || '-' }}</div>
-            <div class="conversation-sub">最近更新时间：{{ item.lastTime || '-' }}</div>
+            <div class="conversation-sub ellipsis">{{ item.lastMessage || '暂无消息，点击开始沟通' }}</div>
+            <div class="conversation-sub">更新时间：{{ item.lastMessageTime || item.designerTakeTime || item.orderTime || '-' }}</div>
           </div>
         </div>
         <el-empty v-else description="暂无会话数据" :image-size="84" />
       </article>
 
-      <article class="panel-card detail-card" v-if="selectedOrder">
+      <article class="panel-card detail-card" v-if="selectedSession">
         <div class="panel-title-row">
-          <div class="panel-title">会话详情（建设中）</div>
-          <el-button type="text" @click="$router.push('/designer/orders')">回到订单管理</el-button>
-        </div>
-
-        <div class="order-summary">
-          <el-tag size="mini" type="success">订单号：{{ selectedOrder.orderNo || selectedOrder.id }}</el-tag>
-          <el-tag size="mini" type="info">用户ID：{{ selectedOrder.userId || '-' }}</el-tag>
-          <el-tag size="mini">履约：{{ selectedOrder.orderStatus || '-' }}</el-tag>
-        </div>
-
-        <div class="timeline">
-          <div class="timeline-item" v-for="item in placeholderTimeline" :key="item.title">
-            <div class="timeline-dot" />
-            <div>
-              <div class="timeline-title">{{ item.title }}</div>
-              <div class="timeline-desc">{{ item.desc }}</div>
-            </div>
+          <div class="panel-title">会话详情</div>
+          <div class="panel-btns">
+            <el-button type="text" @click="$router.push('/designer/orders')">回到订单管理</el-button>
+            <el-button type="text" @click="loadCurrentDetail">重新加载</el-button>
           </div>
         </div>
 
-        <el-input
-          type="textarea"
-          :rows="4"
-          placeholder="消息功能建设中，后续将接入按 orderId 收发消息。"
-          disabled
-        />
-
-        <div class="footer-actions">
-          <el-button type="primary" disabled>发送消息（即将上线）</el-button>
-          <el-button @click="$router.push('/designer/profile')">查看资料与作品</el-button>
+        <div class="order-summary">
+          <el-tag size="mini" type="success">订单号：{{ selectedSession.orderNo || selectedSession.orderId }}</el-tag>
+          <el-tag size="mini" type="info">用户ID：{{ selectedSession.userId || '-' }}</el-tag>
+          <el-tag size="mini">履约：{{ selectedSession.orderStatus || '-' }}</el-tag>
+          <el-tag size="mini" effect="plain">接单：{{ selectedSession.designerStatus || '-' }}</el-tag>
         </div>
+
+        <el-tabs v-model="activePane" class="detail-tabs">
+          <el-tab-pane label="会话消息" name="messages">
+            <div v-if="messages.length" class="message-list">
+              <div
+                v-for="msg in messages"
+                :key="msg.id"
+                :class="['message-item', { me: isMine(msg) }]"
+              >
+                <div class="message-head">
+                  <span>{{ msg.senderName || roleText(msg.senderRole) }}</span>
+                  <small>{{ msg.addtime || '-' }}</small>
+                </div>
+                <div class="message-body">{{ msg.content }}</div>
+              </div>
+            </div>
+            <el-empty v-else description="暂无消息，开始第一条沟通吧" :image-size="72" />
+
+            <div class="send-box">
+              <el-input
+                v-model.trim="draftMessage"
+                type="textarea"
+                :rows="3"
+                maxlength="500"
+                show-word-limit
+                placeholder="输入消息内容，回车发送，Shift+回车换行"
+                @keydown.native="handleMessageKeydown"
+              />
+              <div class="send-actions">
+                <el-button @click="openOrderDetail">查看订单</el-button>
+                <el-button type="primary" :loading="sendLoading" @click="sendMessage">发送</el-button>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="交付记录" name="delivery">
+            <div v-if="deliveryList.length" class="timeline">
+              <div class="timeline-item" v-for="(item, idx) in deliveryList" :key="`${item.time}-${idx}`">
+                <div :class="['timeline-dot', item.type === 'DELIVERY' ? 'delivery' : 'status']" />
+                <div class="timeline-content">
+                  <div class="timeline-title">{{ item.title || '-' }}</div>
+                  <div class="timeline-desc">{{ item.content || '-' }}</div>
+                  <div class="timeline-meta">
+                    <span>{{ item.operatorRole || '-' }}</span>
+                    <span>{{ item.operatorName || '-' }}</span>
+                    <span>{{ item.time || '-' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <el-empty v-else description="暂无交付记录" :image-size="72" />
+          </el-tab-pane>
+        </el-tabs>
       </article>
 
       <article v-else class="panel-card detail-card empty-detail">
@@ -84,56 +126,237 @@ export default {
   data() {
     return {
       keyword: '',
-      orderList: [],
-      selectedOrder: null,
-      placeholderTimeline: [
-        { title: '沟通域规划', desc: '后续将接入按 orderId 的消息查询与发送接口。' },
-        { title: '消息类型扩展', desc: '将支持文本、附件、制作进度卡片等结构化消息。' },
-        { title: '会话状态同步', desc: '将补充未读、已读、催单提醒与系统通知能力。' }
-      ]
+      sessionList: [],
+      selectedSession: null,
+      messages: [],
+      deliveryList: [],
+      draftMessage: '',
+      activePane: 'messages',
+      sessionLoading: false,
+      detailLoading: false,
+      sendLoading: false,
+      pollTimer: null
     }
   },
   computed: {
-    filteredOrders() {
+    filteredSessions() {
       const text = (this.keyword || '').toLowerCase()
-      if (!text) {
-        return this.orderList
-      }
-      return this.orderList.filter((item) => {
+      if (!text) return this.sessionList
+      return this.sessionList.filter((item) => {
         return String(item.orderNo || '').toLowerCase().includes(text) || String(item.userId || '').includes(text)
       })
+    },
+    currentRole() {
+      const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
+      if (tableName === 'shejishi') return 'DESIGNER'
+      if (tableName === 'yonghu') return 'USER'
+      return String(localStorage.getItem('role') || '').toUpperCase()
+    }
+  },
+  watch: {
+    '$route.query.orderId'(val) {
+      if (!val) return
+      const target = this.sessionList.find((item) => String(item.orderId) === String(val))
+      if (target) {
+        this.selectSession(target)
+      }
     }
   },
   created() {
-    this.loadOrders()
+    this.loadSessions()
+  },
+  beforeDestroy() {
+    this.stopPoll()
   },
   methods: {
-    normalizeRows(rows = []) {
+    normalizeSessionRows(rows = []) {
       return rows.map((row) => ({
-        id: row.id,
+        orderId: row.orderId || row.order_id || row.id,
         orderNo: row.orderNo || row.order_no || '',
         userId: row.userId || row.user_id || '',
         orderStatus: row.orderStatus || row.order_status || '',
-        lastTime: row.designerTakeTime || row.designer_take_time || row.addtime || '-'
+        designerStatus: row.designerStatus || row.designer_status || '',
+        orderTime: row.orderTime || row.order_time || row.addtime || '',
+        designerTakeTime: row.designerTakeTime || row.designer_take_time || '',
+        lastMessage: row.lastMessage || row.last_message || '',
+        lastMessageTime: row.lastMessageTime || row.last_message_time || ''
       }))
     },
-    async loadOrders() {
+    normalizeMessageRows(rows = []) {
+      return rows.map((row) => ({
+        id: row.id,
+        senderRole: row.senderRole || row.sender_role || '',
+        senderName: row.senderName || row.sender_name || '',
+        content: row.content || '',
+        messageType: row.messageType || row.message_type || 'TEXT',
+        addtime: row.addtime || row.addTime || ''
+      }))
+    },
+    roleText(role) {
+      const text = String(role || '').toUpperCase()
+      if (text === 'DESIGNER') return '设计师'
+      if (text === 'USER') return '用户'
+      return role || '-'
+    },
+    isMine(msg) {
+      return String(msg.senderRole || '').toUpperCase() === String(this.currentRole || '').toUpperCase()
+    },
+    async loadSessions() {
+      this.sessionLoading = true
       const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerMine,
+        url: this.$proxy.Api.cosorderCommSessionPage,
         method: 'get',
         showLoading: false,
         showError: false,
-        params: { page: 1, limit: 300 }
+        params: {
+          page: 1,
+          limit: 300,
+          keyword: this.keyword || undefined
+        }
       })
+      this.sessionLoading = false
+
       if (!res || res.code !== 0) {
         this.$message.warning('会话数据加载失败，已显示空状态')
-        this.orderList = []
-        this.selectedOrder = null
+        this.sessionList = []
+        this.selectedSession = null
+        this.messages = []
+        this.deliveryList = []
         return
       }
-      const list = this.normalizeRows((res.data && res.data.list) || [])
-      this.orderList = list
-      this.selectedOrder = list[0] || null
+
+      const list = this.normalizeSessionRows((res.data && res.data.list) || [])
+      this.sessionList = list
+      const queryOrderId = this.$route.query.orderId
+      const target = list.find((item) => String(item.orderId) === String(queryOrderId))
+      this.selectedSession = target || list[0] || null
+      if (this.selectedSession) {
+        await this.loadCurrentDetail()
+        this.startPoll()
+      } else {
+        this.stopPoll()
+      }
+    },
+    async loadCurrentDetail() {
+      if (!this.selectedSession || !this.selectedSession.orderId) {
+        this.messages = []
+        this.deliveryList = []
+        return
+      }
+      this.detailLoading = true
+      await Promise.all([this.loadMessages(), this.loadDelivery()])
+      this.detailLoading = false
+    },
+    async loadMessages() {
+      if (!this.selectedSession || !this.selectedSession.orderId) return
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosorderCommMessagePage,
+        method: 'get',
+        showLoading: false,
+        showError: false,
+        params: {
+          orderId: this.selectedSession.orderId,
+          page: 1,
+          limit: 200
+        }
+      })
+      if (!res || res.code !== 0) {
+        this.messages = []
+        return
+      }
+      this.messages = this.normalizeMessageRows((res.data && res.data.list) || [])
+    },
+    async loadDelivery() {
+      if (!this.selectedSession || !this.selectedSession.orderId) return
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosorderCommDelivery,
+        method: 'get',
+        showLoading: false,
+        showError: false,
+        params: { orderId: this.selectedSession.orderId }
+      })
+      if (!res || res.code !== 0) {
+        this.deliveryList = []
+        return
+      }
+      this.deliveryList = (res.data || []).map((item) => ({
+        time: item.time || item.addtime || '-',
+        type: item.type || 'STATUS',
+        title: item.title || '-',
+        content: item.content || '-',
+        operatorRole: item.operatorRole || '-',
+        operatorName: item.operatorName || '-'
+      }))
+    },
+    async selectSession(item) {
+      this.selectedSession = item
+      this.activePane = 'messages'
+      this.$router.replace({ path: '/designer/communication', query: { orderId: item.orderId } })
+      await this.loadCurrentDetail()
+    },
+    async sendMessage() {
+      if (!this.selectedSession || !this.selectedSession.orderId) {
+        this.$message.warning('请先选择订单会话')
+        return
+      }
+      if (!this.draftMessage) {
+        this.$message.warning('请输入消息内容')
+        return
+      }
+
+      this.sendLoading = true
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.cosorderCommSend,
+        method: 'post',
+        dataType: 'json',
+        showError: false,
+        params: {
+          orderId: this.selectedSession.orderId,
+          content: this.draftMessage,
+          messageType: 'TEXT'
+        }
+      })
+      this.sendLoading = false
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && res.msg) || '发送失败')
+        return
+      }
+
+      this.draftMessage = ''
+      await Promise.all([this.loadMessages(), this.loadSessions()])
+    },
+    handleMessageKeydown(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        this.sendMessage()
+      }
+    },
+    openOrderDetail() {
+      if (!this.selectedSession || !this.selectedSession.orderId) return
+      this.$router.push('/designer/orders')
+    },
+    async refreshCurrent() {
+      if (!this.selectedSession) {
+        await this.loadSessions()
+        return
+      }
+      await this.loadCurrentDetail()
+    },
+    startPoll() {
+      this.stopPoll()
+      this.pollTimer = setInterval(() => {
+        if (this.selectedSession && this.selectedSession.orderId) {
+          this.loadMessages()
+          this.loadDelivery()
+        }
+      }, 8000)
+    },
+    stopPoll() {
+      if (this.pollTimer) {
+        clearInterval(this.pollTimer)
+        this.pollTimer = null
+      }
     }
   }
 }
@@ -170,8 +393,14 @@ export default {
   color: #8290ba;
 }
 
+.head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .search-input {
-  width: 280px;
+  width: 260px;
 }
 
 .content-grid {
@@ -193,9 +422,13 @@ export default {
 
 .panel-title-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: space-between;
+}
+
+.panel-btns {
+  display: flex;
+  gap: 8px;
 }
 
 .conversation-list {
@@ -244,15 +477,70 @@ export default {
   font-size: 12px;
 }
 
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .order-summary {
-  margin-top: 4px;
+  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+.detail-tabs {
+  margin-top: 10px;
+}
+
+.message-list {
+  max-height: 340px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.message-item {
+  border: 1px solid #e9eeff;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+.message-item.me {
+  border-color: #cfd9ff;
+  background: #f6f8ff;
+}
+
+.message-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #5f6f9f;
+  font-size: 12px;
+}
+
+.message-body {
+  margin-top: 6px;
+  color: #2f4384;
+  line-height: 1.5;
+}
+
+.send-box {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.send-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .timeline {
-  margin: 14px 0;
   display: grid;
   gap: 10px;
 }
@@ -268,8 +556,16 @@ export default {
   height: 8px;
   border-radius: 50%;
   margin-top: 6px;
-  background: #677de2;
-  box-shadow: 0 0 0 4px rgba(103, 125, 226, 0.16);
+}
+
+.timeline-dot.status {
+  background: #667be1;
+  box-shadow: 0 0 0 4px rgba(102, 123, 225, 0.16);
+}
+
+.timeline-dot.delivery {
+  background: #2cb67d;
+  box-shadow: 0 0 0 4px rgba(44, 182, 125, 0.18);
 }
 
 .timeline-title {
@@ -283,10 +579,13 @@ export default {
   font-size: 13px;
 }
 
-.footer-actions {
-  margin-top: 12px;
+.timeline-meta {
+  margin-top: 4px;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  color: #9aa5c6;
+  font-size: 12px;
 }
 
 .empty-detail {
@@ -295,13 +594,12 @@ export default {
 }
 
 @media (max-width: 900px) {
-  .head-card,
-  .list-card,
-  .detail-card {
-    padding: 12px;
+  .head-card {
+    flex-wrap: wrap;
   }
 
-  .head-card {
+  .head-actions {
+    width: 100%;
     flex-wrap: wrap;
   }
 
@@ -311,6 +609,11 @@ export default {
 
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .list-card,
+  .detail-card {
+    padding: 12px;
   }
 }
 </style>

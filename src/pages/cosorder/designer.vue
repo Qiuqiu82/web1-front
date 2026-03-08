@@ -93,7 +93,7 @@
             <el-table-column prop="designerStatus" label="接单状态" width="120" />
             <el-table-column prop="designerTakeTime" label="认领时间" min-width="160" />
             <el-table-column prop="addtime" label="下单时间" min-width="160" />
-            <el-table-column label="操作" width="260" fixed="right">
+            <el-table-column label="操作" width="340" fixed="right">
               <template slot-scope="scope">
                 <el-button
                   v-if="canStartProduction(scope.row)"
@@ -113,6 +113,7 @@
                 >
                   制作完成并发货
                 </el-button>
+                <el-button size="mini" @click="goComm(scope.row)">去沟通</el-button>
                 <span v-if="!canStartProduction(scope.row) && !canShip(scope.row)" class="noop-tip">当前状态无需操作</span>
               </template>
             </el-table-column>
@@ -470,7 +471,11 @@ export default {
       await this.loadMine()
       if (!this.hasMineOrder(row.id)) {
         this.appendClaimedOrder(row)
+        this.$message.warning('认领已成功，列表同步稍慢，已临时回填此订单')
       }
+    },
+    goComm(row) {
+      this.$router.push({ path: '/designer/communication', query: { orderId: row.id } })
     }
   }
 }
