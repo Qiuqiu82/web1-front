@@ -50,13 +50,39 @@ Vue.http.interceptors.push(function(request, next) {
     if (response.data.code == 401 || response.data.code == 403) {
       const currentPath = (router.currentRoute && router.currentRoute.path) || ''
       if (currentPath.indexOf('/index') === 0) {
-        authDialogBus.$emit('open', { mode: 'login', role: 'yonghu' })
+        router
+          .replace({
+            path: '/index/home',
+            query: {
+              auth: 'login',
+              role: 'yonghu',
+              redirect: currentPath
+            }
+          })
+          .catch(() => {})
       } else if (currentPath.indexOf('/admin') === 0) {
         router.replace('/admin-login').catch(() => {})
       } else if (currentPath.indexOf('/designer') === 0) {
-        router.replace({ path: '/login', query: { role: 'shejishi' } }).catch(() => {})
+        router
+          .replace({
+            path: '/index/home',
+            query: {
+              auth: 'login',
+              role: 'shejishi',
+              redirect: currentPath
+            }
+          })
+          .catch(() => {})
       } else {
-        router.replace('/login').catch(() => {})
+        router
+          .replace({
+            path: '/index/home',
+            query: {
+              auth: 'login',
+              role: 'yonghu'
+            }
+          })
+          .catch(() => {})
       }
     } else {
       return response
@@ -65,7 +91,7 @@ Vue.http.interceptors.push(function(request, next) {
 })
 
 router.afterEach((to, from) => {
-  if (from.path === '/login' || from.path === '/admin-login') {
+  if (from.path === '/login' || from.path === '/register' || from.path === '/admin-login') {
     Vue.http.headers.common['Token'] = localStorage.getItem('Token')
   }
 })

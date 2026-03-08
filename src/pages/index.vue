@@ -58,7 +58,7 @@
       :default-role="authDialog.role"
       :redirect="authDialog.redirect"
       @success="handleAuthSuccess"
-      @close="clearAuthRedirect"
+      @close="handleAuthClose"
     />
   </div>
 </template>
@@ -79,7 +79,8 @@ export default {
         mode: 'login',
         role: 'yonghu',
         redirect: null
-      }
+      },
+      authRouteSignature: ''
     }
   },
   computed: {
@@ -123,6 +124,14 @@ export default {
       return menus
     }
   },
+  watch: {
+    '$route.fullPath': {
+      immediate: true,
+      handler() {
+        this.consumeAuthRouteQuery()
+      }
+    }
+  },
   created() {
     this.$authDialogBus.$on('open', this.handleBusOpen)
     this.$authDialogBus.$on('close', this.closeAuthDialog)
@@ -142,22 +151,58 @@ export default {
       }
       this.$router.push(item.path)
     },
+    normalizeRole(role) {
+      return role === 'shejishi' ? 'shejishi' : 'yonghu'
+    },
     handleBusOpen(payload = {}) {
       this.openAuth(payload.mode || 'login', payload.role || 'yonghu', payload.redirect || null)
+    },
+    consumeAuthRouteQuery() {
+      const auth = this.$route.query.auth
+      if (['login', 'register'].indexOf(auth) === -1) {
+        return
+      }
+      const role = this.normalizeRole(this.$route.query.role)
+      const redirect = typeof this.$route.query.redirect === 'string' ? this.$route.query.redirect : null
+      const signature = [this.$route.path, auth, role, redirect || ''].join('|')
+      if (this.authRouteSignature === signature && this.authDialog.visible) {
+        return
+      }
+      this.authRouteSignature = signature
+      this.openAuth(auth, role, redirect)
     },
     openAuth(mode = 'login', role = 'yonghu', redirect = null) {
       this.authDialog = {
         visible: true,
-        mode,
-        role,
+        mode: mode === 'register' ? 'register' : 'login',
+        role: this.normalizeRole(role),
         redirect
       }
     },
     closeAuthDialog() {
       this.authDialog.visible = false
+      this.clearAuthRedirect()
+      this.clearAuthRouteQuery()
     },
     clearAuthRedirect() {
       this.authDialog.redirect = null
+    },
+    clearAuthRouteQuery() {
+      const query = { ...this.$route.query }
+      let changed = false
+      ;['auth', 'role', 'redirect'].forEach((key) => {
+        if (query[key] !== undefined) {
+          delete query[key]
+          changed = true
+        }
+      })
+      this.authRouteSignature = ''
+      if (changed) {
+        this.$router.replace({ path: this.$route.path, query }).catch(() => {})
+      }
+    },
+    handleAuthClose() {
+      this.closeAuthDialog()
     },
     handleAuthSuccess() {
       this.authVersion += 1
