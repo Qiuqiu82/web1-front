@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <div class="admin-shell">
     <header class="admin-topbar">
       <div class="brand" @click="$router.push('/admin/dashboard')">
-        <div class="brand-mark">COS</div>
+        <div class="brand-mark">AD</div>
         <div>
           <div class="brand-title">管理后台</div>
           <div class="brand-sub">订单协同与运营管理中心</div>
@@ -80,9 +80,9 @@ export default {
       drawerVisible: false,
       menuItems: [
         { label: '数据概览', path: '/admin/dashboard', icon: 'el-icon-data-analysis' },
-        { label: '角色权限管理', path: '/admin/roles', icon: 'el-icon-s-check' },
-        { label: '服装素材管理', path: '/admin/materials', icon: 'el-icon-picture-outline' },
-        { label: '订单生产管理', path: '/admin/orders', icon: 'el-icon-s-order' }
+        { label: '角色权限', path: '/admin/roles', icon: 'el-icon-s-check' },
+        { label: '素材管理', path: '/admin/materials', icon: 'el-icon-picture-outline' },
+        { label: '订单管理', path: '/admin/orders', icon: 'el-icon-s-order' }
       ]
     }
   },
@@ -117,7 +117,7 @@ export default {
       const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
       if (!token) {
         this.$message.warning('请先登录后访问管理后台')
-        this.$router.replace('/login')
+        this.$router.replace('/admin-login')
         return false
       }
       if (tableName !== 'users') {
@@ -146,7 +146,7 @@ export default {
       localStorage.removeItem('userid')
       localStorage.removeItem('userId')
       this.$message.success('已退出登录')
-      this.$router.replace('/login')
+      this.$router.replace('/admin-login')
     }
   }
 }
@@ -155,52 +155,47 @@ export default {
 <style scoped>
 .admin-shell {
   min-height: 100vh;
-  background: linear-gradient(180deg, #eef3ff 0%, #f5f7ff 48%, #f7f8fc 100%);
+  background: linear-gradient(180deg, #f4f7ff 0%, #f7f8fc 100%);
 }
 
 .admin-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  height: 68px;
-  padding: 0 20px;
+  width: min(1380px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 16px 0;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  background: linear-gradient(105deg, #2f4399 0%, #4f63c5 56%, #6f81dc 100%);
-  box-shadow: 0 10px 24px rgba(39, 58, 126, 0.24);
+  align-items: center;
+  gap: 16px;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #fff;
   cursor: pointer;
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.34);
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  color: #fff;
   font-weight: 700;
-  letter-spacing: 1px;
+  background: linear-gradient(135deg, #23346d 0%, #4d67c3 100%);
 }
 
 .brand-title {
   font-size: 18px;
   font-weight: 700;
+  color: #1f2b59;
 }
 
 .brand-sub {
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 12px;
-  color: rgba(239, 244, 255, 0.9);
+  color: #8190ba;
 }
 
 .top-actions {
@@ -209,61 +204,65 @@ export default {
   gap: 10px;
 }
 
-.mobile-trigger {
-  border-radius: 10px;
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+.mobile-trigger,
+.admin-chip {
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #dce3ff;
 }
 
 .admin-chip {
-  height: 36px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-  padding: 0 12px;
+  padding: 8px 12px;
+  color: #304073;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
 }
 
 .logout-btn {
-  color: #f3f6ff;
+  color: #5a66a0;
   font-weight: 600;
 }
 
 .admin-main {
-  display: flex;
-  min-height: calc(100vh - 68px);
+  width: min(1380px, calc(100% - 32px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 18px;
+  padding-bottom: 24px;
+}
+
+.admin-sidebar,
+.mobile-sidebar {
+  background: #fff;
+  border: 1px solid #e4e9ff;
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(77, 93, 151, 0.08);
 }
 
 .admin-sidebar {
-  width: 236px;
-  background: rgba(255, 255, 255, 0.92);
-  border-right: 1px solid #e3e9ff;
-  box-shadow: 8px 0 26px rgba(56, 79, 149, 0.08);
-  padding: 16px 12px;
+  padding: 18px;
+  align-self: start;
+  position: sticky;
+  top: 12px;
 }
 
 .menu-title {
-  margin: 4px 8px 12px;
-  color: #8c97ba;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a95b6;
+  margin-bottom: 12px;
 }
 
 .menu-item {
-  height: 44px;
-  border-radius: 12px;
-  color: #30447f;
-  padding: 0 12px;
   display: flex;
   align-items: center;
   gap: 10px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  color: #33406d;
   cursor: pointer;
-  font-weight: 600;
   transition: all 0.2s ease;
 }
 
@@ -271,41 +270,33 @@ export default {
   margin-top: 8px;
 }
 
-.menu-item:hover {
-  background: #eef2ff;
-}
-
+.menu-item:hover,
 .menu-item.active {
-  color: #fff;
-  background: linear-gradient(135deg, #4c60c7 0%, #6176df 100%);
-  box-shadow: 0 8px 18px rgba(76, 96, 199, 0.28);
+  background: linear-gradient(135deg, #eef2ff 0%, #f7f8ff 100%);
+  color: #2a3b74;
 }
 
 .admin-content {
-  flex: 1;
-  padding: 18px;
   min-width: 0;
 }
 
 .drawer-mask {
   position: fixed;
-  inset: 68px 0 0;
-  background: rgba(17, 24, 48, 0.35);
-  z-index: 45;
+  inset: 0;
+  background: rgba(17, 24, 53, 0.34);
+  z-index: 20;
 }
 
 .mobile-sidebar {
   position: fixed;
+  top: 0;
   left: 0;
-  top: 68px;
-  bottom: 0;
-  width: 250px;
-  background: #fff;
-  border-right: 1px solid #e2e7fb;
-  padding: 14px 12px;
+  width: 280px;
+  height: 100vh;
+  z-index: 30;
   transform: translateX(-100%);
   transition: transform 0.24s ease;
-  z-index: 50;
+  padding: 18px;
 }
 
 .mobile-sidebar.open {
@@ -314,19 +305,15 @@ export default {
 
 .mobile-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  color: #2d3f79;
-  padding: 4px 8px 12px;
-}
-
-.mobile-head i {
-  cursor: pointer;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  color: #22315d;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter,
@@ -345,20 +332,8 @@ export default {
 }
 
 @media (max-width: 900px) {
-  .admin-topbar {
-    padding: 0 14px;
-  }
-
-  .brand-sub {
-    display: none;
-  }
-
-  .admin-content {
-    padding: 12px;
-  }
-
-  .admin-chip {
-    display: none;
+  .admin-main {
+    grid-template-columns: 1fr;
   }
 }
 </style>

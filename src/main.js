@@ -51,6 +51,10 @@ Vue.http.interceptors.push(function(request, next) {
       const currentPath = (router.currentRoute && router.currentRoute.path) || ''
       if (currentPath.indexOf('/index') === 0) {
         authDialogBus.$emit('open', { mode: 'login', role: 'yonghu' })
+      } else if (currentPath.indexOf('/admin') === 0) {
+        router.replace('/admin-login').catch(() => {})
+      } else if (currentPath.indexOf('/designer') === 0) {
+        router.replace({ path: '/login', query: { role: 'shejishi' } }).catch(() => {})
       } else {
         router.replace('/login').catch(() => {})
       }
@@ -61,7 +65,7 @@ Vue.http.interceptors.push(function(request, next) {
 })
 
 router.afterEach((to, from) => {
-  if (from.path == '/login') {
+  if (from.path === '/login' || from.path === '/admin-login') {
     Vue.http.headers.common['Token'] = localStorage.getItem('Token')
   }
 })

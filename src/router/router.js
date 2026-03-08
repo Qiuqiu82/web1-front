@@ -5,6 +5,7 @@ import Index from '../pages/index'
 import Home from '../pages/home/home'
 import Browse from '../pages/browse/index'
 import Login from '../pages/login/login'
+import AdminLogin from '../pages/login/admin-login'
 import Register from '../pages/register/register'
 import CoscartList from '../pages/coscart/list'
 import CosorderList from '../pages/cosorder/list'
@@ -28,6 +29,7 @@ VueRouter.prototype.push = function push(location) {
 }
 
 export default new VueRouter({
+  mode: 'history',
   routes: [
     {
       path: '/',
@@ -132,6 +134,10 @@ export default new VueRouter({
     {
       path: '/login',
       component: Login
+    },
+    {
+      path: '/admin-login',
+      component: AdminLogin
     },
     {
       path: '/register',

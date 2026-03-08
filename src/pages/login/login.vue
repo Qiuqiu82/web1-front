@@ -14,7 +14,7 @@
         <p class="showcase-kicker">COSPLAY · TAILORING · COLLAB</p>
         <h1>进入你的定制工坊控制台</h1>
         <p class="showcase-desc">
-          一个入口，连接管理后台、用户下单中心与设计师工作区。保持协作流畅，也让第一眼更有品牌质感。
+一个入口，连接用户下单中心与设计师工作区。前台登录保持轻量，后台管理员则使用独立入口。
         </p>
       </div>
 
@@ -106,21 +106,12 @@ export default {
   data() {
     return {
       heroStats: [
-        { label: '统一身份入口', value: '3 类' },
+        { label: '前台身份入口', value: '2 类' },
         { label: '订单协作链路', value: '全流程' },
         { label: '定制体验氛围', value: '高级感' }
       ],
       roleMenus: [
-        {
-          roleName: '管理员',
-          tableName: 'users',
-          hasFrontLogin: '是',
-          hasFrontRegister: '否',
-          shortDesc: '系统总控',
-          title: '管理后台',
-          description: '查看核心数据、维护商品与审核业务流程，适合系统管理人员使用。',
-          highlights: ['总览业务数据', '维护全站内容', '统一审核流程']
-        },
+
         {
           roleName: '用户',
           tableName: 'yonghu',
@@ -707,3 +698,4 @@ export default {
   }
 }
 </style>
+

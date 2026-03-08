@@ -193,8 +193,7 @@ export default {
       genderOptions: ['男', '女'],
       loginRoles: [
         { roleName: '用户', tableName: 'yonghu', desc: '查看详情 / 预约下单' },
-        { roleName: '设计师', tableName: 'shejishi', desc: '接单协作 / 工作台' },
-        { roleName: '管理员', tableName: 'users', desc: '系统后台入口' }
+        { roleName: '设计师', tableName: 'shejishi', desc: '接单协作 / 工作台' }
       ],
       registerRoles: [
         { roleName: '用户', tableName: 'yonghu', desc: '创建预约账号' },
@@ -261,17 +260,16 @@ export default {
     syncFromProps() {
       this.activeTab = this.mode === 'register' ? 'register' : 'login'
       this.pendingRoute = this.redirect || null
-      this.loginForm.tableName = this.normalizeRole(this.defaultRole, true)
-      this.registerRole = this.normalizeRole(this.defaultRole, false)
+      this.loginForm.tableName = this.normalizeRole(this.defaultRole)
+      this.registerRole = this.normalizeRole(this.defaultRole)
       this.buildRegisterRules()
       this.$nextTick(() => {
         if (this.$refs.loginForm) this.$refs.loginForm.clearValidate()
         if (this.$refs.registerForm) this.$refs.registerForm.clearValidate()
       })
     },
-    normalizeRole(role, allowAdmin) {
+    normalizeRole(role) {
       if (role === 'shejishi') return 'shejishi'
-      if (allowAdmin && role === 'users') return 'users'
       return 'yonghu'
     },
     close() {
@@ -282,7 +280,7 @@ export default {
       if (this.$refs.loginForm) {
         this.$refs.loginForm.resetFields()
       }
-      this.loginForm.tableName = this.normalizeRole(this.defaultRole, true)
+      this.loginForm.tableName = this.normalizeRole(this.defaultRole)
     },
     changeRegisterRole(role) {
       this.registerRole = role === 'shejishi' ? 'shejishi' : 'yonghu'
@@ -826,4 +824,6 @@ export default {
   }
 }
 </style>
+
+
 

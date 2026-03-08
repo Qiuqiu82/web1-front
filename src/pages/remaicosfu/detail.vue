@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="cos-detail">
     <section class="head-panel">
       <div>
@@ -52,7 +52,7 @@
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="尺码">
-              <el-select v-model="cartForm.sizeCode" placeholder="閫夋嫨灏虹爜" style="width: 100%">
+              <el-select v-model="cartForm.sizeCode" placeholder="选择尺码" style="width: 100%">
                 <el-option v-for="s in sizeOptions" :key="s" :label="s" :value="s" />
               </el-select>
             </el-form-item>
@@ -61,7 +61,7 @@
             <el-form-item label="面料">
               <el-select
                 v-model="cartForm.materialName"
-                placeholder="閫夋嫨闈㈡枡"
+                placeholder="选择面料"
                 style="width: 100%"
                 :disabled="!materialOptions.length"
               >
@@ -74,7 +74,7 @@
 
         <el-form-item label="身材档案">
           <div class="body-row">
-            <el-select v-model="selectedBodyProfileId" placeholder="閫夋嫨妗ｆ" style="width: calc(100% - 140px)">
+            <el-select v-model="selectedBodyProfileId" placeholder="选择档案" style="width: calc(100% - 140px)">
               <el-option
                 v-for="item in bodyProfileOptions"
                 :key="item.id"
@@ -219,15 +219,15 @@ export default {
     },
     designSummary() {
       const parts = []
-      if (this.cartForm.sizeCode) parts.push(`灏虹爜:${this.cartForm.sizeCode}`)
-      if (this.cartForm.materialName) parts.push(`闈㈡枡:${this.cartForm.materialName}`)
-      if (this.selectedBodySnapshot.profileName) parts.push(`韬潗:${this.selectedBodySnapshot.profileName}`)
-      if (this.cartForm.silhouette) parts.push(`鐗堝瀷杞粨:${this.cartForm.silhouette}`)
-      if (this.cartForm.fitType) parts.push(`鏉鹃噺:${this.cartForm.fitType}`)
-      if (this.cartForm.colorTheme) parts.push(`閰嶈壊:${this.cartForm.colorTheme}`)
-      if (this.cartForm.craftTags.length) parts.push(`宸ヨ壓:${this.cartForm.craftTags.join('|')}`)
-      if (this.cartForm.accessoryTags.length) parts.push(`閰嶄欢:${this.cartForm.accessoryTags.join('|')}`)
-      return parts.length ? parts.join(' / ') : '榛樿瀹氬埗'
+      if (this.cartForm.sizeCode) parts.push(`尺码:${this.cartForm.sizeCode}`)
+      if (this.cartForm.materialName) parts.push(`面料:${this.cartForm.materialName}`)
+      if (this.selectedBodySnapshot.profileName) parts.push(`身材:${this.selectedBodySnapshot.profileName}`)
+      if (this.cartForm.silhouette) parts.push(`版型轮廓:${this.cartForm.silhouette}`)
+      if (this.cartForm.fitType) parts.push(`松量:${this.cartForm.fitType}`)
+      if (this.cartForm.colorTheme) parts.push(`配色:${this.cartForm.colorTheme}`)
+      if (this.cartForm.craftTags.length) parts.push(`工艺:${this.cartForm.craftTags.join('|')}`)
+      if (this.cartForm.accessoryTags.length) parts.push(`配件:${this.cartForm.accessoryTags.join('|')}`)
+      return parts.length ? parts.join(' / ') : '默认定制'
     }
   },
   created() {
@@ -255,7 +255,7 @@ export default {
     normalizeBodyProfileRow(row) {
       return {
         id: row.id,
-        profileName: row.profileName || row.profile_name || '榛樿妗ｆ',
+        profileName: row.profileName || row.profile_name || '默认档案',
         heightCm: Number(row.heightCm != null ? row.heightCm : row.height_cm || 0),
         weightKg: Number(row.weightKg != null ? row.weightKg : row.weight_kg || 0),
         waistCm: Number(row.waistCm != null ? row.waistCm : row.waist_cm || 0),
@@ -339,8 +339,8 @@ export default {
     resetFormDefaults() {
       this.cartForm.sizeCode = 'M'
       this.cartForm.materialName = this.materialOptions[0] || this.detail.mianliaoleibie || ''
-      this.cartForm.silhouette = '甯歌'
-      this.cartForm.fitType = '甯歌'
+      this.cartForm.silhouette = '常规'
+      this.cartForm.fitType = '常规'
       this.cartForm.colorTheme = ''
       this.cartForm.craftTags = []
       this.cartForm.accessoryTags = []
@@ -482,7 +482,7 @@ export default {
     async saveDraft(showMessage = true) {
       this.cartForm.sizeCode = this.ensureSizeCode(this.cartForm.sizeCode)
       if (!this.cartForm.sizeCode) {
-        this.$message.warning('璇烽€夋嫨灏虹爜')
+        this.$message.warning('请选择尺码')
         return null
       }
 
@@ -515,7 +515,7 @@ export default {
 
       if (!res || res.code !== 0) {
         if (showMessage) {
-          this.$message.error((res && res.msg) || '淇濆瓨鑽夌澶辫触')
+          this.$message.error((res && res.msg) || '保存草稿失败')
         }
         return null
       }
@@ -578,9 +578,9 @@ export default {
       })
 
       if (res && res.code === 0) {
-        this.$message.success('宸插姞鍏ヨ喘鐗╄溅')
+        this.$message.success('已加入购物车')
         this.customizeDialogVisible = false
-        this.$confirm('宸插姞鍏ヨ喘鐗╄溅锛屾槸鍚﹀墠寰€璐墿杞︼紵', '鎻愮ず', {
+        this.$confirm('已加入购物车锛屾槸鍚﹀墠寰€璐墿杞︼紵', '提示', {
           type: 'success'
         })
           .then(() => this.$router.push('/index/coscart'))
