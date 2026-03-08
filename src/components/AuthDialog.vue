@@ -10,7 +10,8 @@
           <div class="showcase-tag">TAOBAO-STYLE ACCESS</div>
           <h2>先逛首页，喜欢再登录</h2>
           <p>
-            你可以像逛淘宝一样先浏览热门款式与灵感内容；当准备查看详情、下单预约或进入个人中心时，再用居中弹窗快速登录或注册。
+            你可以像逛电商首页一样先浏览热门款式与灵感内容；当准备查看详情、提交预约或进入个人中心时，
+            再通过居中弹窗快速登录或注册，体验更轻、更顺手。
           </p>
 
           <div class="showcase-cards">
@@ -25,7 +26,13 @@
               <span class="note-label">当前模式</span>
               <strong>{{ activeTab === 'login' ? '账号登录' : '注册新账号' }}</strong>
             </div>
-            <p>{{ activeTab === 'login' ? '登录后会返回你刚刚想查看的页面或操作。' : '注册成功后会自动切回登录，让进入体验更顺手。' }}</p>
+            <p>
+              {{
+                activeTab === 'login'
+                  ? '登录后会自动进入你当前对应的工作区域。设计师登录后将直接进入设计师工作台。'
+                  : '注册成功后会自动切回登录，方便继续完成身份进入。'
+              }}
+            </p>
           </div>
         </section>
 
@@ -33,7 +40,7 @@
           <div class="panel-head">
             <div>
               <span class="panel-kicker">WELCOME</span>
-              <h3>{{ activeTab === 'login' ? '欢迎回来' : '创建账号' }}</h3>
+              <h3>{{ activeTab === 'login' ? '欢迎回来' : '快速创建账号' }}</h3>
             </div>
             <div class="tab-switch">
               <button type="button" :class="{ active: activeTab === 'login' }" @click="activeTab = 'login'">登录</button>
@@ -58,8 +65,14 @@
 
             <el-form ref="loginForm" :model="loginForm" :rules="loginRules" label-position="top" class="auth-form compact">
               <el-form-item label="账号" prop="username">
-                <el-input v-model.trim="loginForm.username" prefix-icon="el-icon-user" placeholder="请输入账号" autocomplete="username" />
+                <el-input
+                  v-model.trim="loginForm.username"
+                  prefix-icon="el-icon-user"
+                  placeholder="请输入账号"
+                  autocomplete="username"
+                />
               </el-form-item>
+
               <el-form-item label="密码" prop="password">
                 <el-input
                   v-model.trim="loginForm.password"
@@ -70,6 +83,7 @@
                   autocomplete="current-password"
                 />
               </el-form-item>
+
               <div class="action-row">
                 <el-button type="primary" :loading="loginSubmitting" @click="submitLogin">登录并继续</el-button>
                 <el-button @click="resetLogin">重置</el-button>
@@ -92,61 +106,64 @@
               </button>
             </div>
 
-            <el-form ref="registerForm" :model="registerForm" :rules="registerRules" label-position="top" class="auth-form">
-              <div class="grid-form">
-                <template v-if="registerRole === 'yonghu'">
+            <el-form ref="registerForm" :model="registerForm" :rules="registerRules" label-position="top" class="auth-form register-form">
+              <template v-if="registerRole === 'yonghu'">
+                <div class="form-grid two-col">
                   <el-form-item label="用户账号" prop="yonghuzhanghao">
                     <el-input v-model.trim="registerForm.yonghuzhanghao" placeholder="请输入用户账号" />
                   </el-form-item>
                   <el-form-item label="用户姓名" prop="yonghuxingming">
                     <el-input v-model.trim="registerForm.yonghuxingming" placeholder="请输入用户姓名" />
                   </el-form-item>
-                  <el-form-item label="性别" prop="xingbie">
-                    <el-select v-model="registerForm.xingbie" placeholder="请选择性别" style="width: 100%">
-                      <el-option v-for="item in genderOptions" :key="item" :label="item" :value="item" />
-                    </el-select>
-                  </el-form-item>
-                </template>
-                <template v-else>
+                </div>
+
+                <el-form-item label="性别" prop="xingbie">
+                  <el-radio-group v-model="registerForm.xingbie">
+                    <el-radio v-for="item in genderOptions" :key="item" :label="item">{{ item }}</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </template>
+
+              <template v-else>
+                <div class="form-grid two-col">
                   <el-form-item label="设计师账号" prop="shejishizhanghao">
                     <el-input v-model.trim="registerForm.shejishizhanghao" placeholder="请输入设计师账号" />
                   </el-form-item>
                   <el-form-item label="设计师姓名" prop="shejishixingming">
                     <el-input v-model.trim="registerForm.shejishixingming" placeholder="请输入设计师姓名" />
                   </el-form-item>
-                  <el-form-item label="擅长方向" prop="zhuanchang">
-                    <el-input v-model.trim="registerForm.zhuanchang" placeholder="可选：盔甲 / 制服 / 礼服" />
-                  </el-form-item>
-                  <el-form-item label="个人简介" prop="jianjie" class="full-row">
-                    <el-input v-model="registerForm.jianjie" type="textarea" :rows="3" placeholder="可选：填写设计风格、接单经验和服务特色" />
-                  </el-form-item>
-                </template>
+                </div>
 
+                <div class="form-grid two-col">
+                  <el-form-item label="设计专长">
+                    <el-input v-model.trim="registerForm.zhuanchang" placeholder="例如：舞台服、礼服、改版定制" />
+                  </el-form-item>
+                  <el-form-item label="个人简介">
+                    <el-input v-model.trim="registerForm.jianjie" placeholder="简单介绍你的风格方向" />
+                  </el-form-item>
+                </div>
+              </template>
+
+              <div class="form-grid two-col">
+                <el-form-item label="手机号" prop="lianxifangshi">
+                  <el-input v-model.trim="registerForm.lianxifangshi" placeholder="请输入手机号" />
+                </el-form-item>
+                <el-form-item label="头像地址">
+                  <el-input v-model.trim="registerForm.touxiang" placeholder="可选：输入头像图片地址" />
+                </el-form-item>
+              </div>
+
+              <div class="form-grid two-col">
                 <el-form-item label="密码" prop="mima">
                   <el-input v-model.trim="registerForm.mima" type="password" show-password placeholder="请输入密码" />
                 </el-form-item>
                 <el-form-item label="确认密码" prop="mima2">
                   <el-input v-model.trim="registerForm.mima2" type="password" show-password placeholder="请再次输入密码" />
                 </el-form-item>
-                <el-form-item label="联系电话" prop="lianxifangshi">
-                  <el-input v-model.trim="registerForm.lianxifangshi" placeholder="请输入手机号" />
-                </el-form-item>
-                <el-form-item label="头像" prop="touxiang" class="full-row avatar-row">
-                  <div class="upload-box">
-                    <file-upload
-                      tip="上传头像"
-                      action="file/upload"
-                      :limit="1"
-                      :multiple="true"
-                      :fileUrls="registerForm.touxiang || ''"
-                      @change="handleAvatarChange"
-                    />
-                  </div>
-                </el-form-item>
               </div>
 
               <div class="action-row">
-                <el-button type="primary" :loading="registerSubmitting" @click="submitRegister">注册账号</el-button>
+                <el-button type="primary" :loading="registerSubmitting" @click="submitRegister">注册并继续</el-button>
                 <el-button @click="resetRegister">重置</el-button>
               </div>
             </el-form>
@@ -174,7 +191,7 @@ export default {
       default: 'yonghu'
     },
     redirect: {
-      type: Object,
+      type: [String, Object],
       default: null
     }
   },
@@ -186,13 +203,13 @@ export default {
       registerSubmitting: false,
       registerRole: 'yonghu',
       showcaseCards: [
-        { title: '先浏览', desc: '首页内容始终可见，先种草再决定。' },
-        { title: '再登录', desc: '查看详情、预约下单时再轻量登录。' },
-        { title: '继续操作', desc: '成功后自动回到你刚刚想看的内容。' }
+        { title: '先浏览', desc: '首页内容保持开放，先种草再决定。' },
+        { title: '再登录', desc: '查看详情或提交预约时再轻量登录。' },
+        { title: '直达目标', desc: '设计师登录后直接进入工作台。' }
       ],
       genderOptions: ['男', '女'],
       loginRoles: [
-        { roleName: '用户', tableName: 'yonghu', desc: '查看详情 / 预约下单' },
+        { roleName: '用户', tableName: 'yonghu', desc: '查看详情 / 提交预约' },
         { roleName: '设计师', tableName: 'shejishi', desc: '接单协作 / 工作台' }
       ],
       registerRoles: [
@@ -212,15 +229,15 @@ export default {
       registerForm: {
         xingbie: '',
         yonghuzhanghao: '',
-        shejishizhanghao: '',
-        mima: '',
-        mima2: '',
         yonghuxingming: '',
+        shejishizhanghao: '',
         shejishixingming: '',
-        touxiang: '',
         lianxifangshi: '',
+        touxiang: '',
         zhuanchang: '',
-        jianjie: ''
+        jianjie: '',
+        mima: '',
+        mima2: ''
       },
       registerRules: {}
     }
@@ -232,9 +249,9 @@ export default {
         if (value) {
           this.syncFromProps()
           this.lockScroll(true)
-          return
+        } else {
+          this.lockScroll(false)
         }
-        this.lockScroll(false)
       }
     },
     mode() {
@@ -257,6 +274,9 @@ export default {
       }
       document.body.style.overflow = locked ? 'hidden' : ''
     },
+    normalizeRole(role) {
+      return role === 'shejishi' ? 'shejishi' : 'yonghu'
+    },
     syncFromProps() {
       this.activeTab = this.mode === 'register' ? 'register' : 'login'
       this.pendingRoute = this.redirect || null
@@ -264,13 +284,13 @@ export default {
       this.registerRole = this.normalizeRole(this.defaultRole)
       this.buildRegisterRules()
       this.$nextTick(() => {
-        if (this.$refs.loginForm) this.$refs.loginForm.clearValidate()
-        if (this.$refs.registerForm) this.$refs.registerForm.clearValidate()
+        if (this.$refs.loginForm) {
+          this.$refs.loginForm.clearValidate()
+        }
+        if (this.$refs.registerForm) {
+          this.$refs.registerForm.clearValidate()
+        }
       })
-    },
-    normalizeRole(role) {
-      if (role === 'shejishi') return 'shejishi'
-      return 'yonghu'
     },
     close() {
       this.$emit('update:visible', false)
@@ -303,6 +323,7 @@ export default {
           { pattern: /^1\d{10}$/, message: '请输入正确的手机号', trigger: 'blur' }
         ]
       }
+
       if (this.registerRole === 'shejishi') {
         this.registerRules = {
           ...baseRules,
@@ -314,6 +335,7 @@ export default {
         }
         return
       }
+
       this.registerRules = {
         ...baseRules,
         yonghuzhanghao: [
@@ -324,9 +346,6 @@ export default {
         xingbie: [{ required: true, message: '请选择性别', trigger: 'change' }]
       }
     },
-    handleAvatarChange(fileUrls) {
-      this.registerForm.touxiang = fileUrls.replace(new RegExp(this.$config.baseUrl, 'g'), '')
-    },
     submitLogin() {
       if (this.loginSubmitting) {
         return
@@ -335,34 +354,31 @@ export default {
         if (!valid) {
           return false
         }
-        const loginApi = `${this.loginForm.tableName}/login`
-        const isAdminLogin = this.loginForm.tableName === 'users'
         this.loginSubmitting = true
-        const loginRequest = isAdminLogin
-          ? this.$http.post(loginApi, null, { params: this.loginForm })
-          : this.$http.get(loginApi, { params: this.loginForm })
-
-        loginRequest
+        const roleNameMap = {
+          yonghu: '用户',
+          shejishi: '设计师'
+        }
+        this.$http
+          .get(`${this.loginForm.tableName}/login`, {
+            params: this.loginForm
+          })
           .then((res) => {
             if (res.data.code !== 0) {
               this.$message.error(res.data.msg || '登录失败')
               return
             }
             const token = res.data.token
-            const roleNameMap = {
-              users: '管理员',
-              yonghu: '用户',
-              shejishi: '设计师'
-            }
             localStorage.setItem('Token', token)
             localStorage.setItem('UserTableName', this.loginForm.tableName)
             localStorage.setItem('sessionTable', this.loginForm.tableName)
             localStorage.setItem('username', this.loginForm.username)
             localStorage.setItem('adminName', this.loginForm.username)
-            localStorage.setItem('role', roleNameMap[this.loginForm.tableName] || '')
+            localStorage.setItem('role', roleNameMap[this.loginForm.tableName] || '用户')
             if (this.$http && this.$http.headers && this.$http.headers.common) {
               this.$http.headers.common.Token = token
             }
+
             return this.$http
               .get(`${this.loginForm.tableName}/session`, {
                 headers: { Token: token }
@@ -379,13 +395,18 @@ export default {
                 this.$message.warning('登录成功，但会话信息读取失败')
               })
               .then(() => {
+                const defaultRouteMap = {
+                  shejishi: '/designer/workbench',
+                  yonghu: '/index/home'
+                }
+                const nextRoute =
+                  this.loginForm.tableName === 'shejishi'
+                    ? '/designer/workbench'
+                    : this.pendingRoute || defaultRouteMap[this.loginForm.tableName] || '/index/home'
                 this.$message.success('登录成功')
                 this.$emit('success', { type: 'login', role: this.loginForm.tableName })
-                const nextRoute = this.pendingRoute
                 this.close()
-                if (nextRoute) {
-                  this.$router.push(nextRoute)
-                }
+                this.$router.push(nextRoute)
               })
           })
           .catch(() => {
@@ -431,10 +452,8 @@ export default {
           return false
         }
         this.registerSubmitting = true
-        const url = `${this.registerRole}/register`
-        const payload = this.buildRegisterPayload()
         this.$http
-          .post(url, payload)
+          .post(`${this.registerRole}/register`, this.buildRegisterPayload())
           .then((res) => {
             if (res.data.code === 0) {
               this.$message.success('注册成功，请登录')
@@ -461,6 +480,8 @@ export default {
       if (this.$refs.registerForm) {
         this.$refs.registerForm.resetFields()
       }
+      this.registerRole = this.normalizeRole(this.defaultRole)
+      this.buildRegisterRules()
     }
   }
 }
@@ -514,27 +535,23 @@ export default {
   gap: 24px;
 }
 
-.showcase-tag {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.08);
+.showcase-tag,
+.panel-kicker,
+.note-label {
   font-size: 12px;
   letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .auth-showcase h2 {
-  font-size: 38px;
-  line-height: 1.15;
-  font-family: 'Georgia', 'Times New Roman', 'STSong', serif;
+  font-size: 34px;
+  line-height: 1.28;
+  color: #fff;
 }
 
 .auth-showcase p {
-  line-height: 1.85;
-  color: rgba(237, 241, 255, 0.84);
+  line-height: 1.9;
+  color: rgba(243, 247, 255, 0.92);
 }
 
 .showcase-cards {
@@ -543,200 +560,155 @@ export default {
 }
 
 .showcase-card {
-  padding: 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 16px 18px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  gap: 6px;
 }
 
-.showcase-card strong,
-.showcase-card span {
-  display: block;
+.showcase-card strong {
+  color: #fff;
 }
 
 .showcase-card span {
-  margin-top: 8px;
-  color: rgba(228, 234, 255, 0.76);
+  color: rgba(243, 247, 255, 0.85);
+  font-size: 13px;
 }
 
 .showcase-note {
   margin-top: auto;
-  padding: 20px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255, 241, 214, 0.14), rgba(255, 255, 255, 0.06));
-  border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.note-label {
-  display: block;
-  color: rgba(223, 230, 255, 0.8);
-  font-size: 13px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .showcase-note strong {
-  display: block;
+  display: inline-block;
   margin-top: 6px;
-  color: #fff8ea;
-  font-size: 20px;
+  color: #fff;
+  font-size: 18px;
+}
+
+.showcase-note p {
+  margin-top: 10px;
+  font-size: 13px;
 }
 
 .auth-panel {
-  padding: 34px;
+  padding: 38px 34px;
+  background: linear-gradient(180deg, #fffdf7 0%, #fffaf1 100%);
 }
 
 .panel-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-}
-
-.panel-kicker {
-  display: inline-block;
-  color: #7c86aa;
-  font-size: 12px;
-  letter-spacing: 0.2em;
+  gap: 14px;
 }
 
 .panel-head h3 {
-  margin-top: 10px;
-  color: #17204b;
+  margin-top: 8px;
+  color: #1b2148;
   font-size: 32px;
-  font-family: 'Georgia', 'Times New Roman', 'STSong', serif;
 }
 
 .tab-switch {
   display: inline-flex;
-  gap: 8px;
-  padding: 6px;
+  padding: 4px;
   border-radius: 999px;
-  background: #f2f5ff;
-}
-
-.tab-switch button,
-.role-pill {
-  cursor: pointer;
+  background: #eef2ff;
 }
 
 .tab-switch button {
   border: none;
   background: transparent;
-  color: #5f6d98;
-  padding: 9px 16px;
+  color: #6776a5;
+  height: 38px;
+  padding: 0 18px;
   border-radius: 999px;
-  font-weight: 700;
+  cursor: pointer;
 }
 
 .tab-switch button.active {
-  background: linear-gradient(135deg, #24346f 0%, #5870d7 100%);
-  color: #fff;
+  background: #fff;
+  color: #23346e;
+  box-shadow: 0 8px 18px rgba(85, 102, 172, 0.12);
 }
 
 .role-pills {
-  margin-top: 22px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 24px;
+  margin-bottom: 22px;
 }
 
-.login-roles {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
+.login-roles,
 .register-roles {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .role-pill {
-  border: 1px solid rgba(37, 53, 110, 0.12);
+  padding: 14px 16px;
   border-radius: 18px;
+  border: 1px solid #e7ebfb;
   background: #fff;
-  padding: 14px 14px 12px;
+  color: #31406d;
+  cursor: pointer;
   text-align: left;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-}
-
-.role-pill:hover {
-  transform: translateY(-1px);
-  border-color: rgba(82, 100, 255, 0.28);
-  box-shadow: 0 16px 28px rgba(68, 85, 149, 0.12);
-}
-
-.role-pill.active {
-  background: linear-gradient(135deg, rgba(31, 45, 99, 0.96), rgba(83, 104, 206, 0.92));
-  border-color: transparent;
-}
-
-.role-pill span,
-.role-pill small {
-  display: block;
+  transition: all 0.2s ease;
 }
 
 .role-pill span {
-  color: #24315d;
+  display: block;
   font-weight: 700;
 }
 
 .role-pill small {
+  display: block;
   margin-top: 6px;
-  color: #818cae;
+  color: #7c88af;
 }
 
-.role-pill.active span,
-.role-pill.active small {
-  color: #fffaf1;
+.role-pill.active {
+  border-color: #4f69d7;
+  background: linear-gradient(180deg, #f6f8ff 0%, #edf2ff 100%);
+  box-shadow: 0 12px 22px rgba(79, 105, 215, 0.12);
 }
 
 .auth-form {
-  margin-top: 22px;
+  margin-top: 6px;
 }
 
-.auth-form.compact {
-  max-width: 480px;
-}
-
-.grid-form {
+.form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 14px;
-}
-
-.full-row {
-  grid-column: 1 / -1;
-}
-
-.avatar-row {
-  margin-bottom: 6px;
-}
-
-.upload-box {
-  padding: 14px;
-  border-radius: 18px;
-  border: 1px dashed rgba(79, 97, 180, 0.22);
-  background: linear-gradient(180deg, #f8faff, #fffdf8);
-}
-
-.action-row {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
   gap: 12px;
 }
 
-.action-row .el-button {
-  min-width: 128px;
+.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .auth-panel ::v-deep .el-form-item__label {
   padding-bottom: 8px;
-  color: #2a3769;
+  color: #33416d;
   font-weight: 600;
 }
 
 .auth-panel ::v-deep .el-input__inner,
 .auth-panel ::v-deep .el-textarea__inner {
   border-radius: 16px;
-  border-color: rgba(36, 47, 93, 0.12);
-  background: rgba(255, 255, 255, 0.92);
+  border-color: #dfe6ff;
+  background: #fff;
 }
 
 .auth-panel ::v-deep .el-input__inner {
@@ -745,30 +717,19 @@ export default {
 
 .auth-panel ::v-deep .el-input__inner:focus,
 .auth-panel ::v-deep .el-textarea__inner:focus {
-  border-color: rgba(70, 94, 179, 0.6);
-  box-shadow: 0 0 0 4px rgba(90, 112, 196, 0.1);
+  border-color: #6880df;
+  box-shadow: 0 0 0 4px rgba(98, 122, 214, 0.1);
 }
 
 .auth-panel ::v-deep .el-button--primary {
   border: none;
-  background: linear-gradient(135deg, #22316c 0%, #5870d7 100%);
-  box-shadow: 0 14px 28px rgba(50, 67, 136, 0.2);
-}
-
-.auth-panel ::v-deep .upload .upload-img,
-.auth-panel ::v-deep .el-upload-list .el-upload-list__item,
-.auth-panel ::v-deep .el-upload .el-icon-plus {
-  width: 110px;
-  height: 110px;
-  line-height: 110px;
-  border-radius: 14px;
-  border: 1px dashed #d7def8;
-  background: #f8faff;
+  background: linear-gradient(135deg, #23346e 0%, #4f69d7 100%);
+  box-shadow: 0 14px 26px rgba(79, 105, 215, 0.2);
 }
 
 .auth-fade-enter-active,
 .auth-fade-leave-active {
-  transition: opacity 0.22s ease;
+  transition: opacity 0.2s ease;
 }
 
 .auth-fade-enter,
@@ -784,12 +745,6 @@ export default {
   .auth-showcase {
     border-radius: 30px 30px 0 0;
   }
-
-  .login-roles,
-  .register-roles,
-  .grid-form {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 640px) {
@@ -799,31 +754,23 @@ export default {
 
   .auth-showcase,
   .auth-panel {
-    padding: 22px;
+    padding: 24px 18px;
   }
 
-  .auth-showcase h2 {
-    font-size: 30px;
+  .login-roles,
+  .register-roles,
+  .two-col {
+    grid-template-columns: 1fr;
   }
 
   .panel-head {
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  .action-row {
-    display: block;
-  }
-
-  .action-row .el-button {
-    width: 100%;
-  }
-
-  .action-row .el-button + .el-button {
-    margin-left: 0;
-    margin-top: 12px;
+  .auth-showcase h2,
+  .panel-head h3 {
+    font-size: 26px;
   }
 }
 </style>
-
-
-
