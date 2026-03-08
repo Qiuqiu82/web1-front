@@ -11,6 +11,11 @@ const Api = {
   shejishiSession: '/shejishi/session',
   shejishiUpdateMyProfile: '/shejishi/update-my-profile',
   commonCalCosorderTotalAmount: '/cal/cosorder/total_amount',
+  adminAnalyticsOverview: '/admin/analytics/overview',
+  adminAnalyticsOrderFunnel: '/admin/analytics/order-funnel',
+  adminAnalyticsOrderTrend: '/admin/analytics/order-trend',
+  adminAnalyticsOrderStayDuration: '/admin/analytics/order-stay-duration',
+  adminAnalyticsDesignerEfficiency: '/admin/analytics/designer-efficiency',
 
   // product
   remaicosfuList: '/remaicosfu/list',

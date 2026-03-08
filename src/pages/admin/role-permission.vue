@@ -1,10 +1,41 @@
 <template>
   <div class="role-page">
-    <section class="head-card panel-card">
-      <div>
-        <h2>角色权限管理</h2>
-        <p>当前提供账号与角色台账，权限矩阵与操作日志保留可扩展骨架。</p>
+    <section class="hero-card panel-card">
+      <div class="hero-copy">
+        <div class="hero-kicker">角色权限</div>
+        <h2>先把系统角色边界、页面入口和账号台账讲清楚，再考虑细粒度权限编排</h2>
+        <p>
+          当前页面聚焦三件事：查看管理员、用户、设计师账号台账；明确各角色的页面访问边界；
+          为后续细粒度权限矩阵保留统一展示位置。
+        </p>
       </div>
+      <div class="hero-side">
+        <div class="summary-item">
+          <span>管理员</span>
+          <strong>{{ roleStats.admin }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>用户</span>
+          <strong>{{ roleStats.user }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>设计师</span>
+          <strong>{{ roleStats.designer }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="role-card-grid">
+      <article v-for="item in roleCards" :key="item.role" class="role-card panel-card">
+        <div class="role-icon" :style="{ background: item.bg }">
+          <i :class="item.icon"></i>
+        </div>
+        <div class="role-copy">
+          <strong>{{ item.role }}</strong>
+          <p>{{ item.desc }}</p>
+          <span>{{ item.routes }}</span>
+        </div>
+      </article>
     </section>
 
     <section class="panel-card search-card">
@@ -28,14 +59,25 @@
 
     <section class="panel-card table-card">
       <div class="panel-title-row">
-        <div class="panel-title">账号角色列表</div>
+        <div>
+          <div class="panel-title">账号角色列表</div>
+          <div class="panel-desc">当前基于账号来源表自动汇总，不提供在线变更角色能力。</div>
+        </div>
         <el-button size="mini" icon="el-icon-refresh" @click="loadAccounts" :loading="loading">刷新</el-button>
       </div>
 
       <el-table :data="pagedRows" border v-loading="loading" style="width: 100%">
-        <el-table-column prop="id" label="账号ID" width="100" />
-        <el-table-column prop="username" label="账号" min-width="140" />
-        <el-table-column prop="phone" label="手机号" min-width="140" />
+        <el-table-column prop="id" label="账号ID" width="110" />
+                <el-table-column label="账号 / 名称" min-width="220">
+          <template slot-scope="scope">
+            <div class="identity-cell">
+              <strong>{{ scope.row.account || '-' }}</strong>
+              <span>{{ scope.row.displayName || '未设置名称' }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="phone" label="联系方式" min-width="150" />
+        <el-table-column prop="sourceTable" label="来源表" width="110" align="center" />
         <el-table-column prop="role" label="角色" width="120" align="center">
           <template slot-scope="scope">
             <el-tag size="mini" :type="roleTagType(scope.row.role)">{{ scope.row.role }}</el-tag>
@@ -65,7 +107,8 @@
 
     <section class="bottom-grid">
       <article class="panel-card">
-        <div class="panel-title">权限矩阵（建设中）</div>
+        <div class="panel-title">系统权限矩阵</div>
+        <div class="panel-desc">本轮聚焦“系统角色能力展示”，不提供在线授权修改。</div>
         <div class="matrix-list">
           <div v-for="row in permissionMatrix" :key="row.module" class="matrix-row">
             <div class="matrix-module">{{ row.module }}</div>
@@ -79,14 +122,13 @@
       </article>
 
       <article class="panel-card">
-        <div class="panel-title">操作日志（建设中）</div>
-        <div class="log-list">
-          <div v-for="item in operationLogs" :key="item.title" class="log-item">
-            <div class="log-dot" />
-            <div>
-              <div class="log-title">{{ item.title }}</div>
-              <div class="log-sub">{{ item.desc }}</div>
-            </div>
+        <div class="panel-title">页面访问边界</div>
+        <div class="panel-desc">帮助明确当前系统的菜单级访问范围。</div>
+        <div class="route-list">
+          <div v-for="item in routeRules" :key="item.path" class="route-row">
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.path }}</span>
+            <p>{{ item.desc }}</p>
           </div>
         </div>
       </article>
@@ -108,34 +150,50 @@ export default {
       pageSize: 10,
       accountRows: [],
       permissionMatrix: [
-        { module: '角色与权限', admin: '读写', designer: '只读', user: '无权限' },
-        { module: '服装与素材', admin: '读写', designer: '按需申请', user: '浏览' },
-        { module: '订单与生产', admin: '读写', designer: '履约处理', user: '查看与确认' },
-        { module: '统计分析', admin: '读写', designer: '个人看板', user: '无权限' }
+        { module: '后台概览与统计', admin: '读写', designer: '个人看板', user: '无权限' },
+        { module: '服装与素材管理', admin: '读写', designer: '只读参考', user: '前台浏览' },
+        { module: '订单与生产协同', admin: '读写', designer: '履约处理', user: '查看与确认收货' },
+        { module: '个人中心与资料维护', admin: '系统账号', designer: '维护个人资料与作品', user: '维护地址与身材档案' },
+        { module: '沟通与交付记录', admin: '当前不发送', designer: '会话读写', user: '会话读写' }
       ],
-      operationLogs: [
-        { title: '权限矩阵细粒度配置', desc: '后续将补充按菜单、按钮、数据范围的授权规则。' },
-        { title: '角色变更审批流', desc: '后续将补充角色变更申请、审批、审计追踪。' },
-        { title: '权限变更日志', desc: '后续将补充角色权限历史快照与回滚能力。' }
-      ]
+      routeRules: [
+        { title: '管理员后台', path: '/admin/*', desc: '管理员访问统一后台壳层，处理概览、角色、素材和订单。' },
+        { title: '设计师后台', path: '/designer/*', desc: '设计师访问工作台、订单、沟通、资料和收益页面。' },
+        { title: '用户前台', path: '/index/*', desc: '用户在前台完成浏览、定制、下单、订单沟通和个人中心维护。' },
+        { title: '登录入口', path: '/login /admin-login', desc: '管理员与普通账号使用不同登录落点，角色鉴权在路由和接口双重控制。' }
+      ],
+      roleMeta: {
+        管理员: { icon: 'el-icon-s-tools', bg: '#eef4ff', desc: '负责平台运营、素材治理、订单协同与统计分析。', routes: '后台壳层：/admin/*' },
+        用户: { icon: 'el-icon-user', bg: '#fff7ed', desc: '负责浏览、定制、下单、收货与订单沟通。', routes: '前台壳层：/index/*' },
+        设计师: { icon: 'el-icon-s-custom', bg: '#f3f0ff', desc: '负责认领订单、推进制作、交付沟通、维护作品与收益。', routes: '设计师壳层：/designer/*' }
+      }
     }
   },
   computed: {
+    roleStats() {
+      return this.accountRows.reduce(
+        (acc, row) => {
+          if (row.role === '管理员') acc.admin += 1
+          if (row.role === '用户') acc.user += 1
+          if (row.role === '设计师') acc.designer += 1
+          return acc
+        },
+        { admin: 0, user: 0, designer: 0 }
+      )
+    },
+    roleCards() {
+      return ['管理员', '用户', '设计师'].map((role) => ({
+        role,
+        ...this.roleMeta[role]
+      }))
+    },
     filteredRows() {
       const keyword = (this.searchForm.keyword || '').toLowerCase()
       const role = this.searchForm.role
       return this.accountRows.filter((row) => {
-        const roleMatch = !role || row.role === role
-        if (!roleMatch) {
-          return false
-        }
-        if (!keyword) {
-          return true
-        }
-        const idText = String(row.id || '')
-        const accountText = String(row.username || '').toLowerCase()
-        const phoneText = String(row.phone || '')
-        return idText.includes(keyword) || accountText.includes(keyword) || phoneText.includes(keyword)
+        if (role && row.role !== role) return false
+        if (!keyword) return true
+        return [row.id, row.account, row.displayName, row.phone, row.sourceTable].some((item) => String(item || '').toLowerCase().includes(keyword))
       })
     },
     pagedRows() {
@@ -158,61 +216,71 @@ export default {
       return 'status-on'
     },
     pick(item, keys, fallback = '') {
-      if (!item || typeof item !== 'object') {
-        return fallback
-      }
+      if (!item || typeof item !== 'object') return fallback
       for (let i = 0; i < keys.length; i += 1) {
-        const key = keys[i]
-        if (item[key] !== undefined && item[key] !== null && item[key] !== '') {
-          return item[key]
+        const value = item[keys[i]]
+        if (value !== undefined && value !== null && value !== '') {
+          return value
         }
       }
       return fallback
     },
-    buildRows(list, roleName) {
-      if (!Array.isArray(list)) {
-        return []
+    normalizeAccount(item) {
+      return this.pick(item, [
+        'username',
+        'userName',
+        'account',
+        'loginName',
+        'yonghuzhanghao',
+        'shejishizhanghao'
+      ], '-')
+    },
+    normalizeDisplayName(item) {
+      const displayName = this.pick(item, [
+        'name',
+        'realName',
+        'displayName',
+        'nickname',
+        'yonghuxingming',
+        'shejishixingming'
+      ], '')
+      if (displayName) {
+        return displayName
       }
+      return this.normalizeAccount(item)
+    },
+    buildRows(list, roleName, sourceTable) {
+      if (!Array.isArray(list)) return []
       return list.map((item) => ({
         id: this.pick(item, ['id', 'userid', 'userId'], '-'),
-        username: this.pick(item, ['username', 'yonghuming', 'shejishiming', 'name'], '-'),
+        account: this.normalizeAccount(item),
+        displayName: this.normalizeDisplayName(item),
         phone: this.pick(item, ['mobile', 'phone', 'lianxifangshi'], '-'),
-        status: this.pick(item, ['status', 'sfsh', 'enableStatus'], '正常'),
+        status: this.pick(item, ['status', 'sfsh', 'enableStatus'], '-'),
         addtime: this.pick(item, ['addtime', 'createTime', 'insertTime', 'create_time'], '-'),
-        role: roleName
+        role: roleName,
+        sourceTable
       }))
     },
     async loadAccounts() {
       this.loading = true
-      const [adminRes, userRes, designerRes] = await Promise.all([
-        this.$proxy.Request({
-          url: this.$proxy.Api.usersPage,
-          method: 'get',
-          showLoading: false,
-          params: { page: 1, limit: 100 }
-        }),
-        this.$proxy.Request({
-          url: this.$proxy.Api.yonghuPage,
-          method: 'get',
-          showLoading: false,
-          params: { page: 1, limit: 100 }
-        }),
-        this.$proxy.Request({
-          url: this.$proxy.Api.shejishiPage,
-          method: 'get',
-          showLoading: false,
-          params: { page: 1, limit: 100 }
-        })
-      ])
+      try {
+        const [adminRes, userRes, designerRes] = await Promise.all([
+          this.$proxy.Request({ url: this.$proxy.Api.usersPage, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 200 } }),
+          this.$proxy.Request({ url: this.$proxy.Api.yonghuPage, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 200 } }),
+          this.$proxy.Request({ url: this.$proxy.Api.shejishiPage, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 200 } })
+        ])
 
-      const adminRows = this.buildRows((((adminRes || {}).data || {}).list) || [], '管理员')
-      const userRows = this.buildRows((((userRes || {}).data || {}).list) || [], '用户')
-      const designerRows = this.buildRows((((designerRes || {}).data || {}).list) || [], '设计师')
-      this.accountRows = [...adminRows, ...userRows, ...designerRows]
+        const adminRows = this.buildRows((((adminRes || {}).data || {}).list) || [], '管理员', 'users')
+        const userRows = this.buildRows((((userRes || {}).data || {}).list) || [], '用户', 'yonghu')
+        const designerRows = this.buildRows((((designerRes || {}).data || {}).list) || [], '设计师', 'shejishi')
+        this.accountRows = [...adminRows, ...userRows, ...designerRows]
 
-      this.loading = false
-      if (!this.accountRows.length) {
-        this.$message.warning('当前未获取到账号数据，请检查后端分页接口')
+        if (!adminRes || !userRes || !designerRes) {
+          this.$message.warning('部分账号台账加载失败，已展示可用数据')
+        }
+      } finally {
+        this.loading = false
       }
     },
     onSearch() {
@@ -237,159 +305,241 @@ export default {
 <style scoped>
 .role-page {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .panel-card {
-  border-radius: 16px;
-  border: 1px solid #e5ebff;
+  border-radius: 24px;
+  border: 1px solid #e7ebfb;
   background: #fff;
-  box-shadow: 0 10px 24px rgba(75, 93, 154, 0.1);
+  box-shadow: 0 14px 32px rgba(84, 99, 183, 0.08);
 }
 
-.head-card {
-  padding: 16px;
+.hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) 320px;
+  gap: 18px;
+  padding: 24px 26px;
+  background: linear-gradient(135deg, #f4f7ff 0%, #ffffff 48%, #f0f3ff 100%);
 }
 
-.head-card h2 {
-  color: #26366e;
-  font-size: 24px;
+.hero-kicker {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #eef1ff;
+  color: #5b6ef5;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
 }
 
-.head-card p {
+.hero-card h2 {
+  margin-top: 12px;
+  font-size: 30px;
+  line-height: 1.35;
+  color: #202a4a;
+}
+
+.hero-card p {
+  margin-top: 12px;
+  line-height: 1.85;
+  color: #7f8bb2;
+}
+
+.hero-side {
+  display: grid;
+  gap: 12px;
+}
+
+.summary-item {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #e2e8ff;
+}
+
+.summary-item span {
+  color: #7f8bb2;
+  font-size: 12px;
+}
+
+.summary-item strong {
+  display: block;
   margin-top: 6px;
-  color: #8290ba;
+  color: #202a4a;
+  font-size: 26px;
 }
 
-.search-card {
-  padding: 14px;
+.role-card-grid,
+.bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.search-form {
+.bottom-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.role-card {
+  padding: 18px;
   display: flex;
-  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
 }
 
-.table-card {
-  padding: 14px;
+.role-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5b6ef5;
+  font-size: 22px;
+}
+
+.role-copy strong,
+.panel-title {
+  color: #202a4a;
+}
+
+.role-copy p,
+.panel-desc,
+.route-row p {
+  margin-top: 8px;
+  color: #7f8bb2;
+  line-height: 1.7;
+}
+
+.identity-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.identity-cell strong {
+  color: #202a4a;
+}
+
+.identity-cell span {
+  color: #7f8bb2;
+  font-size: 12px;
+}
+.role-copy span,
+.route-row span {
+  display: block;
+  margin-top: 10px;
+  color: #5b6ef5;
+  font-size: 12px;
+}
+
+.search-card,
+.table-card,
+.bottom-grid > .panel-card {
+  padding: 22px;
 }
 
 .panel-title-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
 .panel-title {
-  color: #2f4486;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
 }
 
-.status-chip {
-  display: inline-block;
-  min-width: 58px;
-  text-align: center;
-  border-radius: 999px;
-  padding: 2px 10px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.status-on {
-  color: #2f7a4c;
-  background: #e8f7ee;
-}
-
-.status-off {
-  color: #9c4f58;
-  background: #fbecee;
-}
-
 .pagination {
-  margin-top: 14px;
-  text-align: right;
-}
-
-.bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.bottom-grid .panel-card {
-  padding: 14px;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .matrix-list,
-.log-list {
-  margin-top: 12px;
+.route-list {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.matrix-row {
-  border-radius: 10px;
-  border: 1px solid #ebefff;
-  background: #f8faff;
-  padding: 10px;
+.matrix-row,
+.route-row {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #f8f9ff;
 }
 
 .matrix-module {
-  color: #344b8f;
-  font-weight: 600;
+  color: #202a4a;
+  font-weight: 700;
 }
 
 .matrix-tags {
-  margin-top: 8px;
+  margin-top: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-}
-
-.log-item {
-  display: flex;
   gap: 10px;
-  align-items: flex-start;
-  padding: 8px 0;
-  border-bottom: 1px dashed #e6ebff;
 }
 
-.log-item:last-child {
-  border-bottom: none;
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 66px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
 }
 
-.log-dot {
-  margin-top: 6px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #6b7fe0;
-  box-shadow: 0 0 0 4px rgba(107, 127, 224, 0.14);
+.status-on {
+  color: #198754;
+  background: #e9f9ef;
 }
 
-.log-title {
-  color: #304683;
-  font-weight: 600;
+.status-off {
+  color: #b26c00;
+  background: #fff4df;
 }
 
-.log-sub {
-  margin-top: 4px;
-  color: #8b95b7;
-  font-size: 13px;
-}
-
-@media (max-width: 900px) {
-  .head-card,
-  .search-card,
-  .table-card,
-  .bottom-grid .panel-card {
-    padding: 12px;
+@media (max-width: 1200px) {
+  .role-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+@media (max-width: 960px) {
+  .hero-card,
   .bottom-grid {
     grid-template-columns: 1fr;
+  }
+
+  .panel-title-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 720px) {
+  .role-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-card,
+  .table-card,
+  .bottom-grid > .panel-card,
+  .hero-card {
+    padding: 18px;
+  }
+
+  .pagination {
+    justify-content: flex-start;
+    overflow: auto;
   }
 }
 </style>
