@@ -1,48 +1,24 @@
 <template>
   <div class="designer-workbench-page">
-    <section class="bench-hero board-card">
-      <div class="hero-copy">
-        <div class="hero-kicker">Designer Center</div>
-        <h2>把接单、制作、沟通和交付，收拢进一个设计师工作台</h2>
-        <p>
-          登录后即可快速查看待接订单、正在推进的任务、今日接单节奏以及个人资料完成度，
-          同时从一个入口跳转到沟通、订单和档案页面。
-        </p>
-        <div class="hero-actions">
-          <button v-for="item in quickActions" :key="item.path" type="button" class="action-chip" @click="go(item.path)">
-            <i :class="item.icon"></i>
-            <span>{{ item.label }}</span>
-          </button>
-        </div>
+    <section class="page-toolbar">
+      <div class="page-copy">
+        <span class="page-tag">{{ '\u5de5\u4f5c\u53f0' }}</span>
+        <h2>{{ texts.heroTitle }}</h2>
+        <p>{{ texts.heroDesc }}</p>
       </div>
-      <div class="hero-side">
-        <div class="date-chip">
-          <i class="el-icon-date"></i>
-          <span>{{ todayText }}</span>
-        </div>
-        <div class="profile-card-mini">
-          <div class="profile-head">
-            <strong>{{ displayName }}</strong>
-            <span>档案完成度 {{ profileCompletion }}%</span>
-          </div>
-          <div class="completion-track">
-            <div class="completion-fill" :style="{ width: `${profileCompletion}%` }"></div>
-          </div>
-          <p>{{ profileHint }}</p>
-        </div>
+      <div class="page-actions">
+        <div class="mini-chip"><i class="el-icon-date"></i><span>{{ todayText }}</span></div>
+        <button v-for="item in quickActions" :key="item.path" type="button" class="action-chip" @click="go(item.path)">
+          <i :class="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </button>
       </div>
     </section>
 
     <section class="metric-grid">
       <article v-for="item in metricCards" :key="item.label" class="metric-card board-card">
-        <div class="metric-icon" :style="{ background: item.bg }">
-          <i :class="item.icon"></i>
-        </div>
-        <div>
-          <div class="metric-label">{{ item.label }}</div>
-          <div class="metric-value">{{ item.value }}</div>
-          <div class="metric-sub">{{ item.sub }}</div>
-        </div>
+        <div class="metric-icon" :style="{ background: item.bg }"><i :class="item.icon"></i></div>
+        <div><div class="metric-label">{{ item.label }}</div><div class="metric-value">{{ item.value }}</div><div class="metric-sub">{{ item.sub }}</div></div>
       </article>
     </section>
 
@@ -50,149 +26,78 @@
       <div class="dashboard-main-column">
         <article class="board-card task-card">
           <div class="section-head">
-            <div>
-              <h3>今日任务焦点</h3>
-              <p>按“待接单 / 生产中 / 待交付”划分，优先推进关键节点。</p>
-            </div>
-            <el-button size="mini" icon="el-icon-refresh" :loading="loading" @click="loadData">刷新数据</el-button>
+            <div><h3>{{ texts.focusTitle }}</h3><p>{{ texts.focusDesc }}</p></div>
+            <el-button size="mini" icon="el-icon-refresh" :loading="loading" @click="loadData">{{ texts.refresh }}</el-button>
           </div>
           <div class="task-grid">
             <div class="task-column">
-              <div class="task-head">
-                <strong>待接单</strong>
-                <span>{{ poolOrders.length }} 条</span>
-              </div>
+              <div class="task-head"><strong>{{ texts.poolGroup }}</strong><span>{{ poolOrders.length }} {{ texts.unit }}</span></div>
               <div v-if="poolOrders.length" class="task-list">
                 <div v-for="item in poolOrders" :key="`pool-${item.id}`" class="task-row">
-                  <div>
-                    <div class="task-title">{{ item.orderNo || item.id }}</div>
-                    <div class="task-meta">用户 {{ item.userId || '-' }} · ¥{{ formatMoney(item.totalAmount) }}</div>
-                  </div>
-                  <el-button size="mini" type="primary" :loading="actionLoadingKey === `claim-${item.id}`" @click="claim(item)">领取</el-button>
+                  <div><div class="task-title">{{ item.orderNo || item.id }}</div><div class="task-meta">{{ texts.userLabel }} {{ item.userId || '-' }} | {{ currency }}{{ formatMoney(item.totalAmount) }}</div></div>
+                  <el-button size="mini" type="primary" :loading="actionLoadingKey === `claim-${item.id}`" @click="claim(item)">{{ texts.claim }}</el-button>
                 </div>
               </div>
-              <div v-else class="empty-tip">暂时没有待领取的订单。</div>
+              <div v-else class="empty-tip">{{ texts.emptyPool }}</div>
             </div>
 
             <div class="task-column">
-              <div class="task-head">
-                <strong>制作中</strong>
-                <span>{{ producingOrders.length }} 条</span>
-              </div>
+              <div class="task-head"><strong>{{ texts.producingGroup }}</strong><span>{{ producingOrders.length }} {{ texts.unit }}</span></div>
               <div v-if="producingOrders.length" class="task-list">
                 <div v-for="item in producingOrders" :key="`prod-${item.id}`" class="task-row">
-                  <div>
-                    <div class="task-title">{{ item.orderNo || item.id }}</div>
-                    <div class="task-meta">{{ item.orderStatus }} · {{ item.designerTakeTime || '-' }}</div>
-                  </div>
-                  <el-button
-                    v-if="canStartProduction(item)"
-                    size="mini"
-                    type="primary"
-                    :loading="actionLoadingKey === `start-${item.id}`"
-                    @click="startProduction(item)"
-                  >开始制作</el-button>
-                  <el-button v-else size="mini" @click="openCommunication(item)">去沟通</el-button>
+                  <div><div class="task-title">{{ item.orderNo || item.id }}</div><div class="task-meta">{{ item.orderStatus || '-' }} | {{ item.designerTakeTime || '-' }}</div></div>
+                  <el-button v-if="canStartProduction(item)" size="mini" type="primary" :loading="actionLoadingKey === `start-${item.id}`" @click="startProduction(item)">{{ texts.startProduction }}</el-button>
+                  <el-button v-else size="mini" @click="openCommunication(item)">{{ texts.goComm }}</el-button>
                 </div>
               </div>
-              <div v-else class="empty-tip">当前没有处于制作中的订单。</div>
+              <div v-else class="empty-tip">{{ texts.emptyProducing }}</div>
             </div>
 
             <div class="task-column">
-              <div class="task-head">
-                <strong>待交付</strong>
-                <span>{{ deliveryOrders.length }} 条</span>
-              </div>
+              <div class="task-head"><strong>{{ texts.deliveryGroup }}</strong><span>{{ deliveryOrders.length }} {{ texts.unit }}</span></div>
               <div v-if="deliveryOrders.length" class="task-list">
                 <div v-for="item in deliveryOrders" :key="`ship-${item.id}`" class="task-row">
-                  <div>
-                    <div class="task-title">{{ item.orderNo || item.id }}</div>
-                    <div class="task-meta">{{ item.orderStatus }} · 建议补充交付说明</div>
-                  </div>
-                  <el-button size="mini" type="success" :loading="actionLoadingKey === `ship-${item.id}`" @click="shipOrder(item)">完成并发货</el-button>
+                  <div><div class="task-title">{{ item.orderNo || item.id }}</div><div class="task-meta">{{ texts.waitingShip }} | {{ currency }}{{ formatMoney(item.totalAmount) }}</div></div>
+                  <el-button size="mini" type="primary" :loading="actionLoadingKey === `ship-${item.id}`" @click="shipOrder(item)">{{ texts.shipNow }}</el-button>
                 </div>
               </div>
-              <div v-else class="empty-tip">当前没有待交付订单。</div>
+              <div v-else class="empty-tip">{{ texts.emptyDelivery }}</div>
             </div>
           </div>
-        </article>
-
-        <article class="board-card chart-card">
-          <div class="section-head">
-            <div>
-              <h3>订单状态分布</h3>
-              <p>帮助你直观看到当前手头订单的阶段比例。</p>
-            </div>
-            <el-button type="text" @click="go('/designer/orders')">查看订单列表</el-button>
-          </div>
-          <div v-if="statusDistribution.length" class="status-list">
-            <div v-for="item in statusDistribution" :key="item.label" class="status-row">
-              <div class="status-copy">
-                <strong>{{ item.label }}</strong>
-              </div>
-              <div class="status-meta">
-                <div class="status-progress">
-                  <div class="status-progress-inner" :style="{ width: `${item.percent}%` }"></div>
-                </div>
-                <b>{{ item.count }}</b>
-              </div>
-            </div>
-          </div>
-          <div v-else class="empty-tip">暂时还没有可统计的订单状态。</div>
         </article>
       </div>
 
       <div class="dashboard-side-column">
         <article class="board-card side-card">
-          <div class="section-head compact">
-            <h3>近 7 日处理趋势</h3>
+          <div class="section-head compact"><h3>{{ texts.distributionTitle }}</h3></div>
+          <div v-if="statusDistribution.length" class="distribution-list">
+            <div v-for="item in statusDistribution" :key="item.label" class="distribution-row">
+              <div class="distribution-meta"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+              <div class="distribution-track"><div class="distribution-fill" :style="{ width: distributionWidth(item.count) }"></div></div>
+            </div>
           </div>
+          <div v-else class="empty-tip">{{ texts.emptyDistribution }}</div>
+        </article>
+
+        <article class="board-card side-card">
+          <div class="section-head compact"><h3>{{ texts.trendTitle }}</h3></div>
           <div v-if="trendData.length" class="trend-list">
-            <div v-for="item in trendData" :key="item.key" class="trend-row">
+            <div v-for="item in trendData" :key="item.label" class="trend-row">
               <div class="trend-label">{{ item.label }}</div>
-              <div class="trend-track">
-                <div class="trend-fill" :style="{ width: `${Math.max((item.count / trendMax) * 100, 6)}%` }"></div>
-              </div>
-              <div class="trend-value">{{ item.count }}</div>
+              <div class="trend-bar"><span :style="{ width: trendWidth(item.count) }"></span></div>
+              <strong>{{ item.count }}</strong>
             </div>
           </div>
-          <div v-else class="empty-tip">暂时没有处理趋势数据。</div>
+          <div v-else class="empty-tip">{{ texts.emptyTrend }}</div>
         </article>
 
         <article class="board-card side-card">
-          <div class="section-head compact">
-            <h3>收入概览</h3>
-          </div>
+          <div class="section-head compact"><h3>{{ texts.incomeTitle }}</h3></div>
           <div class="income-list">
-            <div class="income-row">
-              <span>累计承接金额</span>
-              <strong>¥{{ formatMoney(totalOrderAmount) }}</strong>
-            </div>
-            <div class="income-row">
-              <span>已完成订单额</span>
-              <strong>¥{{ formatMoney(completedOrderAmount) }}</strong>
-            </div>
-            <div class="income-row">
-              <span>待交付订单数</span>
-              <strong>{{ kpi.toShipCount }}</strong>
-            </div>
+            <div class="income-row"><span>{{ texts.totalAmount }}</span><strong>{{ currency }}{{ formatMoney(totalOrderAmount) }}</strong></div>
+            <div class="income-row"><span>{{ texts.completedAmount }}</span><strong>{{ currency }}{{ formatMoney(completedOrderAmount) }}</strong></div>
+            <div class="income-row"><span>{{ texts.pendingShipCount }}</span><strong>{{ kpi.toShipCount }}</strong></div>
           </div>
-        </article>
-
-        <article class="board-card side-card">
-          <div class="section-head compact">
-            <h3>热门灵感</h3>
-          </div>
-          <div v-if="hotList.length" class="hot-list">
-            <div v-for="item in hotList" :key="item.id" class="hot-row" @click="toCosDetail(item)">
-              <img :src="coverUrl(item)" alt="热门款式" />
-              <div>
-                <strong>{{ item.fuzhuangmingcheng || '热门款式' }}</strong>
-                <span>热度 {{ item.clicknum || 0 }}</span>
-              </div>
-            </div>
-          </div>
-          <div v-else class="empty-tip">暂时还没有热门灵感内容。</div>
         </article>
       </div>
     </section>
@@ -200,182 +105,135 @@
 </template>
 
 <script>
+const STATUS_PENDING_PRODUCTION = '\u5f85\u751f\u4ea7'
+const STATUS_PRODUCING = '\u751f\u4ea7\u4e2d'
+const STATUS_SHIPPED = '\u5df2\u53d1\u8d27'
+const STATUS_FINISHED = '\u5df2\u5b8c\u6210'
+const STATUS_CANCELLED = '\u5df2\u53d6\u6d88'
+const TEXTS = {
+  heroTitle: '\u628a\u63a5\u5355\u3001\u5236\u4f5c\u3001\u6c9f\u901a\u548c\u4ea4\u4ed8\uff0c\u6536\u62e2\u8fdb\u4e00\u4e2a\u8bbe\u8ba1\u5e08\u5de5\u4f5c\u53f0',
+  heroDesc: '\u767b\u5f55\u540e\u5373\u53ef\u5feb\u901f\u67e5\u770b\u5f85\u63a5\u8ba2\u5355\u3001\u6b63\u5728\u63a8\u8fdb\u7684\u4efb\u52a1\u3001\u4eca\u65e5\u63a5\u5355\u8282\u594f\u4ee5\u53ca\u4e2a\u4eba\u8d44\u6599\u5b8c\u6210\u5ea6\u3002',
+  profileCompletion: '\u6863\u6848\u5b8c\u6210\u5ea6 ',
+  focusTitle: '\u4eca\u65e5\u4efb\u52a1\u7126\u70b9',
+  focusDesc: '\u6309\u201c\u5f85\u63a5\u5355 / \u5236\u4f5c\u4e2d / \u5f85\u4ea4\u4ed8\u201d\u5206\u7ec4\uff0c\u4f18\u5148\u63a8\u8fdb\u5173\u952e\u8282\u70b9\u3002',
+  refresh: '\u5237\u65b0\u6570\u636e',
+  poolGroup: '\u5f85\u63a5\u5355',
+  producingGroup: '\u5236\u4f5c\u4e2d',
+  deliveryGroup: '\u5f85\u4ea4\u4ed8',
+  unit: '\u6761',
+  userLabel: '\u7528\u6237',
+  claim: '\u8ba4\u9886',
+  startProduction: '\u5f00\u59cb\u5236\u4f5c',
+  goComm: '\u53bb\u6c9f\u901a',
+  shipNow: '\u53bb\u53d1\u8d27',
+  waitingShip: '\u5f85\u53d1\u8d27',
+  emptyPool: '\u6682\u65f6\u6ca1\u6709\u5f85\u9886\u53d6\u7684\u8ba2\u5355\u3002',
+  emptyProducing: '\u5f53\u524d\u6ca1\u6709\u5904\u4e8e\u5236\u4f5c\u4e2d\u7684\u8ba2\u5355\u3002',
+  emptyDelivery: '\u5f53\u524d\u6ca1\u6709\u5f85\u53d1\u8d27\u7684\u8ba2\u5355\u3002',
+  distributionTitle: '\u8ba2\u5355\u72b6\u6001\u5206\u5e03',
+  trendTitle: '\u8fd17\u65e5\u5904\u7406\u8d8b\u52bf',
+  incomeTitle: '\u91d1\u989d\u6982\u89c8',
+  totalAmount: '\u7d2f\u8ba1\u627f\u63a5\u91d1\u989d',
+  completedAmount: '\u5df2\u5b8c\u6210\u8ba2\u5355\u989d',
+  pendingShipCount: '\u5f85\u4ea4\u4ed8\u8ba2\u5355\u6570',
+  emptyDistribution: '\u6682\u65f6\u8fd8\u6ca1\u6709\u53ef\u7528\u7684\u72b6\u6001\u5206\u5e03\u6570\u636e\u3002',
+  emptyTrend: '\u6682\u65f6\u8fd8\u6ca1\u6709\u8fd17\u65e5\u8d8b\u52bf\u6570\u636e\u3002',
+  loadWarn: '\u8ba2\u5355\u6570\u636e\u52a0\u8f7d\u5b58\u5728\u5f02\u5e38\uff0c\u5df2\u5c55\u793a\u53ef\u7528\u90e8\u5206\u3002',
+  claimConfirm: '\u786e\u8ba4\u8ba4\u9886\u8ba2\u5355 ',
+  startConfirm: '\u786e\u8ba4\u5f00\u59cb\u5236\u4f5c\u8ba2\u5355 ',
+  promptTitle: '\u5b8c\u6210\u5e76\u53d1\u8d27',
+  promptLabel: '\u8bf7\u586b\u5199\u4ea4\u4ed8\u8bf4\u660e\u6216\u7269\u6d41\u5355\u53f7\uff08\u53ef\u9009\uff09',
+  promptPlaceholder: '\u4f8b\u5982\uff1a\u7269\u6d41\u5355\u53f7 + \u4ea4\u4ed8\u8bf4\u660e',
+  confirm: '\u786e\u8ba4',
+  cancel: '\u53d6\u6d88',
+  confirmClaim: '\u786e\u8ba4\u8ba4\u9886',
+  confirmStart: '\u5f00\u59cb\u5236\u4f5c',
+  confirmShip: '\u786e\u8ba4\u53d1\u8d27',
+  claimFail: '\u8ba4\u9886\u5931\u8d25',
+  claimSuccess: '\u8ba4\u9886\u6210\u529f',
+  startFail: '\u5f00\u59cb\u5236\u4f5c\u5931\u8d25',
+  startSuccess: '\u5df2\u5f00\u59cb\u5236\u4f5c',
+  shipFail: '\u53d1\u8d27\u64cd\u4f5c\u5931\u8d25',
+  shipSuccess: '\u5df2\u6807\u8bb0\u53d1\u8d27',
+  profileDone: '\u8d44\u6599\u5df2\u5b8c\u5584\uff0c\u53ef\u4ee5\u6301\u7eed\u6c89\u6dc0\u4e2a\u4eba\u54c1\u724c\u4e0e\u670d\u52a1\u80fd\u529b\u3002',
+  profileTodo: '\u5efa\u8bae\u8865\u5145\u5934\u50cf\u3001\u8054\u7cfb\u65b9\u5f0f\u3001\u4e13\u957f\u548c\u7b80\u4ecb\uff0c\u63d0\u5347\u5408\u4f5c\u4fe1\u4efb\u611f\u3002'
+}
+
 export default {
   name: 'DesignerWorkbench',
   data() {
     return {
-      baseUrl: this.$config.baseUrl,
+      texts: TEXTS,
+      currency: '\u00a5',
       loading: false,
       actionLoadingKey: '',
       poolList: [],
-      poolTotal: 0,
       mineList: [],
-      hotList: [],
       profileSnapshot: {},
-      kpi: {
-        poolCount: 0,
-        inProgressCount: 0,
-        toShipCount: 0,
-        todayClaimCount: 0,
-        completedAmount: 0
-      },
+      kpi: { poolCount: 0, inProgressCount: 0, toShipCount: 0, todayClaimCount: 0 },
       statusDistribution: [],
       trendData: []
     }
   },
   computed: {
-    displayName() {
-      return localStorage.getItem('username') || this.profileSnapshot.shejishixingming || '设计师'
-    },
+    displayName() { return localStorage.getItem('username') || this.profileSnapshot.shejishixingming || '\u8bbe\u8ba1\u5e08' },
     todayText() {
       const now = new Date()
-      const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-      return `${now.getMonth() + 1} 月 ${now.getDate()} 日 · ${weekNames[now.getDay()]}`
+      const weekNames = ['\u5468\u65e5', '\u5468\u4e00', '\u5468\u4e8c', '\u5468\u4e09', '\u5468\u56db', '\u5468\u4e94', '\u5468\u516d']
+      return `${now.getMonth() + 1}\u6708${now.getDate()}\u65e5 | ${weekNames[now.getDay()]}`
     },
-    poolOrders() {
-      return this.poolList.slice(0, 4)
-    },
-    producingOrders() {
-      return this.mineList.filter((item) => ['待生产', '生产中'].includes(item.orderStatus)).slice(0, 4)
-    },
-    deliveryOrders() {
-      return this.mineList.filter((item) => item.orderStatus === '生产中').slice(0, 4)
-    },
-    trendMax() {
-      if (!this.trendData.length) return 1
-      const max = Math.max(...this.trendData.map((item) => item.count || 0))
-      return max > 0 ? max : 1
-    },
-    totalOrderAmount() {
-      return this.mineList.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
-    },
-    completedOrderAmount() {
-      return this.mineList
-        .filter((item) => item.orderStatus === '已完成')
-        .reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
-    },
+    poolOrders() { return this.poolList.slice(0, 4) },
+    producingOrders() { return this.mineList.filter((item) => [STATUS_PENDING_PRODUCTION, STATUS_PRODUCING].includes(item.orderStatus)).slice(0, 4) },
+    deliveryOrders() { return this.mineList.filter((item) => item.orderStatus === STATUS_PRODUCING).slice(0, 4) },
+    trendMax() { return Math.max(1, ...this.trendData.map((item) => item.count || 0)) },
+    distributionMax() { return Math.max(1, ...this.statusDistribution.map((item) => item.count || 0)) },
+    totalOrderAmount() { return this.mineList.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0) },
+    completedOrderAmount() { return this.mineList.filter((item) => item.orderStatus === STATUS_FINISHED).reduce((sum, item) => sum + Number(item.totalAmount || 0), 0) },
     metricCards() {
       return [
-        {
-          label: '待接订单',
-          value: this.kpi.poolCount,
-          sub: '等待领取的公开订单池',
-          icon: 'el-icon-s-order',
-          bg: '#eef2ff'
-        },
-        {
-          label: '处理中任务',
-          value: this.kpi.inProgressCount,
-          sub: '待生产与生产中的订单',
-          icon: 'el-icon-magic-stick',
-          bg: '#f4f1ff'
-        },
-        {
-          label: '今日领取',
-          value: this.kpi.todayClaimCount,
-          sub: '按领取时间统计',
-          icon: 'el-icon-time',
-          bg: '#eef8ff'
-        },
-        {
-          label: '已完成订单额',
-          value: `¥${this.formatMoney(this.completedOrderAmount)}`,
-          sub: '已闭环订单累计金额',
-          icon: 'el-icon-coin',
-          bg: '#eef7ff'
-        }
+        { label: this.texts.poolGroup, value: this.kpi.poolCount, sub: '\u7b49\u5f85\u9886\u53d6\u7684\u516c\u5f00\u8ba2\u5355\u6c60', icon: 'el-icon-s-order', bg: '#eef2ff' },
+        { label: '\u5904\u7406\u4e2d\u4efb\u52a1', value: this.kpi.inProgressCount, sub: '\u5f85\u751f\u4ea7\u4e0e\u751f\u4ea7\u4e2d\u7684\u8ba2\u5355', icon: 'el-icon-magic-stick', bg: '#f4f1ff' },
+        { label: '\u4eca\u65e5\u9886\u53d6', value: this.kpi.todayClaimCount, sub: '\u6309\u9886\u53d6\u65f6\u95f4\u7edf\u8ba1', icon: 'el-icon-time', bg: '#eef8ff' },
+        { label: '\u5df2\u5b8c\u6210\u8ba2\u5355\u989d', value: `${this.currency}${this.formatMoney(this.completedOrderAmount)}`, sub: '\u5df2\u95ed\u73af\u8ba2\u5355\u7d2f\u8ba1\u91d1\u989d', icon: 'el-icon-coin', bg: '#eef7ff' }
       ]
     },
     quickActions() {
       return [
-        { label: '订单管理', path: '/designer/orders', icon: 'el-icon-s-order' },
-        { label: '沟通记录', path: '/designer/communication', icon: 'el-icon-chat-dot-round' },
-        { label: '资料档案', path: '/designer/profile', icon: 'el-icon-user' }
+        { label: '\u8ba2\u5355\u7ba1\u7406', path: '/designer/orders', icon: 'el-icon-s-order' },
+        { label: '\u6c9f\u901a\u8bb0\u5f55', path: '/designer/communication', icon: 'el-icon-chat-dot-round' },
+        { label: '\u70ed\u95e8\u7075\u611f', path: '/designer/inspirations', icon: 'el-icon-picture-outline-round' },
+        { label: '\u8d44\u6599\u6863\u6848', path: '/designer/profile', icon: 'el-icon-user' }
       ]
     },
     profileCompletion() {
-      const fields = [
-        this.profileSnapshot.touxiang,
-        this.profileSnapshot.lianxifangshi,
-        this.profileSnapshot.zhuanchang,
-        this.profileSnapshot.jianjie
-      ]
+      const fields = [this.profileSnapshot.touxiang, this.profileSnapshot.lianxifangshi, this.profileSnapshot.zhuanchang, this.profileSnapshot.jianjie]
       const done = fields.filter((item) => String(item || '').trim()).length
       return Math.round((done / fields.length) * 100)
     },
-    profileHint() {
-      if (this.profileCompletion >= 100) {
-        return '资料已完善，可以持续沉淀个人品牌与服务能力。'
-      }
-      return '建议补充头像、联系方式、专长和简介，提升合作信任感。'
-    }
+    profileHint() { return this.profileCompletion >= 100 ? this.texts.profileDone : this.texts.profileTodo }
   },
-  created() {
-    this.loadData()
-  },
+  created() { this.loadData() },
   methods: {
-    go(path) {
-      this.$router.push(path)
-    },
-    formatMoney(v) {
-      return Number(v || 0).toFixed(2)
-    },
+    go(path) { this.$router.push(path) },
+    formatMoney(value) { return Number(value || 0).toFixed(2) },
     parseDateValue(input) {
       if (input === undefined || input === null || input === '') return null
-      if (input instanceof Date) {
-        return Number.isNaN(input.getTime()) ? null : input
-      }
-      if (typeof input === 'number') {
-        const time = input < 10000000000 ? input * 1000 : input
-        const date = new Date(time)
-        return Number.isNaN(date.getTime()) ? null : date
-      }
-      const text = String(input).trim()
-      if (!text) return null
-      if (/^\d{10,13}$/.test(text)) {
-        const time = text.length === 10 ? Number(text) * 1000 : Number(text)
-        const date = new Date(time)
-        return Number.isNaN(date.getTime()) ? null : date
-      }
-      const match = text.match(/\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2})?/)
-      if (match) {
-        const normalized = match[0].replace('T', ' ')
-        const date = new Date(normalized.replace(/-/g, '/'))
-        if (!Number.isNaN(date.getTime())) {
-          return date
-        }
-      }
-      const fallback = new Date(text.replace('T', ' ').replace(/-/g, '/'))
-      if (!Number.isNaN(fallback.getTime())) {
-        return fallback
-      }
-      return null
+      const date = input instanceof Date ? input : new Date(String(input).replace(/-/g, '/'))
+      return Number.isNaN(date.getTime()) ? null : date
     },
     parseDayKey(input) {
       const date = this.parseDateValue(input)
-      return date ? this.dayKey(date) : ''
-    },
-    dayKey(date) {
-      const year = date.getFullYear()
+      if (!date) return ''
       const month = `${date.getMonth() + 1}`.padStart(2, '0')
       const day = `${date.getDate()}`.padStart(2, '0')
-      return `${year}-${month}-${day}`
+      return `${date.getFullYear()}-${month}-${day}`
     },
-    coverUrl(item) {
-      const raw = (item && item.huawentuan) || ''
-      const first = raw.split(',')[0] || ''
-      if (!first) return ''
-      return first.startsWith('http') ? first : `${this.baseUrl}${first}`
-    },
-    toCosDetail(item) {
-      this.$router.push({ path: '/index/remaicosfuDetail', query: { detailObj: JSON.stringify(item) } })
-    },
-    openCommunication(item) {
-      this.$router.push({ path: '/designer/communication', query: { orderId: item.id } })
-    },
+    distributionWidth(count) { return `${Math.max(18, Math.round((count / this.distributionMax) * 100))}%` },
+    trendWidth(count) { return `${Math.max(10, Math.round((count / this.trendMax) * 100))}%` },
     normalizeOrders(rows = []) {
       return rows.map((row) => ({
-        id: row.id,
+        ...row,
+        id: row.id || row.orderId || row.order_id || '',
         orderNo: row.orderNo || row.order_no || '',
         userId: row.userId || row.user_id || '',
         totalAmount: row.totalAmount || row.total_amount || 0,
@@ -385,582 +243,135 @@ export default {
         addtime: row.addtime || ''
       }))
     },
-    parsePageData(raw = {}) {
-      const list = raw.list || raw.records || raw.rows || (Array.isArray(raw) ? raw : [])
-      const total = Number(raw.total || raw.count || raw.recordsTotal || (Array.isArray(list) ? list.length : 0))
-      return {
-        list: Array.isArray(list) ? list : [],
-        total
-      }
-    },
-    buildTrendRows() {
-      const now = new Date()
-      const rows = []
-      for (let i = 6; i >= 0; i -= 1) {
-        const date = new Date(now)
-        date.setDate(now.getDate() - i)
-        rows.push({ key: this.dayKey(date), label: `${date.getMonth() + 1}/${date.getDate()}`, count: 0 })
-      }
-      return rows
+    parsePageData(rawData) {
+      const data = rawData || {}
+      const list = data.list || data.records || data.rows || (Array.isArray(data) ? data : [])
+      const total = Number(data.total || data.count || data.recordsTotal || (Array.isArray(list) ? list.length : 0))
+      return { list: Array.isArray(list) ? list : [], total }
     },
     updateMetrics() {
       const mineRows = this.mineList
-      const today = this.dayKey(new Date())
-      this.kpi.poolCount = this.poolTotal || this.poolList.length
-      this.kpi.inProgressCount = mineRows.filter((item) => ['待生产', '生产中'].includes(item.orderStatus)).length
-      this.kpi.toShipCount = mineRows.filter((item) => item.orderStatus === '生产中').length
-      this.kpi.todayClaimCount = mineRows.filter((item) => {
-        const claimDay = this.parseDayKey(item.designerTakeTime)
-        return claimDay && claimDay === today
-      }).length
-      this.kpi.completedAmount = mineRows
-        .filter((item) => item.orderStatus === '已完成')
-        .reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
-
-      const statusSeed = [
-        { label: '待生产', count: 0 },
-        { label: '生产中', count: 0 },
-        { label: '已发货', count: 0 },
-        { label: '已完成', count: 0 },
-        { label: '已取消', count: 0 }
-      ]
-      mineRows.forEach((item) => {
-        const target = statusSeed.find((status) => status.label === item.orderStatus)
-        if (target) target.count += 1
-      })
-      const max = Math.max(...statusSeed.map((item) => item.count), 1)
-      this.statusDistribution = statusSeed.filter((item) => item.count > 0).map((item) => ({
-        ...item,
-        percent: Math.max(Math.round((item.count / max) * 100), 8)
-      }))
-
-      const trendRows = this.buildTrendRows()
-      const trendMap = trendRows.reduce((acc, row) => {
-        acc[row.key] = row
-        return acc
-      }, {})
+      const today = this.parseDayKey(new Date())
+      this.kpi.poolCount = this.poolList.length
+      this.kpi.inProgressCount = mineRows.filter((item) => [STATUS_PENDING_PRODUCTION, STATUS_PRODUCING].includes(item.orderStatus)).length
+      this.kpi.toShipCount = mineRows.filter((item) => item.orderStatus === STATUS_PRODUCING).length
+      this.kpi.todayClaimCount = mineRows.filter((item) => this.parseDayKey(item.designerTakeTime || item.addtime) === today).length
+      this.statusDistribution = [STATUS_PENDING_PRODUCTION, STATUS_PRODUCING, STATUS_SHIPPED, STATUS_FINISHED, STATUS_CANCELLED].map((label) => ({ label, count: mineRows.filter((item) => item.orderStatus === label).length }))
+      const trendMap = {}
+      for (let idx = 6; idx >= 0; idx -= 1) {
+        const date = new Date()
+        date.setDate(date.getDate() - idx)
+        const key = this.parseDayKey(date)
+        trendMap[key] = { label: `${date.getMonth() + 1}/${date.getDate()}`, count: 0 }
+      }
       mineRows.forEach((item) => {
         const key = this.parseDayKey(item.designerTakeTime || item.addtime)
         if (key && trendMap[key]) trendMap[key].count += 1
       })
-      this.trendData = trendRows
+      this.trendData = Object.values(trendMap)
     },
-    canStartProduction(row) {
-      return row && row.orderStatus === '待生产'
-    },
+    canStartProduction(row) { return row && row.orderStatus === STATUS_PENDING_PRODUCTION },
     async loadData() {
       this.loading = true
       try {
-        const [poolRes, mineRes, hotRes, sessionRes] = await Promise.all([
-          this.$proxy.Request({
-            url: this.$proxy.Api.cosorderDesignerPool,
-            method: 'get',
-            showLoading: false,
-            showError: false,
-            params: { page: 1, limit: 120 }
-          }),
-          this.$proxy.Request({
-            url: this.$proxy.Api.cosorderDesignerMine,
-            method: 'get',
-            showLoading: false,
-            showError: false,
-            params: { page: 1, limit: 300 }
-          }),
-          this.$proxy.Request({
-            url: this.$proxy.Api.remaicosfuAutoSort,
-            method: 'get',
-            showLoading: false,
-            showError: false,
-            params: { page: 1, limit: 4 }
-          }),
-          this.$proxy.Request({
-            url: this.$proxy.Api.shejishiSession,
-            method: 'get',
-            showLoading: false,
-            showError: false
-          })
+        const [poolRes, mineRes, sessionRes] = await Promise.all([
+          this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerPool, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 120 } }),
+          this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerMine, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 300 } }),
+          this.$proxy.Request({ url: this.$proxy.Api.shejishiSession, method: 'get', showLoading: false, showError: false })
         ])
-
         if (!poolRes || poolRes.code !== 0 || !mineRes || mineRes.code !== 0) {
-          this.$message.warning('订单数据加载存在异常，已展示可用部分。')
+          this.$message.warning(this.texts.loadWarn)
         }
-
-        const pool = this.parsePageData((poolRes && poolRes.data) || {})
-        const mine = this.parsePageData((mineRes && mineRes.data) || {})
-        this.poolList = this.normalizeOrders(pool.list)
-        this.poolTotal = pool.total || this.poolList.length
-        this.mineList = this.normalizeOrders(mine.list)
-
-        const hotData = (hotRes && hotRes.code === 0 && hotRes.data) || {}
-        this.hotList = hotData.list || []
+        this.poolList = this.normalizeOrders(this.parsePageData((poolRes && poolRes.data) || {}).list)
+        this.mineList = this.normalizeOrders(this.parsePageData((mineRes && mineRes.data) || {}).list)
         this.profileSnapshot = (sessionRes && sessionRes.code === 0 && sessionRes.data) || {}
         this.updateMetrics()
       } finally {
         this.loading = false
       }
     },
+    async confirmAction(message, confirmButtonText) {
+      return this.$confirm(message, this.texts.confirm, { confirmButtonText, cancelButtonText: this.texts.cancel, type: 'warning' }).then(() => true).catch(() => false)
+    },
     async claim(row) {
-      const ok = await this.$confirm(`确认领取订单 ${row.orderNo || row.id} 吗？`, '提示', {
-        confirmButtonText: '确认领取',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => true).catch(() => false)
+      const ok = await this.confirmAction(`${this.texts.claimConfirm}${row.orderNo || row.id}\uff1f`, this.texts.confirmClaim)
       if (!ok) return
-
       this.actionLoadingKey = `claim-${row.id}`
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerClaim,
-        method: 'post',
-        dataType: 'json',
-        showError: false,
-        params: { orderId: row.id }
-      })
+      const res = await this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerClaim, method: 'post', dataType: 'json', showError: false, params: { orderId: row.id } })
       this.actionLoadingKey = ''
-
-      if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '领取失败')
-        return
-      }
-      this.$message.success(res.msg || '领取成功')
+      if (!res || res.code !== 0) { this.$message.error((res && res.msg) || this.texts.claimFail); return }
+      this.$message.success(res.msg || this.texts.claimSuccess)
       await this.loadData()
       this.openCommunication(row)
     },
     async startProduction(row) {
-      const ok = await this.$confirm(`确认开始制作订单 ${row.orderNo || row.id} 吗？`, '提示', {
-        confirmButtonText: '开始制作',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => true).catch(() => false)
+      const ok = await this.confirmAction(`${this.texts.startConfirm}${row.orderNo || row.id}\uff1f`, this.texts.confirmStart)
       if (!ok) return
-
       this.actionLoadingKey = `start-${row.id}`
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerStart,
-        method: 'post',
-        dataType: 'json',
-        showError: false,
-        params: { orderId: row.id }
-      })
+      const res = await this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerStart, method: 'post', dataType: 'json', showError: false, params: { orderId: row.id } })
       this.actionLoadingKey = ''
-      if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '开始制作失败')
-        return
-      }
-      this.$message.success(res.msg || '已进入制作阶段')
+      if (!res || res.code !== 0) { this.$message.error((res && res.msg) || this.texts.startFail); return }
+      this.$message.success(res.msg || this.texts.startSuccess)
       await this.loadData()
     },
     async shipOrder(row) {
-      const promptRes = await this.$prompt('请填写交付说明或物流单号（可选）', '完成并发货', {
-        confirmButtonText: '确认发货',
-        cancelButtonText: '取消',
-        inputType: 'textarea',
-        inputPlaceholder: '例如：物流单号 + 交付说明'
-      }).catch(() => null)
+      const promptRes = await this.$prompt(this.texts.promptLabel, this.texts.promptTitle, { confirmButtonText: this.texts.confirmShip, cancelButtonText: this.texts.cancel, inputType: 'textarea', inputPlaceholder: this.texts.promptPlaceholder }).catch(() => null)
       if (!promptRes) return
-
       const remark = (promptRes.value || '').trim()
       this.actionLoadingKey = `ship-${row.id}`
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerShip,
-        method: 'post',
-        dataType: 'json',
-        showError: false,
-        params: {
-          orderId: row.id,
-          remark: remark ? `交付说明：${remark}` : '设计师已完成制作并发货'
-        }
-      })
+      const res = await this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerShip, method: 'post', dataType: 'json', showError: false, params: { orderId: row.id, remark: remark || '\u8bbe\u8ba1\u5e08\u5df2\u5b8c\u6210\u5236\u4f5c\u5e76\u53d1\u8d27' } })
       this.actionLoadingKey = ''
-      if (!res || res.code !== 0) {
-        this.$message.error((res && res.msg) || '发货失败')
-        return
-      }
-      this.$message.success(res.msg || '发货成功')
+      if (!res || res.code !== 0) { this.$message.error((res && res.msg) || this.texts.shipFail); return }
+      this.$message.success(res.msg || this.texts.shipSuccess)
       await this.loadData()
-    }
+    },
+    openCommunication(row) { this.$router.push({ path: '/designer/communication', query: { orderId: row.id } }) }
   }
 }
 </script>
 
 <style scoped>
-.designer-workbench-page {
-  display: grid;
-  gap: 16px;
-}
-
-.board-card {
-  border-radius: 24px;
-  border: 1px solid #e6eafb;
-  background: #fff;
-  box-shadow: 0 16px 34px rgba(84, 99, 183, 0.08);
-}
-
-.bench-hero {
-  padding: 24px 26px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) 320px;
-  gap: 18px;
-  background: linear-gradient(135deg, #f5f7ff 0%, #ffffff 46%, #eff2ff 100%);
-}
-
-.hero-kicker {
-  display: inline-flex;
-  height: 30px;
-  align-items: center;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #eef1ff;
-  color: #5b6ef5;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.bench-hero h2 {
-  margin-top: 12px;
-  font-size: 32px;
-  line-height: 1.35;
-  color: #202a4a;
-}
-
-.bench-hero p {
-  margin-top: 12px;
-  max-width: 760px;
-  line-height: 1.85;
-  color: #7f8bb2;
-}
-
-.hero-actions {
-  margin-top: 18px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.action-chip {
-  padding: 12px 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 16px;
-  border: 1px solid #dbe2ff;
-  background: #fff;
-  color: #445077;
-  cursor: pointer;
-}
-
-.action-chip i {
-  color: #5b6ef5;
-}
-
-.hero-side {
-  display: grid;
-  gap: 14px;
-}
-
-.date-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  justify-self: end;
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid #dde4ff;
-  color: #6f7aa2;
-}
-
-.profile-card-mini {
-  padding: 18px;
-  border-radius: 20px;
-  background: #fff;
-  border: 1px solid #dde4ff;
-  display: grid;
-  gap: 12px;
-}
-
-.profile-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.profile-head strong {
-  color: #202a4a;
-  font-size: 18px;
-}
-
-.profile-head span,
-.profile-card-mini p {
-  color: #7f8bb2;
-  font-size: 13px;
-}
-
-.completion-track,
-.status-progress,
-.trend-track {
-  height: 10px;
-  border-radius: 999px;
-  background: #eef1fb;
-  overflow: hidden;
-}
-
-.completion-fill,
-.status-progress-inner,
-.trend-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #8a8eff 0%, #5b6ef5 100%);
-}
-
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.metric-card {
-  padding: 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.metric-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  color: #4a57a0;
-  font-size: 20px;
-}
-
-.metric-label {
-  color: #8792b8;
-  font-size: 13px;
-}
-
-.metric-value {
-  margin-top: 6px;
-  color: #202a4a;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.metric-sub {
-  margin-top: 4px;
-  color: #99a2c5;
-  font-size: 12px;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) 320px;
-  gap: 16px;
-}
-
-.dashboard-main-column,
-.dashboard-side-column {
-  display: grid;
-  gap: 16px;
-}
-
-.task-card,
-.chart-card,
-.side-card {
-  padding: 20px 22px;
-}
-
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.section-head h3 {
-  color: #222d4e;
-  font-size: 18px;
-}
-
-.section-head p {
-  margin-top: 6px;
-  color: #8591b8;
-  font-size: 13px;
-}
-
-.section-head.compact {
-  margin-bottom: 14px;
-}
-
-.task-grid {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.task-column {
-  padding: 16px;
-  border-radius: 20px;
-  background: #f8f9ff;
-  border: 1px solid #edf0ff;
-}
-
-.task-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.task-head strong {
-  color: #25315a;
-}
-
-.task-head span,
-.task-meta,
-.hot-row span,
-.trend-label,
-.empty-tip,
-.income-row span {
-  color: #8591b8;
-  font-size: 13px;
-}
-
-.task-list,
-.status-list,
-.trend-list,
-.income-list,
-.hot-list {
-  margin-top: 14px;
-  display: grid;
-  gap: 12px;
-}
-
-.task-row,
-.status-row,
-.trend-row,
-.income-row,
-.hot-row {
-  display: grid;
-  align-items: center;
-  gap: 12px;
-}
-
-.task-row {
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 12px;
-  border-radius: 16px;
-  background: #fff;
-  border: 1px solid #e8ecff;
-}
-
-.task-title,
-.hot-row strong {
-  color: #232f55;
-  font-weight: 700;
-}
-
-.status-row {
-  grid-template-columns: minmax(0, 1fr) 180px;
-  padding: 12px 0;
-  border-bottom: 1px solid #edf0ff;
-}
-
-.status-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.status-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.status-meta b,
-.trend-value,
-.income-row strong {
-  color: #232f55;
-  font-weight: 700;
-}
-
-.trend-row {
-  grid-template-columns: 56px minmax(0, 1fr) 44px;
-}
-
-.income-row {
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 12px 0;
-  border-bottom: 1px solid #edf0ff;
-}
-
-.income-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.hot-row {
-  grid-template-columns: 64px minmax(0, 1fr);
-  padding: 10px;
-  border-radius: 16px;
-  background: #f8f9ff;
-  border: 1px solid #edf0ff;
-  cursor: pointer;
-}
-
-.hot-row img {
-  width: 64px;
-  height: 64px;
-  border-radius: 14px;
-  object-fit: cover;
-  background: #eef1fb;
-}
-
-@media (max-width: 1280px) {
-  .metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dashboard-grid,
-  .bench-hero {
-    grid-template-columns: 1fr;
-  }
-
-  .task-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .date-chip {
-    justify-self: start;
-  }
-}
-
-@media (max-width: 768px) {
-  .metric-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .task-row,
-  .status-row,
-  .trend-row,
-  .income-row {
-    grid-template-columns: 1fr;
-  }
-
-  .section-head,
-  .profile-head {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .bench-hero {
-    padding: 18px;
-  }
-}
+.designer-workbench-page { display:grid; gap:16px; }
+.board-card { border-radius:18px; border:1px solid #e7edff; background:#fff; box-shadow:none; }
+.page-toolbar { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.page-copy { display:grid; gap:6px; }
+.page-tag { display:inline-flex; width:fit-content; align-items:center; padding:5px 10px; border-radius:999px; border:1px solid #dbe6ff; background:#f7faff; color:#5870bc; font-size:12px; letter-spacing:.04em; }
+.page-copy h2 { margin:0; color:#24356b; font-size:26px; line-height:1.35; }
+.page-copy p { margin:0; max-width:760px; color:#7d89af; line-height:1.75; }
+.page-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; }
+.mini-chip { display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 14px; border-radius:999px; border:1px solid #dfe7ff; background:#fff; color:#5f6d96; }
+.action-chip { border:1px solid #dfe7ff; border-radius:999px; padding:9px 14px; background:#fff; color:#3657c8; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:.2s ease; }
+.action-chip:hover { border-color:#bfd0ff; background:#f6f9ff; }
+.metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.metric-card { display:flex; align-items:center; gap:14px; padding:18px; }
+.metric-icon { width:50px; height:50px; border-radius:16px; display:grid; place-items:center; color:#3657c8; font-size:20px; }
+.metric-label { color:#7b88b4; font-size:13px; }
+.metric-value { margin-top:4px; color:#24356b; font-size:24px; font-weight:700; }
+.metric-sub { margin-top:6px; color:#8b97bb; font-size:12px; line-height:1.6; }
+.dashboard-grid { display:grid; grid-template-columns:minmax(0,1.4fr) 360px; gap:14px; }
+.dashboard-main-column,.dashboard-side-column { display:grid; gap:14px; }
+.task-card,.side-card { padding:20px; }
+.section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.section-head h3 { color:#24356b; font-size:20px; }
+.section-head p { margin-top:6px; color:#7d89af; line-height:1.7; }
+.section-head.compact { margin-bottom:12px; }
+.task-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.task-column { border-radius:18px; border:1px solid #edf2ff; background:#fbfcff; padding:14px; }
+.task-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; color:#24356b; }
+.task-list { display:grid; gap:10px; }
+.task-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px; border-radius:14px; background:#fff; border:1px solid #edf1ff; }
+.task-title { color:#24356b; font-weight:700; }
+.task-meta,.empty-tip { color:#7f8cb4; font-size:13px; line-height:1.6; }
+.distribution-list,.trend-list,.income-list { display:grid; gap:12px; }
+.distribution-row,.income-row { display:grid; gap:8px; }
+.distribution-meta,.income-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.distribution-track,.trend-bar { height:10px; border-radius:999px; background:#edf2ff; overflow:hidden; }
+.distribution-fill,.trend-bar span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#4f6ef7,#8fd4ff); }
+.trend-row { display:grid; grid-template-columns:56px minmax(0,1fr) 28px; align-items:center; gap:10px; }
+.trend-label { color:#7f8cb4; font-size:12px; }
+.income-row span { color:#7f8cb4; }
+.income-row strong { color:#24356b; }
+@media (max-width:1200px){ .metric-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .dashboard-grid{ grid-template-columns:1fr; } }
+@media (max-width:900px){ .page-toolbar{ flex-direction:column; } .page-actions{ justify-content:flex-start; } .task-grid{ grid-template-columns:1fr; } }
+@media (max-width:640px){ .metric-grid{ grid-template-columns:1fr; } .page-copy h2{ font-size:22px; } .task-card,.side-card{ padding:18px; } }
 </style>

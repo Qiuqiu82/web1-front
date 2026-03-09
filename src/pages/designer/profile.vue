@@ -1,38 +1,15 @@
 <template>
   <div class="designer-profile-page">
-    <section class="hero-card profile-card-shell">
-      <div class="hero-copy">
-        <span class="section-kicker">资料档案</span>
-        <h2>把个人介绍、作品案例和履约成果，沉淀成一张可持续经营的设计师名片</h2>
-        <p>
-          本页负责两件核心事情：维护设计师资料，以及把已交付订单沉淀为作品案例库。
-          资料越完整、案例越清晰，后续工作台、沟通页和收益页的信息就越可信。
-        </p>
-        <div class="hero-actions">
-          <el-button type="primary" icon="el-icon-edit" @click="openProfileDialog">编辑个人资料</el-button>
-          <el-button icon="el-icon-plus" @click="openPortfolioDialog('create')">新增作品</el-button>
-          <el-button icon="el-icon-refresh" :loading="loading" @click="loadData">刷新</el-button>
-        </div>
+    <section class="page-toolbar">
+      <div class="page-copy">
+        <span class="page-tag">{{ '\u8d44\u6599\u6863\u6848' }}</span>
+        <h2>{{ '\u8bbe\u8ba1\u5e08\u8d44\u6599\u4e0e\u4f5c\u54c1\u96c6' }}</h2>
+        <p>{{ '\u7ef4\u62a4\u4e2a\u4eba\u8d44\u6599\u3001\u6c89\u6dc0\u6848\u4f8b\u4f5c\u54c1\uff0c\u5e76\u628a\u5df2\u4ea4\u4ed8\u8ba2\u5355\u6574\u7406\u4e3a\u540e\u7eed\u5c55\u793a\u4e0e\u6c9f\u901a\u53ef\u590d\u7528\u7684\u4f5c\u54c1\u5e93\u3002' }}</p>
       </div>
-      <div class="hero-side">
-        <div class="avatar-frame">
-          <img v-if="profileAvatar" :src="profileAvatar" alt="设计师头像" />
-          <div v-else class="avatar-placeholder">{{ nameInitial }}</div>
-        </div>
-        <div class="identity-block">
-          <strong>{{ displayName }}</strong>
-          <span>账号：{{ profile.account || '-' }}</span>
-        </div>
-        <div class="completion-card">
-          <div class="completion-top">
-            <span>资料完整度</span>
-            <strong>{{ completionPercent }}%</strong>
-          </div>
-          <div class="completion-track">
-            <div class="completion-fill" :style="{ width: `${completionPercent}%` }"></div>
-          </div>
-          <p>{{ completionHint }}</p>
-        </div>
+      <div class="page-actions">
+        <el-button type="primary" plain icon="el-icon-edit" @click="openProfileDialog">{{ '\u7f16\u8f91\u4e2a\u4eba\u8d44\u6599' }}</el-button>
+        <el-button plain icon="el-icon-plus" @click="openPortfolioDialog('create')">{{ '\u65b0\u589e\u4f5c\u54c1' }}</el-button>
+        <el-button plain icon="el-icon-refresh" :loading="loading" @click="loadData">{{ '\u5237\u65b0' }}</el-button>
       </div>
     </section>
 
@@ -53,106 +30,123 @@
       <article class="panel-card profile-panel">
         <div class="panel-head">
           <div>
-            <h3>个人资料</h3>
-            <p>当前读取设计师 session，并支持保存头像、联系方式、擅长方向与个人简介。</p>
+            <h3>{{ '\u4e2a\u4eba\u8d44\u6599' }}</h3>
+            <p>{{ '\u5f53\u524d\u8bfb\u53d6\u8bbe\u8ba1\u5e08 session \u4fe1\u606f\uff0c\u652f\u6301\u5934\u50cf\u3001\u8054\u7cfb\u65b9\u5f0f\u3001\u64c5\u957f\u65b9\u5411\u548c\u4e2a\u4eba\u7b80\u4ecb\u7684\u5c55\u793a\u4e0e\u7f16\u8f91\u3002' }}</p>
           </div>
-          <el-button type="text" @click="openProfileDialog">编辑</el-button>
+          <el-button type="text" @click="openProfileDialog">{{ '\u7f16\u8f91' }}</el-button>
         </div>
         <div class="profile-detail-grid">
           <div class="detail-item">
-            <span>设计师姓名</span>
+            <span>{{ '\u59d3\u540d' }}</span>
             <strong>{{ profile.name || '-' }}</strong>
           </div>
           <div class="detail-item">
-            <span>设计师账号</span>
+            <span>{{ '\u8d26\u53f7' }}</span>
             <strong>{{ profile.account || '-' }}</strong>
           </div>
           <div class="detail-item">
-            <span>联系方式</span>
+            <span>{{ '\u8054\u7cfb\u65b9\u5f0f' }}</span>
             <strong>{{ profile.phone || '-' }}</strong>
           </div>
           <div class="detail-item">
-            <span>擅长方向</span>
+            <span>{{ '\u64c5\u957f\u65b9\u5411' }}</span>
             <div class="tag-wrap">
               <el-tag v-for="tag in specialtyTags" :key="tag" size="mini" effect="plain">{{ tag }}</el-tag>
-              <span v-if="!specialtyTags.length" class="empty-inline">暂未填写</span>
+              <span v-if="!specialtyTags.length" class="empty-inline">{{ '\u6682\u672a\u586b\u5199\u64c5\u957f\u65b9\u5411' }}</span>
             </div>
           </div>
         </div>
         <div class="intro-panel">
-          <div class="intro-title">个人简介</div>
-          <div class="intro-text">{{ profile.intro || '暂未填写简介，建议补充风格特长、服务经验和交付特点。' }}</div>
+          <div class="intro-title">{{ '\u4e2a\u4eba\u7b80\u4ecb' }}</div>
+          <div class="intro-text">{{ profile.intro || '\u6682\u672a\u586b\u5199\u4e2a\u4eba\u7b80\u4ecb' }}</div>
         </div>
       </article>
 
       <article class="panel-card portfolio-panel">
         <div class="panel-head portfolio-head">
           <div>
-            <h3>作品集管理</h3>
-            <p>仅管理当前设计师自己的作品，案例订单只能关联已发货或已完成订单。</p>
+            <h3>{{ '\u4f5c\u54c1\u96c6\u7ba1\u7406' }}</h3>
+            <p>{{ '\u4ec5\u7ba1\u7406\u5f53\u524d\u8bbe\u8ba1\u5e08\u81ea\u5df1\u7684\u4f5c\u54c1\uff0c\u6848\u4f8b\u8ba2\u5355\u53ea\u80fd\u5173\u8054\u5df2\u53d1\u8d27\u6216\u5df2\u5b8c\u6210\u8ba2\u5355\u3002' }}</p>
           </div>
           <div class="toolbar-actions">
             <el-input
               v-model.trim="filters.keyword"
               size="small"
               clearable
-              placeholder="搜索作品标题、标签或简介"
+              :placeholder="'\u641c\u7d22\u4f5c\u54c1\u6807\u9898\u3001\u6807\u7b7e\u6216\u7b80\u4ecb'"
               class="toolbar-input"
               @keyup.enter.native="handleFilter"
               @clear="handleFilter"
             />
-            <el-select v-model="filters.status" size="small" clearable placeholder="全部状态" @change="handleFilter">
-              <el-option label="启用" value="启用" />
-              <el-option label="隐藏" value="隐藏" />
+            <el-select v-model="filters.status" size="small" clearable :placeholder="'\u5168\u90e8\u72b6\u6001'" @change="handleFilter">
+              <el-option :label="'\u542f\u7528'" :value="'\u542f\u7528'" />
+              <el-option :label="'\u505c\u7528'" :value="'\u505c\u7528'" />
             </el-select>
-            <el-button size="small" type="primary" icon="el-icon-search" @click="handleFilter">查询</el-button>
-            <el-button size="small" icon="el-icon-plus" @click="openPortfolioDialog('create')">新增作品</el-button>
+            <el-button size="small" type="primary" icon="el-icon-search" @click="handleFilter">{{ '\u67e5\u8be2' }}</el-button>
+            <el-button size="small" icon="el-icon-plus" @click="openPortfolioDialog('create')">{{ '\u65b0\u589e\u4f5c\u54c1' }}</el-button>
           </div>
         </div>
 
-        <el-table v-loading="loading" :data="portfolioList" class="portfolio-table">
-          <el-table-column label="封面" width="92">
+        <div v-if="portfolioList.length" class="portfolio-preview-grid">
+          <product-poster-card
+            v-for="item in portfolioList"
+            :key="item.id"
+            :image-src="item.coverImageUrl"
+            :image-alt="item.title || '\u4f5c\u54c1\u5c01\u9762'"
+            :title="item.title || '\u672a\u547d\u540d\u4f5c\u54c1'"
+            :subtitle="item.intro || '\u8865\u5145\u4f5c\u54c1\u7b80\u4ecb\u540e\uff0c\u8fd9\u91cc\u4f1a\u5c55\u793a\u66f4\u5b8c\u6574\u7684\u6848\u4f8b\u4fe1\u606f\u3002'"
+            :tags="portfolioPreviewTags(item)"
+            :badge="item.status || '\u4f5c\u54c1'"
+            :action-text="'\u7f16\u8f91\u4f5c\u54c1'"
+            @card-click="openPortfolioDialog('edit', item)"
+            @action="openPortfolioDialog('edit', item)"
+          />
+        </div>
+        <el-empty v-else :description="'\u8fd8\u6ca1\u6709\u4f5c\u54c1\uff0c\u5148\u521b\u5efa\u7b2c\u4e00\u6761\u6848\u4f8b'" :image-size="84" />
+
+        <el-table v-loading="loading" :data="portfolioList" style="width: 100%">
+          <el-table-column :label="'\u5c01\u9762'" width="100">
             <template slot-scope="scope">
               <div class="cover-cell">
-                <img v-if="scope.row.coverImageUrl" :src="scope.row.coverImageUrl" alt="作品封面" />
-                <div v-else class="cover-fallback">无图</div>
+                <img v-if="scope.row.coverImageUrl" :src="scope.row.coverImageUrl" :alt="scope.row.title || '\u4f5c\u54c1\u5c01\u9762'" />
+                <div v-else class="cover-fallback">{{ '\u65e0\u56fe' }}</div>
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="作品信息" min-width="260">
+          <el-table-column :label="'\u4f5c\u54c1\u4fe1\u606f'" min-width="260">
             <template slot-scope="scope">
               <div class="work-title">{{ scope.row.title || '-' }}</div>
-              <div class="work-intro">{{ scope.row.intro || '暂无简介' }}</div>
+              <div class="work-intro">{{ scope.row.intro || '\u6682\u65e0\u7b80\u4ecb' }}</div>
               <div class="tag-wrap compact-tags">
                 <el-tag v-for="tag in scope.row.tagList.slice(0, 4)" :key="tag" size="mini" effect="plain">{{ tag }}</el-tag>
-                <span v-if="!scope.row.tagList.length" class="empty-inline">未设置标签</span>
+                <span v-if="!scope.row.tagList.length" class="empty-inline">{{ '\u6682\u65e0\u6807\u7b7e' }}</span>
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="90">
+          <el-table-column :label="'\u72b6\u6001'" width="90">
             <template slot-scope="scope">
-              <el-tag :type="scope.row.status === '启用' ? 'success' : 'info'" size="mini">{{ scope.row.status || '启用' }}</el-tag>
+              <el-tag :type="scope.row.status === '\u542f\u7528' ? 'success' : 'info'" size="mini">{{ scope.row.status || '\u542f\u7528' }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="排序" width="80" prop="sortOrder" />
-          <el-table-column label="案例订单" min-width="220">
+          <el-table-column :label="'\u6392\u5e8f'" width="80" prop="sortOrder" />
+          <el-table-column :label="'\u5173\u8054\u8ba2\u5355'" min-width="220">
             <template slot-scope="scope">
               <div class="order-summary">
-                <div class="order-summary-count">已关联 {{ scope.row.linkedOrderCount }} 单</div>
+                <div class="order-summary-count">{{ '\u5df2\u5173\u8054 ' + scope.row.linkedOrderCount + ' \u5355' }}</div>
                 <div v-if="scope.row.linkedOrderNoList.length" class="order-chip-row">
                   <span v-for="no in scope.row.linkedOrderNoList.slice(0, 3)" :key="no" class="order-chip">{{ no }}</span>
                   <span v-if="scope.row.linkedOrderNoList.length > 3" class="order-chip muted">+{{ scope.row.linkedOrderNoList.length - 3 }}</span>
                 </div>
-                <span v-else class="empty-inline">暂未关联订单</span>
+                <span v-else class="empty-inline">{{ '\u6682\u65e0\u5173\u8054\u8ba2\u5355' }}</span>
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="250" fixed="right">
+          <el-table-column :label="'\u64cd\u4f5c'" width="250" fixed="right">
             <template slot-scope="scope">
               <div class="table-actions">
-                <el-button size="mini" type="primary" plain @click="openPortfolioDialog('edit', scope.row)">编辑</el-button>
-                <el-button size="mini" @click="openLinkDialog(scope.row)">关联订单</el-button>
-                <el-button size="mini" type="danger" plain @click="removePortfolio(scope.row)">删除</el-button>
+                <el-button size="mini" type="primary" plain @click="openPortfolioDialog('edit', scope.row)">{{ '\u7f16\u8f91' }}</el-button>
+                <el-button size="mini" @click="openLinkDialog(scope.row)">{{ '\u5173\u8054\u8ba2\u5355' }}</el-button>
+                <el-button size="mini" type="danger" plain @click="removePortfolio(scope.row)">{{ '\u5220\u9664' }}</el-button>
               </div>
             </template>
           </el-table-column>
@@ -164,7 +158,7 @@
             layout="total, sizes, prev, pager, next"
             :current-page="filters.page"
             :page-size="filters.limit"
-            :page-sizes="[6, 10, 20]"
+            :page-sizes="[6, 12, 18]"
             :total="portfolioTotal"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -173,123 +167,92 @@
       </article>
     </section>
 
-    <el-dialog title="编辑个人资料" :visible.sync="profileDialogVisible" width="640px">
+    <el-dialog :title="'\u7f16\u8f91\u4e2a\u4eba\u8d44\u6599'" :visible.sync="profileDialogVisible" width="620px">
       <el-form :model="profileForm" label-width="96px" class="dialog-form">
-        <el-form-item label="设计师姓名">
-          <el-input v-model.trim="profileForm.shejishixingming" maxlength="30" placeholder="请输入姓名" />
+        <el-form-item :label="'\u59d3\u540d'">
+          <el-input v-model.trim="profileForm.shejishixingming" :maxlength="30" :placeholder="'\u8bf7\u8f93\u5165\u59d3\u540d'" />
         </el-form-item>
-        <el-form-item label="头像">
-          <file-upload
-            action="file/upload"
-            :limit="1"
-            :multiple="false"
-            :file-urls="profileForm.touxiang"
-            tip="建议上传 1 张清晰头像"
-            @change="(val) => { profileForm.touxiang = val }"
-          />
+        <el-form-item :label="'\u5934\u50cf'">
+          <file-upload action="file/upload" :limit="1" :multiple="false" :file-urls="profileForm.touxiang" @change="(val) => { profileForm.touxiang = val }" />
         </el-form-item>
-        <el-form-item label="联系方式">
-          <el-input v-model.trim="profileForm.lianxifangshi" maxlength="50" placeholder="请输入手机号、微信或常用联系方式" />
+        <el-form-item :label="'\u8054\u7cfb\u65b9\u5f0f'">
+          <el-input v-model.trim="profileForm.lianxifangshi" :maxlength="30" :placeholder="'\u8bf7\u8f93\u5165\u8054\u7cfb\u65b9\u5f0f'" />
         </el-form-item>
-        <el-form-item label="擅长方向">
-          <el-input v-model.trim="profileForm.zhuanchang" maxlength="100" placeholder="例如：洛丽塔、女仆、军装、兽耳、舞台服" />
+        <el-form-item :label="'\u64c5\u957f\u65b9\u5411'">
+          <el-input v-model.trim="profileForm.zhuanchang" :maxlength="120" :placeholder="'\u4f8b\u5982\uff1a\u6d1b\u4e3d\u5854\u3001\u5236\u670d\u3001\u821e\u53f0\u793c\u670d'" />
         </el-form-item>
-        <el-form-item label="个人简介">
-          <el-input
-            v-model.trim="profileForm.jianjie"
-            type="textarea"
-            :rows="5"
-            maxlength="300"
-            show-word-limit
-            placeholder="介绍你的设计风格、服务特点和交付经验"
-          />
+        <el-form-item :label="'\u4e2a\u4eba\u7b80\u4ecb'">
+          <el-input v-model.trim="profileForm.jianjie" type="textarea" :rows="5" maxlength="300" show-word-limit :placeholder="'\u8bf7\u8f93\u5165\u4e2a\u4eba\u7b80\u4ecb'" />
         </el-form-item>
       </el-form>
       <span slot="footer">
-        <el-button @click="profileDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="profileSubmitting" @click="submitProfile">保存资料</el-button>
+        <el-button @click="profileDialogVisible = false">{{ '\u53d6\u6d88' }}</el-button>
+        <el-button type="primary" :loading="profileSubmitting" @click="submitProfile">{{ '\u4fdd\u5b58' }}</el-button>
       </span>
     </el-dialog>
 
-    <el-dialog :title="portfolioMode === 'create' ? '新增作品' : '编辑作品'" :visible.sync="portfolioDialogVisible" width="760px">
+    <el-dialog :title="portfolioMode === 'create' ? '\u65b0\u589e\u4f5c\u54c1' : '\u7f16\u8f91\u4f5c\u54c1'" :visible.sync="portfolioDialogVisible" width="760px">
       <el-form :model="portfolioForm" label-width="96px" class="dialog-form">
-        <el-form-item label="作品标题">
-          <el-input v-model.trim="portfolioForm.title" maxlength="40" placeholder="请输入作品标题" />
+        <el-form-item :label="'\u4f5c\u54c1\u6807\u9898'">
+          <el-input v-model.trim="portfolioForm.title" maxlength="40" :placeholder="'\u8bf7\u8f93\u5165\u4f5c\u54c1\u6807\u9898'" />
         </el-form-item>
-        <el-form-item label="封面图片">
-          <file-upload
-            action="file/upload"
-            :limit="1"
-            :multiple="false"
-            :file-urls="portfolioForm.coverImage"
-            tip="建议上传 1 张封面图"
-            @change="(val) => { portfolioForm.coverImage = val }"
-          />
+        <el-form-item :label="'\u5c01\u9762\u56fe'">
+          <file-upload action="file/upload" :limit="1" :multiple="false" :file-urls="portfolioForm.coverImage" @change="(val) => { portfolioForm.coverImage = val }" />
         </el-form-item>
-        <el-form-item label="作品图集">
-          <file-upload
-            action="file/upload"
-            :limit="8"
-            :multiple="true"
-            :file-urls="portfolioForm.imageListValue"
-            tip="可上传多张作品细节图"
-            @change="(val) => { portfolioForm.imageListValue = val }"
-          />
+        <el-form-item :label="'\u4f5c\u54c1\u56fe\u96c6'">
+          <file-upload action="file/upload" :limit="8" :multiple="true" :file-urls="portfolioForm.imageListValue" @change="(val) => { portfolioForm.imageListValue = val }" />
         </el-form-item>
-        <el-form-item label="风格标签">
-          <el-input v-model.trim="portfolioForm.styleTags" maxlength="120" placeholder="多个标签请用逗号分隔，例如：学院风,女仆,甜酷" />
+        <el-form-item :label="'\u98ce\u683c\u6807\u7b7e'">
+          <el-input v-model.trim="portfolioForm.styleTags" maxlength="120" :placeholder="'\u591a\u4e2a\u6807\u7b7e\u8bf7\u7528\u9017\u53f7\u5206\u9694'" />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item :label="'\u4f5c\u54c1\u7b80\u4ecb'">
+          <el-input v-model.trim="portfolioForm.intro" type="textarea" :rows="5" maxlength="400" show-word-limit :placeholder="'\u8bf7\u8f93\u5165\u4f5c\u54c1\u7b80\u4ecb'" />
+        </el-form-item>
+        <el-form-item :label="'\u72b6\u6001'">
           <el-radio-group v-model="portfolioForm.status">
-            <el-radio-button label="启用" />
-            <el-radio-button label="隐藏" />
+            <el-radio-button :label="'\u542f\u7528'" />
+            <el-radio-button :label="'\u505c\u7528'" />
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="排序值">
+        <el-form-item :label="'\u6392\u5e8f'">
           <el-input-number v-model="portfolioForm.sortOrder" :min="0" :max="9999" />
-        </el-form-item>
-        <el-form-item label="作品简介">
-          <el-input
-            v-model.trim="portfolioForm.intro"
-            type="textarea"
-            :rows="5"
-            maxlength="500"
-            show-word-limit
-            placeholder="说明设计灵感、面料特点、制作亮点或适用场景"
-          />
         </el-form-item>
       </el-form>
       <span slot="footer">
-        <el-button @click="portfolioDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="portfolioSubmitting" @click="submitPortfolio">保存作品</el-button>
+        <el-button @click="portfolioDialogVisible = false">{{ '\u53d6\u6d88' }}</el-button>
+        <el-button type="primary" :loading="portfolioSubmitting" @click="submitPortfolio">{{ '\u4fdd\u5b58\u4f5c\u54c1' }}</el-button>
       </span>
     </el-dialog>
 
-    <el-dialog title="关联案例订单" :visible.sync="orderDialogVisible" width="720px">
+    <el-dialog :visible.sync="orderDialogVisible" width="760px">
       <div class="link-dialog-head">
-        <strong>{{ currentPortfolioTitle || '未选择作品' }}</strong>
-        <p>仅可选择当前设计师自己名下、且已发货或已完成的订单作为案例。</p>
+        <strong>{{ currentPortfolioTitle || '\u672a\u9009\u62e9\u4f5c\u54c1' }}</strong>
+        <p>{{ '\u53ea\u80fd\u5173\u8054\u5f53\u524d\u8bbe\u8ba1\u5e08\u81ea\u5df1\u7684\u5df2\u53d1\u8d27\u6216\u5df2\u5b8c\u6210\u8ba2\u5355' }}</p>
       </div>
       <el-checkbox-group v-model="selectedOrderIds" v-loading="orderOptionsLoading" class="order-option-group">
         <label v-for="item in orderOptions" :key="item.id" class="order-option-item">
-          <el-checkbox :label="item.id">
-            <span class="order-option-title">{{ item.orderNo || `订单 ${item.id}` }}</span>
-            <span class="order-option-meta">{{ item.orderStatus }} · ¥{{ formatMoney(item.totalAmount) }} · {{ item.addtime || '-' }}</span>
-          </el-checkbox>
+          <el-checkbox :label="item.id">{{ item.orderNo || ('#' + item.id) }}</el-checkbox>
+          <div class="order-option-title">{{ item.orderStatus || '\u72b6\u6001\u672a\u77e5' }}</div>
+          <div class="order-option-meta">{{ '\u91d1\u989d\uff1a' + formatMoney(item.totalAmount) }}</div>
         </label>
       </el-checkbox-group>
-      <el-empty v-if="!orderOptionsLoading && !orderOptions.length" description="暂无可关联的订单" :image-size="90" />
+      <el-empty v-if="!orderOptionsLoading && !orderOptions.length" :description="'\u6682\u65e0\u53ef\u5173\u8054\u8ba2\u5355'" :image-size="90" />
       <span slot="footer">
-        <el-button @click="orderDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="orderSubmitting" @click="submitOrderLinks">保存关联</el-button>
+        <el-button @click="orderDialogVisible = false">{{ '\u53d6\u6d88' }}</el-button>
+        <el-button type="primary" :loading="orderSubmitting" @click="submitOrderLinks">{{ '\u4fdd\u5b58\u5173\u8054' }}</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
-
 <script>
+import ProductPosterCard from '@/components/ProductPosterCard'
+const PORTFOLIO_STATUS_ENABLED = '\u542f\u7528'
+const DEFAULT_DESIGNER_NAME = '\u8bbe\u8ba1\u5e08'
 export default {
   name: 'DesignerProfile',
+  components: {
+    ProductPosterCard
+  },
   data() {
     return {
       baseUrl: this.$config.baseUrl,
@@ -340,7 +303,7 @@ export default {
         imageListValue: '',
         styleTags: '',
         intro: '',
-        status: '启用',
+        status: PORTFOLIO_STATUS_ENABLED,
         sortOrder: 0
       },
       orderOptions: [],
@@ -350,13 +313,13 @@ export default {
   },
   computed: {
     displayName() {
-      return this.profile.name || localStorage.getItem('username') || '设计师'
+      return this.profile.name || localStorage.getItem('username') || DEFAULT_DESIGNER_NAME
     },
     profileAvatar() {
       return this.toFileUrl(this.profile.avatar)
     },
     nameInitial() {
-      const name = this.displayName || '设计师'
+      const name = this.displayName || DEFAULT_DESIGNER_NAME
       return String(name).slice(0, 1)
     },
     specialtyTags() {
@@ -369,49 +332,58 @@ export default {
     },
     completionHint() {
       if (this.completionPercent >= 100) {
-        return '资料已完整，可继续沉淀作品和案例订单。'
+        return '\u8d44\u6599\u5df2\u5b8c\u6574\uff0c\u53ef\u7ee7\u7eed\u6c89\u6dc0\u4f5c\u54c1\u548c\u6848\u4f8b\u8ba2\u5355\u3002'
       }
       if (this.completionPercent >= 60) {
-        return '建议补齐头像或简介，提升用户与管理员对你的识别度。'
+        return '\u8d44\u6599\u57fa\u7840\u4fe1\u606f\u5df2\u8f83\u5b8c\u6574\uff0c\u5efa\u8bae\u7ee7\u7eed\u8865\u5145\u5934\u50cf\u3001\u64c5\u957f\u65b9\u5411\u548c\u7b80\u4ecb\u3002'
       }
-      return '当前资料仍较少，建议尽快完善基础信息。'
+      return '\u5efa\u8bae\u5b8c\u5584\u5934\u50cf\u3001\u8054\u7cfb\u65b9\u5f0f\u3001\u64c5\u957f\u65b9\u5411\u548c\u7b80\u4ecb\uff0c\u63d0\u9ad8\u5c55\u793a\u5b8c\u6574\u5ea6\u3002'
     },
     metricCards() {
       return [
         {
-          label: '作品总数',
+          label: '\u4f5c\u54c1\u603b\u6570',
           value: this.portfolioStats.total,
-          sub: '当前设计师名下的作品条目',
+          sub: '\u5f53\u524d\u8bbe\u8ba1\u5e08\u540d\u4e0b\u7684\u4f5c\u54c1\u6761\u76ee\u6570',
           icon: 'el-icon-picture-outline',
-          bg: 'linear-gradient(135deg, rgba(86, 110, 255, 0.18), rgba(93, 224, 255, 0.22))'
+          bg: 'linear-gradient(135deg, rgba(122, 162, 255, 0.18), rgba(195, 226, 255, 0.22))'
         },
         {
-          label: '启用作品',
+          label: '\u542f\u7528\u4f5c\u54c1',
           value: this.portfolioStats.enabledCount,
-          sub: '面向后续展示的有效作品数',
+          sub: '\u5f53\u524d\u5904\u4e8e\u542f\u7528\u72b6\u6001\u7684\u4f5c\u54c1\u6570\u91cf',
           icon: 'el-icon-medal-1',
           bg: 'linear-gradient(135deg, rgba(102, 126, 234, 0.18), rgba(167, 139, 250, 0.20))'
         },
         {
-          label: '关联案例',
+          label: '\u5173\u8054\u8ba2\u5355',
           value: this.portfolioStats.orderLinkCount,
-          sub: '累计沉淀到作品集的订单案例',
+          sub: '\u7d2f\u8ba1\u6c89\u6dc0\u5230\u4f5c\u54c1\u96c6\u7684\u8ba2\u5355\u6848\u4f8b\u6570',
           icon: 'el-icon-collection-tag',
           bg: 'linear-gradient(135deg, rgba(74, 144, 226, 0.18), rgba(138, 196, 255, 0.2))'
         },
         {
-          label: '资料完成度',
+          label: '\u8d44\u6599\u5b8c\u6574\u5ea6',
           value: `${this.completionPercent}%`,
-          sub: '头像、专长、简介和联系方式覆盖情况',
+          sub: '\u57fa\u4e8e\u5934\u50cf\u3001\u8054\u7cfb\u65b9\u5f0f\u3001\u64c5\u957f\u65b9\u5411\u548c\u7b80\u4ecb\u7684\u586b\u5199\u60c5\u51b5\u8ba1\u7b97',
           icon: 'el-icon-user-solid',
           bg: 'linear-gradient(135deg, rgba(100, 149, 237, 0.18), rgba(144, 205, 244, 0.2))'
         }
       ]
     }
-  },  created() {
+  },
+  created() {
     this.loadData()
   },
   methods: {
+    portfolioPreviewTags(item) {
+      const tags = Array.isArray(item.tagList) ? item.tagList.slice(0, 2) : []
+      tags.push('\u5173\u8054 ' + (item.linkedOrderCount || 0) + ' \u5355')
+      if (item.status) {
+        tags.push(item.status)
+      }
+      return tags
+    },
     formatMoney(value) {
       return Number(value || 0).toFixed(2)
     },
@@ -436,7 +408,7 @@ export default {
     },
     splitTags(value) {
       return String(value || '')
-        .split(/[，,、\s]+/)
+        .split(/[,\uff0c\u3001\n]+/)
         .map((item) => item.trim())
         .filter(Boolean)
     },
@@ -474,12 +446,12 @@ export default {
           styleTags: this.safeText(item.styleTags, item.style_tags),
           tagList: this.splitTags(this.safeText(item.styleTags, item.style_tags)),
           intro: this.safeText(item.intro),
-          status: this.safeText(item.status) || '启用',
+          status: this.safeText(item.status) || PORTFOLIO_STATUS_ENABLED,
           sortOrder: this.parseNumber(this.safeText(item.sortOrder, item.sort_order), 0),
           addtime: this.safeText(item.addtime),
           linkedOrderCount: this.parseNumber(this.safeText(item.linkedOrderCount, item.linked_order_count), 0),
           linkedOrderNos,
-          linkedOrderNoList: linkedOrderNos ? linkedOrderNos.split(/[，,、]+/).map((part) => part.trim()).filter(Boolean) : []
+          linkedOrderNoList: linkedOrderNos ? linkedOrderNos.split(/[,\\uff0c\\u3001\\n]+/).map((part) => part.trim()).filter(Boolean) : []
         }
       })
     },
@@ -501,7 +473,7 @@ export default {
         imageListValue: '',
         styleTags: '',
         intro: '',
-        status: '启用',
+        status: PORTFOLIO_STATUS_ENABLED,
         sortOrder: 0
       }
     },
@@ -553,7 +525,7 @@ export default {
       try {
         const [profileOk, portfolioOk] = await Promise.all([this.loadProfile(), this.loadPortfolios()])
         if (!profileOk || !portfolioOk) {
-          this.$message.warning('部分资料加载失败，已展示当前可用内容')
+          this.$message.warning('\u8d44\u6599\u6216\u4f5c\u54c1\u5217\u8868\u52a0\u8f7d\u4e0d\u5b8c\u6574\uff0c\u8bf7\u5237\u65b0\u91cd\u8bd5')
         }
       } finally {
         this.loading = false
@@ -584,7 +556,7 @@ export default {
     },
     async submitProfile() {
       if (!String(this.profileForm.shejishixingming || '').trim()) {
-        this.$message.warning('请先填写设计师姓名')
+        this.$message.warning('\u8bf7\u8f93\u5165\u8bbe\u8ba1\u5e08\u59d3\u540d')
         return
       }
       this.profileSubmitting = true
@@ -596,7 +568,7 @@ export default {
           params: { ...this.profileForm }
         })
         if (!res) return
-        this.$message.success(res.msg || '资料已更新')
+        this.$message.success(res.msg || '\u8d44\u6599\u5df2\u66f4\u65b0')
         this.profileDialogVisible = false
         await this.loadProfile()
       } finally {
@@ -613,7 +585,7 @@ export default {
           imageListValue: row.imageListValue,
           styleTags: row.styleTags,
           intro: row.intro,
-          status: row.status || '启用',
+          status: row.status || PORTFOLIO_STATUS_ENABLED,
           sortOrder: row.sortOrder || 0
         }
       } else {
@@ -623,7 +595,7 @@ export default {
     },
     async submitPortfolio() {
       if (!String(this.portfolioForm.title || '').trim()) {
-        this.$message.warning('请输入作品标题')
+        this.$message.warning('\u8bf7\u8f93\u5165\u4f5c\u54c1\u6807\u9898')
         return
       }
       this.portfolioSubmitting = true
@@ -645,7 +617,7 @@ export default {
           }
         })
         if (!res) return
-        this.$message.success(res.msg || (isCreate ? '作品已新增' : '作品已更新'))
+        this.$message.success(res.msg || (isCreate ? '\u4f5c\u54c1\u5df2\u65b0\u589e' : '\u4f5c\u54c1\u5df2\u66f4\u65b0'))
         this.portfolioDialogVisible = false
         await this.loadPortfolios()
       } finally {
@@ -653,7 +625,7 @@ export default {
       }
     },
     removePortfolio(row) {
-      this.$confirm(`确定删除作品“${row.title || row.id}”吗？`, '提示', {
+      this.$confirm(`\u786e\u5b9a\u5220\u9664\u4f5c\u54c1\u201c${row.title || row.id}\u201d\u5417\uff1f`, '\u63d0\u793a', {
         type: 'warning'
       })
         .then(async () => {
@@ -664,7 +636,7 @@ export default {
             params: { ids: [row.id] }
           })
           if (!res) return
-          this.$message.success(res.msg || '作品已删除')
+          this.$message.success(res.msg || '\u4f5c\u54c1\u5df2\u5220\u9664')
           if (this.portfolioList.length === 1 && this.filters.page > 1) {
             this.filters.page -= 1
           }
@@ -690,7 +662,7 @@ export default {
         this.selectedOrderIds = list.filter((item) => item.linked).map((item) => item.id)
         this.linkedOrderIdsSnapshot = [...this.selectedOrderIds]
         if (!res) {
-          this.$message.warning('可关联订单加载失败，请稍后重试')
+          this.$message.warning('\u6848\u4f8b\u8ba2\u5355\u5217\u8868\u52a0\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5')
         }
       } finally {
         this.orderOptionsLoading = false
@@ -730,7 +702,7 @@ export default {
           })
           if (!res) return
         }
-        this.$message.success('案例订单已更新')
+        this.$message.success('\u6848\u4f8b\u8ba2\u5355\u5df2\u66f4\u65b0')
         this.orderDialogVisible = false
         await this.loadPortfolios()
       } finally {
@@ -739,7 +711,9 @@ export default {
     }
   }
 }
-</script><style scoped>
+</script>
+
+<style scoped>
 .designer-profile-page {
   --profile-primary: #4f6ef7;
   --profile-primary-soft: rgba(79, 110, 247, 0.12);
@@ -755,148 +729,59 @@ export default {
   gap: 20px;
 }
 
-.profile-card-shell,
 .panel-card,
 .metric-card {
   background: var(--profile-surface);
   border: 1px solid var(--profile-border);
-  border-radius: 24px;
-  box-shadow: 0 20px 45px rgba(61, 86, 178, 0.08);
+  border-radius: 20px;
+  box-shadow: none;
 }
 
-.hero-card {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) 320px;
-  gap: 20px;
-  padding: 28px;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(79, 110, 247, 0.96), rgba(104, 125, 255, 0.92) 58%, rgba(85, 199, 255, 0.9));
-  color: #fff;
-}
-
-.hero-card::after {
-  content: '';
-  position: absolute;
-  inset: auto -90px -120px auto;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-  filter: blur(4px);
-}
-
-.section-kicker {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
-
-.hero-copy {
-  position: relative;
-  z-index: 1;
-}
-
-.hero-copy h2 {
-  margin: 16px 0 12px;
-  font-size: 30px;
-  line-height: 1.35;
-}
-
-.hero-copy p {
-  margin: 0;
-  max-width: 700px;
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.hero-actions {
-  margin-top: 22px;
+.page-toolbar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.hero-side {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   align-items: flex-start;
-  padding: 20px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(10px);
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.avatar-frame {
-  width: 88px;
-  height: 88px;
-  border-radius: 24px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.avatar-frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-placeholder {
-  font-size: 32px;
-  font-weight: 700;
-}
-
-.identity-block {
-  display: flex;
-  flex-direction: column;
+.page-copy {
+  display: grid;
   gap: 6px;
 }
 
-.identity-block strong {
-  font-size: 22px;
-}
-
-.identity-block span,
-.completion-card p {
-  color: rgba(255, 255, 255, 0.84);
-}
-
-.completion-card {
-  width: 100%;
-}
-
-.completion-top {
-  display: flex;
+.page-tag {
+  display: inline-flex;
+  width: fit-content;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.completion-track {
-  height: 10px;
+  padding: 5px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  overflow: hidden;
+  border: 1px solid #dbe6ff;
+  background: #f7faff;
+  color: #5870bc;
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }
 
-.completion-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #ffffff, #a8e8ff);
+.page-copy h2 {
+  margin: 0;
+  color: var(--profile-text);
+  font-size: 28px;
+  line-height: 1.35;
 }
 
+.page-copy p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--profile-muted);
+  line-height: 1.75;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1044,6 +929,13 @@ export default {
   width: 240px;
 }
 
+.portfolio-preview-grid {
+  margin: 18px 0 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
 .cover-cell {
   width: 56px;
   height: 56px;
@@ -1174,6 +1066,10 @@ export default {
 }
 
 @media (max-width: 1200px) {
+  .portfolio-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1184,8 +1080,8 @@ export default {
 }
 
 @media (max-width: 900px) {
-  .hero-card {
-    grid-template-columns: 1fr;
+  .page-toolbar {
+    flex-direction: column;
   }
 
   .panel-head,
@@ -1208,17 +1104,23 @@ export default {
 }
 
 @media (max-width: 640px) {
+  .portfolio-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
   .designer-profile-page {
     gap: 16px;
   }
 
-  .hero-card,
-  .panel-card,
-  .metric-card {
-    border-radius: 20px;
+  .page-copy h2 {
+    font-size: 22px;
   }
 
-  .hero-card,
+  .panel-card,
+  .metric-card {
+    border-radius: 18px;
+  }
+
   .panel-card {
     padding: 18px;
   }

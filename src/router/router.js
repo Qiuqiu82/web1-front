@@ -22,6 +22,7 @@ import DesignerWorkbench from '../pages/designer/workbench'
 import DesignerCommunication from '../pages/designer/communication'
 import DesignerProfile from '../pages/designer/profile'
 import DesignerRevenue from '../pages/designer/revenue'
+import DesignerInspirations from '../pages/designer/inspirations'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -116,6 +117,10 @@ export default new VueRouter({
         {
           path: 'orders',
           component: CosorderDesigner
+        },
+        {
+          path: 'inspirations',
+          component: DesignerInspirations
         },
         {
           path: 'communication',

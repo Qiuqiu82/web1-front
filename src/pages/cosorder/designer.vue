@@ -1,136 +1,48 @@
 <template>
-  <div class="designer-page order-theme">
+  <div class="designer-order-page">
     <section class="head-panel">
       <div>
-        <h2>设计师接单台</h2>
-        <p>从待接单池快速认领订单，并持续追踪我的订单进度。</p>
+        <h2>{{ texts.title }}</h2>
+        <p>{{ texts.subtitle }}</p>
       </div>
     </section>
 
-    <el-card shadow="never" class="recommend-card panel-card">
-      <div slot="header" class="card-header">
-        <span>热门款参考（热度排序）</span>
-      </div>
-      <el-row :gutter="12" v-if="hotList.length">
-        <el-col :span="6" v-for="item in hotList" :key="item.id">
-          <div class="hot-item" @click="toCosDetail(item)">
-            <img :src="coverUrl(item)" alt="热门款" class="hot-cover" />
-            <div class="hot-name">{{ item.fuzhuangmingcheng || '-' }}</div>
-            <div class="hot-meta">热度：{{ item.clicknum || 0 }}</div>
-          </div>
-        </el-col>
-      </el-row>
-      <div v-else class="empty-tip">暂无热门款数据</div>
-    </el-card>
-
     <section class="panel-card tabs-panel">
       <el-tabs v-model="activeTab">
-        <el-tab-pane label="待接单池" name="pool">
-          <el-table :data="poolList" border v-loading="poolLoading" style="width: 100%">
-            <el-table-column prop="orderNo" label="订单号" min-width="180" />
-            <el-table-column prop="userId" label="用户ID" width="120" />
-            <el-table-column prop="totalAmount" label="金额" width="120">
-              <template slot-scope="scope">￥{{ formatMoney(scope.row.totalAmount) }}</template>
-            </el-table-column>
-            <el-table-column prop="payStatus" label="支付状态" width="110">
-              <template slot-scope="scope">
-                <el-tag size="mini" :type="payTagType(scope.row.payStatus)">{{ scope.row.payStatus || '-' }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="orderStatus" label="履约状态" width="120">
-              <template slot-scope="scope">
-                <span :class="['status-chip', orderStatusClass(scope.row.orderStatus)]">{{ scope.row.orderStatus || '-' }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="designerStatus" label="接单状态" width="120" />
-            <el-table-column prop="addtime" label="下单时间" min-width="160" />
-            <el-table-column label="操作" width="140" fixed="right">
-              <template slot-scope="scope">
-                <el-button
-                  type="primary"
-                  size="mini"
-                  class="claim-btn"
-                  :loading="claimLoadingOrderId === scope.row.id"
-                  @click="claim(scope.row)"
-                >
-                  认领
-                </el-button>
-              </template>
-            </el-table-column>
+        <el-tab-pane :label="texts.poolTab" name="pool">
+          <el-table :data="poolList" border v-loading="poolLoading" style="width:100%">
+            <el-table-column prop="orderNo" :label="texts.orderNo" min-width="180" />
+            <el-table-column prop="userId" :label="texts.userId" width="120" />
+            <el-table-column prop="totalAmount" :label="texts.amount" width="120"><template slot-scope="scope">{{ currency }}{{ formatMoney(scope.row.totalAmount) }}</template></el-table-column>
+            <el-table-column prop="payStatus" :label="texts.payStatus" width="110"><template slot-scope="scope"><el-tag size="mini" :type="payTagType(scope.row.payStatus)">{{ scope.row.payStatus || '-' }}</el-tag></template></el-table-column>
+            <el-table-column prop="orderStatus" :label="texts.orderStatus" width="120"><template slot-scope="scope"><span :class="['status-chip', orderStatusClass(scope.row.orderStatus)]">{{ scope.row.orderStatus || '-' }}</span></template></el-table-column>
+            <el-table-column prop="designerStatus" :label="texts.designerStatus" width="120" />
+            <el-table-column prop="addtime" :label="texts.orderTime" min-width="160" />
+            <el-table-column :label="texts.actions" width="140" fixed="right"><template slot-scope="scope"><el-button type="primary" size="mini" class="claim-btn" :loading="claimLoadingOrderId === scope.row.id" @click="claim(scope.row)">{{ texts.claim }}</el-button></template></el-table-column>
           </el-table>
-
-          <div class="pagination">
-            <el-pagination
-              @size-change="handlePoolSizeChange"
-              @current-change="handlePoolCurrentChange"
-              :current-page="poolPage"
-              :page-size="poolLimit"
-              :page-sizes="[10, 20, 50]"
-              layout="total, sizes, prev, pager, next"
-              :total="poolTotal"
-              background
-            />
-          </div>
+          <div class="pagination"><el-pagination @size-change="handlePoolSizeChange" @current-change="handlePoolCurrentChange" :current-page="poolPage" :page-size="poolLimit" :page-sizes="[10,20,50]" layout="total, sizes, prev, pager, next" :total="poolTotal" background /></div>
         </el-tab-pane>
 
-        <el-tab-pane label="我的订单" name="mine">
-          <el-table :data="mineList" border v-loading="mineLoading" style="width: 100%">
-            <el-table-column prop="orderNo" label="订单号" min-width="180" />
-            <el-table-column prop="userId" label="用户ID" width="120" />
-            <el-table-column prop="totalAmount" label="金额" width="120">
-              <template slot-scope="scope">￥{{ formatMoney(scope.row.totalAmount) }}</template>
-            </el-table-column>
-            <el-table-column prop="payStatus" label="支付状态" width="110">
+        <el-tab-pane :label="texts.mineTab" name="mine">
+          <el-table :data="mineList" border v-loading="mineLoading" style="width:100%">
+            <el-table-column prop="orderNo" :label="texts.orderNo" min-width="180" />
+            <el-table-column prop="userId" :label="texts.userId" width="120" />
+            <el-table-column prop="totalAmount" :label="texts.amount" width="120"><template slot-scope="scope">{{ currency }}{{ formatMoney(scope.row.totalAmount) }}</template></el-table-column>
+            <el-table-column prop="payStatus" :label="texts.payStatus" width="110"><template slot-scope="scope"><el-tag size="mini" :type="payTagType(scope.row.payStatus)">{{ scope.row.payStatus || '-' }}</el-tag></template></el-table-column>
+            <el-table-column prop="orderStatus" :label="texts.orderStatus" width="120"><template slot-scope="scope"><span :class="['status-chip', orderStatusClass(scope.row.orderStatus)]">{{ scope.row.orderStatus || '-' }}</span></template></el-table-column>
+            <el-table-column prop="designerStatus" :label="texts.designerStatus" width="120" />
+            <el-table-column prop="designerTakeTime" :label="texts.claimTime" min-width="160" />
+            <el-table-column :label="texts.actions" min-width="240" fixed="right">
               <template slot-scope="scope">
-                <el-tag size="mini" :type="payTagType(scope.row.payStatus)">{{ scope.row.payStatus || '-' }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="orderStatus" label="履约状态" width="120">
-              <template slot-scope="scope">
-                <span :class="['status-chip', orderStatusClass(scope.row.orderStatus)]">{{ scope.row.orderStatus || '-' }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="designerStatus" label="接单状态" width="120" />
-            <el-table-column prop="designerTakeTime" label="认领时间" min-width="160" />
-            <el-table-column prop="addtime" label="下单时间" min-width="160" />
-            <el-table-column label="操作" width="340" fixed="right">
-              <template slot-scope="scope">
-                <el-button
-                  v-if="canStartProduction(scope.row)"
-                  type="primary"
-                  size="mini"
-                  :loading="actionLoadingKey === `${scope.row.id}-start`"
-                  @click="startProduction(scope.row)"
-                >
-                  开始制作
-                </el-button>
-                <el-button
-                  v-if="canShip(scope.row)"
-                  type="success"
-                  size="mini"
-                  :loading="actionLoadingKey === `${scope.row.id}-ship`"
-                  @click="shipOrder(scope.row)"
-                >
-                  制作完成并发货
-                </el-button>
-                <el-button size="mini" @click="goComm(scope.row)">去沟通</el-button>
-                <span v-if="!canStartProduction(scope.row) && !canShip(scope.row)" class="noop-tip">当前状态无需操作</span>
+                <div class="row-actions">
+                  <el-button v-if="canStartProduction(scope.row)" type="primary" size="mini" :loading="actionLoadingKey === `start-${scope.row.id}`" @click="startProduction(scope.row)">{{ texts.startProduction }}</el-button>
+                  <el-button v-if="canShip(scope.row)" type="success" size="mini" :loading="actionLoadingKey === `ship-${scope.row.id}`" @click="shipOrder(scope.row)">{{ texts.shipNow }}</el-button>
+                  <el-button size="mini" @click="goComm(scope.row)">{{ texts.goComm }}</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
-
-          <div class="pagination">
-            <el-pagination
-              @size-change="handleMineSizeChange"
-              @current-change="handleMineCurrentChange"
-              :current-page="minePage"
-              :page-size="mineLimit"
-              :page-sizes="[10, 20, 50]"
-              layout="total, sizes, prev, pager, next"
-              :total="mineTotal"
-              background
-            />
-          </div>
+          <div class="pagination"><el-pagination @size-change="handleMineSizeChange" @current-change="handleMineCurrentChange" :current-page="minePage" :page-size="mineLimit" :page-sizes="[10,20,50]" layout="total, sizes, prev, pager, next" :total="mineTotal" background /></div>
         </el-tab-pane>
       </el-tabs>
     </section>
@@ -138,500 +50,67 @@
 </template>
 
 <script>
+const STATUS_PENDING_CONFIRM = '\u5f85\u786e\u8ba4'
+const STATUS_PENDING_PRODUCTION = '\u5f85\u751f\u4ea7'
+const STATUS_PRODUCING = '\u751f\u4ea7\u4e2d'
+const STATUS_SHIPPED = '\u5df2\u53d1\u8d27'
+const STATUS_FINISHED = '\u5df2\u5b8c\u6210'
+const STATUS_CANCELLED = '\u5df2\u53d6\u6d88'
+const PAY_PAID = '\u5df2\u652f\u4ed8'
+const PAY_UNPAID = '\u672a\u652f\u4ed8'
+const TEXTS = {
+  title:'\u8bbe\u8ba1\u5e08\u63a5\u5355\u53f0', subtitle:'\u4ece\u5f85\u63a5\u5355\u6c60\u5feb\u901f\u8ba4\u9886\u8ba2\u5355\uff0c\u5e76\u6301\u7eed\u8ddf\u8fdb\u6211\u7684\u8ba2\u5355\u8fdb\u5ea6\u3002', poolTab:'\u5f85\u63a5\u5355\u6c60', mineTab:'\u6211\u7684\u8ba2\u5355', orderNo:'\u8ba2\u5355\u53f7', userId:'\u7528\u6237ID', amount:'\u91d1\u989d', payStatus:'\u652f\u4ed8\u72b6\u6001', orderStatus:'\u5c65\u7ea6\u72b6\u6001', designerStatus:'\u63a5\u5355\u72b6\u6001', orderTime:'\u4e0b\u5355\u65f6\u95f4', claimTime:'\u8ba4\u9886\u65f6\u95f4', actions:'\u64cd\u4f5c', claim:'\u8ba4\u9886', startProduction:'\u5f00\u59cb\u5236\u4f5c', shipNow:'\u5b8c\u6210\u5e76\u53d1\u8d27', goComm:'\u53bb\u6c9f\u901a', confirm:'\u63d0\u793a', cancel:'\u53d6\u6d88', confirmClaim:'\u786e\u8ba4\u8ba4\u9886', confirmStart:'\u5f00\u59cb\u5236\u4f5c', confirmShip:'\u786e\u8ba4\u53d1\u8d27', promptTitle:'\u5b8c\u6210\u5e76\u53d1\u8d27', promptLabel:'\u8bf7\u586b\u5199\u4ea4\u4ed8\u8bf4\u660e\u6216\u7269\u6d41\u5355\u53f7\uff08\u53ef\u9009\uff09', promptPlaceholder:'\u4f8b\u5982\uff1a\u7269\u6d41\u5355\u53f7 + \u4ea4\u4ed8\u8bf4\u660e', claimFail:'\u8ba4\u9886\u5931\u8d25', claimSuccess:'\u8ba4\u9886\u6210\u529f', startFail:'\u5f00\u59cb\u5236\u4f5c\u5931\u8d25', startSuccess:'\u5df2\u5f00\u59cb\u5236\u4f5c', shipFail:'\u53d1\u8d27\u64cd\u4f5c\u5931\u8d25', shipSuccess:'\u5df2\u6807\u8bb0\u53d1\u8d27', poolLoadFail:'\u5f85\u63a5\u5355\u52a0\u8f7d\u5931\u8d25', mineLoadFail:'\u6211\u7684\u8ba2\u5355\u52a0\u8f7d\u5931\u8d25', syncWarn:'\u8ba4\u9886\u5df2\u6210\u529f\uff0c\u5217\u8868\u540c\u6b65\u7a0d\u6162\uff0c\u5df2\u4e34\u65f6\u56de\u586b\u6b64\u8ba2\u5355\u3002' }
+
 export default {
-  data() {
-    return {
-      baseUrl: this.$config.baseUrl,
-      activeTab: 'pool',
-      hotList: [],
-
-      poolLoading: false,
-      poolList: [],
-      poolPage: 1,
-      poolLimit: 10,
-      poolTotal: 0,
-
-      mineLoading: false,
-      mineList: [],
-      minePage: 1,
-      mineLimit: 10,
-      mineTotal: 0,
-
-      claimLoadingOrderId: null,
-      actionLoadingKey: ''
-    }
-  },
-  created() {
-    if (!this.ensureDesigner()) {
-      return
-    }
-    this.loadHot()
-    this.loadPool()
-    this.loadMine()
-  },
-  methods: {
-    ensureDesigner() {
-      const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
-      const roleName = localStorage.getItem('role') || ''
-      const isDesigner = tableName === 'shejishi' || roleName === '设计师' || roleName === 'DESIGNER'
-      if (!isDesigner) {
-        this.$message.error('仅设计师可访问该页面')
-        this.$router.replace('/index/home')
-        return false
-      }
-      return true
-    },
-    formatMoney(v) {
-      return Number(v || 0).toFixed(2)
-    },
-    payTagType(status) {
-      if (status === '已支付') return 'success'
-      if (status === '未支付') return 'warning'
-      return 'info'
-    },
-    orderStatusClass(status) {
-      if (status === '待确认') return 'status-confirm'
-      if (status === '待生产' || status === '生产中') return 'status-progress'
-      if (status === '已发货') return 'status-ship'
-      if (status === '已完成') return 'status-done'
-      if (status === '已取消') return 'status-cancel'
-      return 'status-default'
-    },
-    canStartProduction(row) {
-      return row && row.orderStatus === '待生产'
-    },
-    canShip(row) {
-      return row && row.orderStatus === '生产中'
-    },
-    normalizeRows(rows = []) {
-      return rows.map((row) => ({
-        ...row,
-        id: row.id || row.orderId || row.order_id || '',
-        orderNo: row.orderNo || row.order_no || '',
-        userId: row.userId || row.user_id || '',
-        totalAmount: row.totalAmount || row.total_amount || 0,
-        payStatus: row.payStatus || row.pay_status || '',
-        orderStatus: row.orderStatus || row.order_status || '',
-        designerStatus: row.designerStatus || row.designer_status || '待接单',
-        designerTakeTime: row.designerTakeTime || row.designer_take_time || '-'
-      }))
-    },
-    parsePageData(rawData) {
-      const data = rawData || {}
-      const list = data.list || data.records || data.rows || (Array.isArray(data) ? data : [])
-      const total = Number(data.total || data.count || data.recordsTotal || (Array.isArray(list) ? list.length : 0))
-      return {
-        list: Array.isArray(list) ? list : [],
-        total
-      }
-    },
-    currentDesignerId() {
-      return localStorage.getItem('userId') || localStorage.getItem('userid') || undefined
-    },
-    formatNow() {
-      const date = new Date()
-      const year = date.getFullYear()
-      const month = `${date.getMonth() + 1}`.padStart(2, '0')
-      const day = `${date.getDate()}`.padStart(2, '0')
-      const hour = `${date.getHours()}`.padStart(2, '0')
-      const minute = `${date.getMinutes()}`.padStart(2, '0')
-      const second = `${date.getSeconds()}`.padStart(2, '0')
-      return `${year}-${month}-${day} ${hour}:${minute}:${second}`
-    },
-    isMojibakeMessage(msg) {
-      if (!msg) return false
-      const text = String(msg)
-      return /[�]|闂|鍊|鈧|绗|鐑|锟/.test(text)
-    },
-    safeMsg(msg, fallback) {
-      if (!msg) return fallback
-      return this.isMojibakeMessage(msg) ? fallback : msg
-    },
-    hasMineOrder(orderId) {
-      if (!orderId) return false
-      return this.mineList.some((item) => String(item.id) === String(orderId))
-    },
-    appendClaimedOrder(row) {
-      if (!row || this.hasMineOrder(row.id)) {
-        return
-      }
-      const optimistic = this.normalizeRows([
-        {
-          ...row,
-          designerStatus: '已认领',
-          designerTakeTime: this.formatNow()
-        }
-      ])[0]
-      this.mineList = [optimistic, ...this.mineList]
-      this.mineTotal = Number(this.mineTotal || 0) + 1
-    },
-    markMineOrderProducing(orderId) {
-      this.mineList = this.mineList.map((item) => {
-        if (String(item.id) !== String(orderId)) return item
-        return {
-          ...item,
-          orderStatus: '生产中',
-          designerStatus: '制作中'
-        }
-      })
-    },
-    coverUrl(item) {
-      const raw = item.huawentuan || ''
-      const first = raw.split(',')[0] || ''
-      if (!first) {
-        return ''
-      }
-      return first.startsWith('http') ? first : `${this.baseUrl}${first}`
-    },
-    toCosDetail(item) {
-      this.$router.push({ path: '/index/remaicosfuDetail', query: { detailObj: JSON.stringify(item) } })
-    },
-    async loadHot() {
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.remaicosfuAutoSort,
-        method: 'get',
-        params: {
-          page: 1,
-          limit: 4
-        },
-        showLoading: false
-      })
-      if (!res || res.code !== 0) {
-        return
-      }
-      const data = res.data || {}
-      this.hotList = data.list || []
-    },
-    async loadPool() {
-      this.poolLoading = true
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerPool,
-        method: 'get',
-        params: {
-          page: this.poolPage,
-          pageNum: this.poolPage,
-          limit: this.poolLimit,
-          pageSize: this.poolLimit,
-          designerId: this.currentDesignerId()
-        },
-        showError: false
-      })
-      this.poolLoading = false
-      if (!res || res.code !== 0) {
-        this.$message.error(this.safeMsg(res && res.msg, '待接单加载失败'))
-        return
-      }
-      const { list, total } = this.parsePageData(res.data)
-      this.poolList = this.normalizeRows(list)
-      this.poolTotal = total
-    },
-    async loadMine() {
-      this.mineLoading = true
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerMine,
-        method: 'get',
-        params: {
-          page: this.minePage,
-          pageNum: this.minePage,
-          limit: this.mineLimit,
-          pageSize: this.mineLimit,
-          designerId: this.currentDesignerId()
-        },
-        showError: false
-      })
-      this.mineLoading = false
-      if (!res || res.code !== 0) {
-        this.$message.error(this.safeMsg(res && res.msg, '我的订单加载失败'))
-        return
-      }
-      const { list, total } = this.parsePageData(res.data)
-      this.mineList = this.normalizeRows(list)
-      this.mineTotal = total
-    },
-    handlePoolSizeChange(v) {
-      this.poolLimit = v
-      this.poolPage = 1
-      this.loadPool()
-    },
-    handlePoolCurrentChange(v) {
-      this.poolPage = v
-      this.loadPool()
-    },
-    handleMineSizeChange(v) {
-      this.mineLimit = v
-      this.minePage = 1
-      this.loadMine()
-    },
-    handleMineCurrentChange(v) {
-      this.minePage = v
-      this.loadMine()
-    },
-    async confirmAction(message) {
-      return this.$confirm(message, '提示', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => true)
-        .catch(() => false)
-    },
-    async startProduction(row) {
-      const ok = await this.confirmAction(`确认开始制作订单 ${row.orderNo || row.id} 吗？`)
-      if (!ok) return
-
-      this.actionLoadingKey = `${row.id}-start`
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerStart,
-        method: 'post',
-        dataType: 'json',
-        params: {
-          orderId: row.id
-        },
-        showError: false
-      })
-      this.actionLoadingKey = ''
-
-      if (!res || res.code !== 0) {
-        this.$message.error(this.safeMsg(res && res.msg, '开始制作失败'))
-        return
-      }
-      this.$message.success(this.safeMsg(res.msg, '已开始制作'))
-      this.markMineOrderProducing(row.id)
-      await this.loadMine()
-      if (!this.hasMineOrder(row.id)) {
-        const fallback = this.normalizeRows([{ ...row, orderStatus: '生产中', designerStatus: '制作中' }])[0]
-        this.mineList = [fallback, ...this.mineList]
-        this.mineTotal = Math.max(Number(this.mineTotal || 0), this.mineList.length)
-      }
-    },
-    async shipOrder(row) {
-      const promptRes = await this.$prompt('可填写交付说明、物流单号或素材链接（选填）', '制作完成并发货', {
-        confirmButtonText: '继续发货',
-        cancelButtonText: '取消',
-        inputPlaceholder: '例如：物流单号 + 交付说明',
-        inputType: 'textarea',
-        inputValue: ''
-      }).catch(() => null)
-      if (!promptRes) {
-        return
-      }
-
-      const deliveryRemark = (promptRes.value || '').trim()
-      this.actionLoadingKey = `${row.id}-ship`
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerShip,
-        method: 'post',
-        dataType: 'json',
-        params: {
-          orderId: row.id,
-          remark: deliveryRemark ? `交付说明：${deliveryRemark}` : '设计师发货'
-        },
-        showError: false
-      })
-      this.actionLoadingKey = ''
-
-      if (!res || res.code !== 0) {
-        this.$message.error(this.safeMsg(res && res.msg, '发货操作失败'))
-        return
-      }
-      this.$message.success(this.safeMsg(res.msg, '已标记发货'))
-      await this.loadMine()
-    },
-    async claim(row) {
-      const ok = await this.confirmAction(`确认认领订单 ${row.orderNo || row.id} 吗？`)
-
-      if (!ok) {
-        return
-      }
-
-      this.claimLoadingOrderId = row.id
-      const designerId = this.currentDesignerId()
-      const res = await this.$proxy.Request({
-        url: this.$proxy.Api.cosorderDesignerClaim,
-        method: 'post',
-        dataType: 'json',
-        params: {
-          orderId: row.id,
-          id: row.id,
-          designerId
-        },
-        showError: false
-      })
-      this.claimLoadingOrderId = null
-
-      if (!res || res.code !== 0) {
-        this.$message.error(this.safeMsg(res && res.msg, '认领失败'))
-        return
-      }
-
-      this.$message.success(this.safeMsg(res.msg, '认领成功'))
-      this.activeTab = 'mine'
-      this.appendClaimedOrder(row)
-      await this.loadPool()
-      await this.loadMine()
-      if (!this.hasMineOrder(row.id)) {
-        this.appendClaimedOrder(row)
-        this.$message.warning('认领已成功，列表同步稍慢，已临时回填此订单')
-      }
-    },
-    goComm(row) {
-      this.$router.push({ path: '/designer/communication', query: { orderId: row.id } })
-    }
+  name:'DesignerOrderPage',
+  data(){ return { texts:TEXTS, currency:'¥', activeTab:'pool', poolLoading:false, poolList:[], poolPage:1, poolLimit:10, poolTotal:0, mineLoading:false, mineList:[], minePage:1, mineLimit:10, mineTotal:0, claimLoadingOrderId:null, actionLoadingKey:'' } },
+  created(){ if(!this.ensureDesigner()) return; this.loadPool(); this.loadMine() },
+  methods:{
+    ensureDesigner(){ const tableName = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''; const roleName = localStorage.getItem('role') || ''; const isDesigner = tableName === 'shejishi' || roleName === '\u8bbe\u8ba1\u5e08' || roleName === 'DESIGNER'; if(!isDesigner){ this.$message.error('\u4ec5\u8bbe\u8ba1\u5e08\u53ef\u8bbf\u95ee\u8be5\u9875\u9762'); this.$router.replace('/index/home'); return false } return true },
+    formatMoney(v){ return Number(v || 0).toFixed(2) },
+    payTagType(status){ if(status === PAY_PAID) return 'success'; if(status === PAY_UNPAID) return 'warning'; return 'info' },
+    orderStatusClass(status){ if(status === STATUS_PENDING_CONFIRM) return 'status-confirm'; if([STATUS_PENDING_PRODUCTION, STATUS_PRODUCING].includes(status)) return 'status-progress'; if(status === STATUS_SHIPPED) return 'status-ship'; if(status === STATUS_FINISHED) return 'status-done'; if(status === STATUS_CANCELLED) return 'status-cancel'; return 'status-default' },
+    canStartProduction(row){ return row && row.orderStatus === STATUS_PENDING_PRODUCTION },
+    canShip(row){ return row && row.orderStatus === STATUS_PRODUCING },
+    normalizeRows(rows=[]){ return rows.map((row) => ({ ...row, id: row.id || row.orderId || row.order_id || '', orderNo: row.orderNo || row.order_no || '', userId: row.userId || row.user_id || '', totalAmount: row.totalAmount || row.total_amount || 0, payStatus: row.payStatus || row.pay_status || '', orderStatus: row.orderStatus || row.order_status || '', designerStatus: row.designerStatus || row.designer_status || '', designerTakeTime: row.designerTakeTime || row.designer_take_time || '-', addtime: row.addtime || '-' })) },
+    parsePageData(rawData){ const data = rawData || {}; const list = data.list || data.records || data.rows || (Array.isArray(data) ? data : []); const total = Number(data.total || data.count || data.recordsTotal || (Array.isArray(list) ? list.length : 0)); return { list: Array.isArray(list) ? list : [], total } },
+    currentDesignerId(){ return localStorage.getItem('userId') || localStorage.getItem('userid') || undefined },
+    formatNow(){ const date = new Date(); const year = date.getFullYear(); const month = `${date.getMonth() + 1}`.padStart(2, '0'); const day = `${date.getDate()}`.padStart(2, '0'); const hour = `${date.getHours()}`.padStart(2, '0'); const minute = `${date.getMinutes()}`.padStart(2, '0'); const second = `${date.getSeconds()}`.padStart(2, '0'); return `${year}-${month}-${day} ${hour}:${minute}:${second}` },
+    hasMineOrder(orderId){ return this.mineList.some((item) => String(item.id) === String(orderId)) },
+    appendClaimedOrder(row){ if(!row || this.hasMineOrder(row.id)) return; const optimistic = this.normalizeRows([{ ...row, designerStatus:'\u5df2\u8ba4\u9886', designerTakeTime:this.formatNow() }])[0]; this.mineList = [optimistic, ...this.mineList]; this.mineTotal += 1 },
+    isMojibakeMessage(msg){ return /[锟絔|闂倈閸妡閳缁梶閻憒閿?]/.test(String(msg || '')) },
+    safeMsg(msg, fallback){ return !msg || this.isMojibakeMessage(msg) ? fallback : msg },
+    async loadPool(){ this.poolLoading = true; const res = await this.$proxy.Request({ url:this.$proxy.Api.cosorderDesignerPool, method:'get', params:{ page:this.poolPage, pageNum:this.poolPage, limit:this.poolLimit, pageSize:this.poolLimit, designerId:this.currentDesignerId() }, showError:false }); this.poolLoading = false; if(!res || res.code !== 0){ this.$message.error(this.safeMsg(res && res.msg, this.texts.poolLoadFail)); return } const { list, total } = this.parsePageData(res.data); this.poolList = this.normalizeRows(list); this.poolTotal = total },
+    async loadMine(){ this.mineLoading = true; const res = await this.$proxy.Request({ url:this.$proxy.Api.cosorderDesignerMine, method:'get', params:{ page:this.minePage, pageNum:this.minePage, limit:this.mineLimit, pageSize:this.mineLimit, designerId:this.currentDesignerId() }, showError:false }); this.mineLoading = false; if(!res || res.code !== 0){ this.$message.error(this.safeMsg(res && res.msg, this.texts.mineLoadFail)); return } const { list, total } = this.parsePageData(res.data); this.mineList = this.normalizeRows(list); this.mineTotal = total },
+    confirmAction(message, confirmButtonText){ return this.$confirm(message, this.texts.confirm, { confirmButtonText, cancelButtonText:this.texts.cancel, type:'warning' }).then(() => true).catch(() => false) },
+    async claim(row){ const ok = await this.confirmAction(`${this.texts.confirmClaim}${row.orderNo || row.id}\uff1f`, this.texts.confirmClaim); if(!ok) return; this.claimLoadingOrderId = row.id; const res = await this.$proxy.Request({ url:this.$proxy.Api.cosorderDesignerClaim, method:'post', dataType:'json', params:{ orderId:row.id, id:row.id, designerId:this.currentDesignerId() }, showError:false }); this.claimLoadingOrderId = null; if(!res || res.code !== 0){ this.$message.error(this.safeMsg(res && res.msg, this.texts.claimFail)); return } this.$message.success(this.safeMsg(res.msg, this.texts.claimSuccess)); this.activeTab = 'mine'; this.appendClaimedOrder(row); await this.loadPool(); await this.loadMine(); if(!this.hasMineOrder(row.id)){ this.appendClaimedOrder(row); this.$message.warning(this.texts.syncWarn) } },
+    async startProduction(row){ const ok = await this.confirmAction(`${this.texts.confirmStart}${row.orderNo || row.id}\uff1f`, this.texts.confirmStart); if(!ok) return; this.actionLoadingKey = `start-${row.id}`; const res = await this.$proxy.Request({ url:this.$proxy.Api.cosorderDesignerStart, method:'post', dataType:'json', params:{ orderId:row.id }, showError:false }); this.actionLoadingKey = ''; if(!res || res.code !== 0){ this.$message.error(this.safeMsg(res && res.msg, this.texts.startFail)); return } this.$message.success(this.safeMsg(res.msg, this.texts.startSuccess)); await this.loadMine() },
+    async shipOrder(row){ const promptRes = await this.$prompt(this.texts.promptLabel, this.texts.promptTitle, { confirmButtonText:this.texts.confirmShip, cancelButtonText:this.texts.cancel, inputType:'textarea', inputPlaceholder:this.texts.promptPlaceholder }).catch(() => null); if(!promptRes) return; const deliveryRemark = (promptRes.value || '').trim(); this.actionLoadingKey = `ship-${row.id}`; const res = await this.$proxy.Request({ url:this.$proxy.Api.cosorderDesignerShip, method:'post', dataType:'json', params:{ orderId:row.id, remark: deliveryRemark || '\u8bbe\u8ba1\u5e08\u53d1\u8d27' }, showError:false }); this.actionLoadingKey = ''; if(!res || res.code !== 0){ this.$message.error(this.safeMsg(res && res.msg, this.texts.shipFail)); return } this.$message.success(this.safeMsg(res.msg, this.texts.shipSuccess)); await this.loadMine() },
+    goComm(row){ this.$router.push({ path:'/designer/communication', query:{ orderId:row.id } }) },
+    handlePoolSizeChange(size){ this.poolLimit = size; this.poolPage = 1; this.loadPool() },
+    handlePoolCurrentChange(page){ this.poolPage = page; this.loadPool() },
+    handleMineSizeChange(size){ this.mineLimit = size; this.minePage = 1; this.loadMine() },
+    handleMineCurrentChange(page){ this.minePage = page; this.loadMine() }
   }
 }
 </script>
 
 <style scoped>
-.order-theme {
-  --order-primary: #5264ff;
-  --order-primary-soft: #edf1ff;
-  --order-text-main: #25356a;
-  --order-text-sub: #8590b2;
-  --order-border: #e7edff;
-  --order-shadow: 0 10px 24px rgba(68, 88, 150, 0.1);
-}
-
-.designer-page {
-  width: 100%;
-  display: grid;
-  gap: 12px;
-}
-
-.panel-card,
-.head-panel,
-.tabs-panel {
-  border-radius: 16px;
-  border: 1px solid var(--order-border);
-  background: #fff;
-  box-shadow: var(--order-shadow);
-}
-
-.head-panel {
-  padding: 14px;
-}
-
-.head-panel h2 {
-  color: var(--order-text-main);
-  font-size: 24px;
-}
-
-.head-panel p {
-  margin-top: 6px;
-  color: var(--order-text-sub);
-}
-
-.recommend-card {
-  margin-bottom: 0;
-}
-
-.card-header {
-  font-weight: 700;
-  color: #334377;
-}
-
-.hot-item {
-  border: 1px solid #ebeef5;
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  background: #fff;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.hot-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 20px rgba(78, 98, 161, 0.15);
-}
-
-.hot-cover {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  display: block;
-  background: #f5f7fa;
-}
-
-.hot-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2f3d6f;
-  padding: 10px 10px 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hot-meta {
-  font-size: 12px;
-  color: #9099b5;
-  padding: 0 10px 10px;
-}
-
-.empty-tip {
-  color: #9099b5;
-}
-
-.tabs-panel {
-  padding: 12px;
-}
-
-.status-chip {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.status-confirm {
-  background: #f0f3ff;
-  color: #4a5c9f;
-}
-
-.status-progress {
-  background: #ebefff;
-  color: #3e52a8;
-}
-
-.status-ship {
-  background: #eaf5ff;
-  color: #3570a4;
-}
-
-.status-done {
-  background: #e9f8ef;
-  color: #2f7a4c;
-}
-
-.status-cancel {
-  background: #f3f4f6;
-  color: #7b8398;
-}
-
-.status-default {
-  background: #f4f6fb;
-  color: #687699;
-}
-
-.claim-btn {
-  min-width: 72px;
-  border-radius: 10px;
-}
-
-.noop-tip {
-  color: #8a95b7;
-  font-size: 12px;
-}
-
-.pagination {
-  margin-top: 16px;
-  text-align: right;
-}
-
-@media (max-width: 900px) {
-  .tabs-panel,
-  .head-panel {
-    padding: 12px;
-  }
-}
+.designer-order-page { display:grid; gap:12px; }
+.panel-card,.head-panel,.tabs-panel { border-radius:18px; border:1px solid #e7edff; background:#fff; box-shadow:0 10px 24px rgba(68,88,150,.08); }
+.head-panel { padding:18px 20px; }
+.head-panel h2 { color:#25356a; font-size:26px; }
+.head-panel p { margin-top:6px; color:#8590b2; }
+.tabs-panel { padding:12px; }
+.status-chip { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+.status-confirm { background:#f0f3ff; color:#4a5c9f; }
+.status-progress { background:#ebefff; color:#3e52a8; }
+.status-ship { background:#eaf5ff; color:#3570a4; }
+.status-done { background:#e9f8ef; color:#2f7a4c; }
+.status-cancel { background:#f3f4f6; color:#7b8398; }
+.status-default { background:#f4f6fb; color:#687699; }
+.claim-btn { min-width:72px; border-radius:10px; }
+.row-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.pagination { margin-top:16px; text-align:right; }
+@media (max-width:900px){ .tabs-panel,.head-panel{ padding:12px; } }
 </style>
