@@ -11,6 +11,7 @@
     "axios": "^1.13.6",
     "core-js": "^3.6.5",
     "element-ui": "^2.15.5",
+    "three": "^0.161.0",
     "vue": "^2.6.11",
     "vue-aplayer": "^1.6.1",
     "vue-baidu-map": "^0.21.22",

@@ -4,6 +4,7 @@ import RemaicosfuDetail from '../pages/remaicosfu/detail'
 import Index from '../pages/index'
 import Home from '../pages/home/home'
 import Browse from '../pages/browse/index'
+import TryOnPage from '../pages/tryon/index'
 import Login from '../pages/login/login'
 import AdminLogin from '../pages/login/admin-login'
 import Register from '../pages/register/register'
@@ -47,6 +48,10 @@ export default new VueRouter({
         {
           path: 'browse',
           component: Browse
+        },
+        {
+          path: 'tryon',
+          component: TryOnPage
         },
         {
           path: 'remaicosfuDetail',

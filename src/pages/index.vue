@@ -109,6 +109,7 @@ export default {
       const menus = [
         { label: '首页', path: '/index/home' },
         { label: '服装浏览', path: '/index/browse' },
+        { label: '3D试穿', path: '/index/tryon' },
         { label: '我的订单', path: '/index/cosorder', requiresAuth: true, roleHint: 'yonghu' }
       ]
       if (this.isUser) {
