@@ -101,15 +101,32 @@ export function resolveTryonColor(colorTheme = '') {
   return '#5b6ef5'
 }
 
+export function extractTryonCover(product = {}) {
+  const firstGallery = safeText((product.huawentuan || '').split(',')[0])
+  return safeText(product.cover || product.productCover || firstGallery)
+}
+
+export function normalizeTryonProduct(product = {}) {
+  return {
+    productId: product.productId || product.id || null,
+    productName: safeText(product.productName || product.fuzhuangmingcheng || product.name, '\u672a\u547d\u540d\u670d\u88c5'),
+    styleName: safeText(product.styleName || product.fuzhuangkuanshi || product.style, ''),
+    materialName: safeText(product.materialName || product.mianliaoleibie, ''),
+    cover: extractTryonCover(product),
+    draftId: product.draftId || null,
+    source: safeText(product.source, 'detail') || 'detail'
+  }
+}
+
 export function buildTryonContext(payload = {}) {
-  const product = payload.product || {}
+  const product = normalizeTryonProduct(payload.product || {})
   const bodyProfile = payload.bodyProfile ? normalizeBodyProfile(payload.bodyProfile) : createFallbackBodyProfile()
   const designConfig = normalizeDesignConfig(payload.designConfig || {}, { sizeCode: bodyProfile.sizeCode || 'M' })
   return {
-    productId: product.productId || product.id || null,
-    productName: safeText(product.productName || product.name, '\u672a\u547d\u540d\u670d\u88c5'),
-    styleName: safeText(product.styleName || product.style, ''),
-    cover: safeText(product.cover || product.productCover, ''),
+    productId: product.productId || null,
+    productName: product.productName,
+    styleName: product.styleName,
+    cover: product.cover,
     draftId: payload.draftId || product.draftId || null,
     source: safeText(payload.source || product.source, 'detail') || 'detail',
     designConfig,
@@ -117,6 +134,22 @@ export function buildTryonContext(payload = {}) {
     bodyProfileSnapshot: bodyProfile,
     updatedAt: new Date().toISOString()
   }
+}
+
+export function createRecommendTryonContext(product = {}, bodyProfile = null) {
+  const normalizedProduct = normalizeTryonProduct({
+    ...product,
+    source: 'recommend'
+  })
+  const nextBodyProfile = bodyProfile ? normalizeBodyProfile(bodyProfile) : createFallbackBodyProfile()
+  const designConfig = createDefaultDesignConfig(normalizedProduct, normalizedProduct.materialName ? [normalizedProduct.materialName] : [])
+  designConfig.sizeCode = nextBodyProfile.sizeCode || 'M'
+  return buildTryonContext({
+    source: 'recommend',
+    product: normalizedProduct,
+    designConfig,
+    bodyProfile: nextBodyProfile
+  })
 }
 
 export function saveTryonContext(context) {

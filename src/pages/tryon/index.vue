@@ -3,13 +3,13 @@
     <section class="tryon-hero panel-card">
       <div class="hero-copy">
         <span class="eyebrow">3D TRY-ON MVP</span>
-        <h2>参数化试穿预览</h2>
-        <p>首版使用程序生成人台与服装外壳，帮助用户快速确认版型、松量、主色与身材比例的匹配效果。</p>
+        <h2>Parametric Preview</h2>
+        <p>Lightweight mannequin and garment shell help users validate silhouette, ease, main color and body proportions before ordering.</p>
       </div>
       <div class="hero-actions">
-        <el-button type="primary" icon="el-icon-refresh-right" @click="syncFromSession">同步当前定制参数</el-button>
-        <el-button icon="el-icon-back" :disabled="!hasContext" @click="openDetail">返回商品详情</el-button>
-        <el-button icon="el-icon-picture-outline-round" @click="goBrowse">去服装浏览</el-button>
+        <el-button type="primary" icon="el-icon-refresh-right" @click="syncFromSession">Sync Current Config</el-button>
+        <el-button icon="el-icon-back" :disabled="!hasContext" @click="openDetail">Back To Detail</el-button>
+        <el-button icon="el-icon-picture-outline-round" @click="goBrowse">Browse Styles</el-button>
       </div>
     </section>
 
@@ -17,8 +17,8 @@
       <aside class="panel-card side-card summary-card">
         <div class="section-head">
           <div>
-            <h3>商品与身材摘要</h3>
-            <p>上下文来源：{{ contextSourceLabel }}</p>
+            <h3>Product Summary</h3>
+            <p>Source: {{ contextSourceLabel }}</p>
           </div>
         </div>
 
@@ -28,21 +28,21 @@
         </div>
 
         <div class="summary-list">
-          <div class="summary-row"><span>商品</span><strong>{{ product.productName }}</strong></div>
-          <div class="summary-row"><span>款式</span><strong>{{ product.styleName || '-' }}</strong></div>
-          <div class="summary-row"><span>尺码</span><strong>{{ designConfig.sizeCode }}</strong></div>
-          <div class="summary-row"><span>版型</span><strong>{{ designConfig.silhouette }}</strong></div>
-          <div class="summary-row"><span>松量</span><strong>{{ designConfig.fitType }}</strong></div>
-          <div class="summary-row"><span>主色</span><strong>{{ designConfig.colorTheme || '默认主题色' }}</strong></div>
-          <div class="summary-row"><span>身材档案</span><strong>{{ bodyProfile.profileName }}</strong></div>
+          <div class="summary-row"><span>Product</span><strong>{{ product.productName }}</strong></div>
+          <div class="summary-row"><span>Style</span><strong>{{ product.styleName || '-' }}</strong></div>
+          <div class="summary-row"><span>Size</span><strong>{{ designConfig.sizeCode }}</strong></div>
+          <div class="summary-row"><span>Silhouette</span><strong>{{ designConfig.silhouette }}</strong></div>
+          <div class="summary-row"><span>Fit</span><strong>{{ designConfig.fitType }}</strong></div>
+          <div class="summary-row"><span>Color</span><strong>{{ designConfig.colorTheme || 'Default theme' }}</strong></div>
+          <div class="summary-row"><span>Body Profile</span><strong>{{ bodyProfile.profileName }}</strong></div>
         </div>
 
         <div class="body-metrics">
-          <div class="metric-chip">身高 {{ bodyProfile.heightCm }} cm</div>
-          <div class="metric-chip">肩宽 {{ bodyProfile.shoulderCm }} cm</div>
-          <div class="metric-chip">胸围 {{ bodyProfile.bustCm }} cm</div>
-          <div class="metric-chip">腰围 {{ bodyProfile.waistCm }} cm</div>
-          <div class="metric-chip">臀围 {{ bodyProfile.hipCm }} cm</div>
+          <div class="metric-chip">Height {{ bodyProfile.heightCm }} cm</div>
+          <div class="metric-chip">Shoulder {{ bodyProfile.shoulderCm }} cm</div>
+          <div class="metric-chip">Bust {{ bodyProfile.bustCm }} cm</div>
+          <div class="metric-chip">Waist {{ bodyProfile.waistCm }} cm</div>
+          <div class="metric-chip">Hip {{ bodyProfile.hipCm }} cm</div>
         </div>
 
         <div class="badge-group">
@@ -53,21 +53,21 @@
       <section class="panel-card stage-card">
         <div class="section-head stage-head">
           <div>
-            <h3>3D 试穿视图</h3>
+            <h3>3D View</h3>
             <p>{{ sceneStatusText }}</p>
           </div>
           <div class="stage-actions">
-            <el-button size="mini" @click="setCameraView('front')">正面</el-button>
-            <el-button size="mini" @click="setCameraView('side')">侧面</el-button>
-            <el-button size="mini" @click="resetCamera">重置视角</el-button>
+            <el-button size="mini" @click="setCameraView('front')">Front</el-button>
+            <el-button size="mini" @click="setCameraView('side')">Side</el-button>
+            <el-button size="mini" @click="resetCamera">Reset</el-button>
           </div>
         </div>
 
         <div class="stage-shell">
           <div v-if="sceneState.failed" class="scene-fallback">
             <div class="fallback-card">
-              <h4>3D 初始化失败</h4>
-              <p>{{ sceneState.failedMessage || '当前环境未能完成 Three.js 初始化，已回退为静态参数预览。' }}</p>
+              <h4>3D Init Failed</h4>
+              <p>{{ sceneState.failedMessage || 'Three.js initialization failed, fallback preview is shown.' }}</p>
               <div class="fallback-figure">
                 <div class="fallback-head" />
                 <div class="fallback-body" :style="fallbackBodyStyle" />
@@ -81,42 +81,42 @@
       <aside class="panel-card side-card control-card">
         <div class="section-head">
           <div>
-            <h3>参数控制</h3>
-            <p>调整参数后，右侧摘要与中间预览会同时更新。</p>
+            <h3>Controls</h3>
+            <p>Changing inputs updates both the summary card and the live scene.</p>
           </div>
         </div>
 
         <div class="control-stack">
           <div class="control-block">
-            <label>身材档案</label>
-            <el-select v-model="selectedBodyProfileId" placeholder="选择身材档案" style="width: 100%" @change="handleBodyProfileChange">
+            <label>Body Profile</label>
+            <el-select v-model="selectedBodyProfileId" placeholder="Select body profile" style="width: 100%" @change="handleBodyProfileChange">
               <el-option v-for="item in bodyProfileOptions" :key="item.id || item.profileName" :label="bodyProfileLabel(item)" :value="item.id" />
             </el-select>
-            <div v-if="!isLoggedIn" class="field-tip">当前未登录或暂无档案，系统正在使用默认体型占位。</div>
+            <div v-if="!isLoggedIn" class="field-tip">No profile found. A fallback body profile is used.</div>
           </div>
 
           <div class="control-block two-col">
             <div>
-              <label>尺码</label>
+              <label>Size</label>
               <el-select v-model="designConfig.sizeCode" style="width: 100%">
                 <el-option v-for="item in sizeOptions" :key="item" :label="item" :value="item" />
               </el-select>
             </div>
             <div>
-              <label>面料名称</label>
-              <el-input v-model="designConfig.materialName" placeholder="如：雪纺、挺括棉、弹力面料" />
+              <label>Material</label>
+              <el-input v-model="designConfig.materialName" placeholder="e.g. cotton, chiffon, stretch" />
             </div>
           </div>
 
           <div class="control-block two-col">
             <div>
-              <label>版型</label>
+              <label>Silhouette</label>
               <el-select v-model="designConfig.silhouette" style="width: 100%">
                 <el-option v-for="item in silhouetteOptions" :key="item" :label="item" :value="item" />
               </el-select>
             </div>
             <div>
-              <label>松量</label>
+              <label>Fit</label>
               <el-select v-model="designConfig.fitType" style="width: 100%">
                 <el-option v-for="item in fitTypeOptions" :key="item" :label="item" :value="item" />
               </el-select>
@@ -124,8 +124,8 @@
           </div>
 
           <div class="control-block">
-            <label>主色主题</label>
-            <el-input v-model="designConfig.colorTheme" placeholder="支持中文颜色名或 #HEX，例如 星夜蓝 / #355c7d" />
+            <label>Color Theme</label>
+            <el-input v-model="designConfig.colorTheme" placeholder="Use color name or #HEX" />
             <div class="preset-row">
               <button
                 v-for="item in colorPresets"
@@ -140,23 +140,23 @@
           </div>
 
           <div class="control-block">
-            <label>工艺标签</label>
+            <label>Craft Tags</label>
             <div v-if="designConfig.craftTags.length" class="tag-wrap">
               <span v-for="item in designConfig.craftTags" :key="`craft-${item}`" class="tag-chip">{{ item }}</span>
             </div>
-            <div v-else class="field-tip">当前没有工艺标签，将使用基础服装壳体预览。</div>
+            <div v-else class="field-tip">No craft tag is attached in this MVP.</div>
           </div>
 
           <div class="control-block">
-            <label>配件标签</label>
+            <label>Accessory Tags</label>
             <div v-if="designConfig.accessoryTags.length" class="tag-wrap">
               <span v-for="item in designConfig.accessoryTags" :key="`accessory-${item}`" class="tag-chip secondary">{{ item }}</span>
             </div>
-            <div v-else class="field-tip">当前没有配件标签，本轮不进入几何细节，只展示摘要徽标。</div>
+            <div v-else class="field-tip">Accessory tags are shown as badges only in this MVP.</div>
           </div>
 
           <div class="control-block live-summary">
-            <span class="eyebrow">实时摘要</span>
+            <span class="eyebrow">LIVE SUMMARY</span>
             <h4>{{ product.productName }}</h4>
             <p>{{ designSummary }}</p>
           </div>
@@ -166,13 +166,13 @@
 
     <section v-else class="panel-card empty-panel">
       <div class="empty-copy">
-        <span class="eyebrow">准备试穿</span>
-        <h3>当前没有可恢复的 3D 试穿上下文</h3>
-        <p>你可以先去服装浏览或商品详情页选择一件服装，再从详情页携带当前定制参数进入试穿。</p>
+        <span class="eyebrow">TRY-ON READY</span>
+        <h3>No try-on context found</h3>
+        <p>Open a product detail page or use a recommend card shortcut to build a try-on context first.</p>
       </div>
       <div class="empty-actions">
-        <el-button type="primary" @click="goBrowse">去服装浏览</el-button>
-        <el-button @click="$router.push('/index/home')">返回首页</el-button>
+        <el-button type="primary" @click="goBrowse">Browse Styles</el-button>
+        <el-button @click="$router.push('/index/home')">Go Home</el-button>
       </div>
     </section>
   </div>
@@ -257,29 +257,32 @@ export default {
       return /^https?:/i.test(cover) ? cover : `${this.baseUrl}${cover}`
     },
     contextSourceLabel() {
-      return this.product && this.product.source === 'detail' ? '商品详情页' : '最近一次试穿会话'
+      if (!this.product) return 'Recent Session'
+      if (this.product.source === 'detail') return 'Product Detail'
+      if (this.product.source === 'recommend') return 'Recommend Entry'
+      return 'Recent Session'
     },
     visualTags() {
       return [
-        this.designConfig.materialName || '默认面料',
+        this.designConfig.materialName || 'Default Material',
         ...this.designConfig.craftTags.slice(0, 2),
         ...this.designConfig.accessoryTags.slice(0, 2)
       ].filter(Boolean)
     },
     designSummary() {
       const parts = [
-        `尺码 ${this.designConfig.sizeCode}`,
+        `Size ${this.designConfig.sizeCode}`,
         this.designConfig.silhouette,
         this.designConfig.fitType
       ]
-      if (this.designConfig.materialName) parts.push(`面料 ${this.designConfig.materialName}`)
-      if (this.designConfig.colorTheme) parts.push(`主色 ${this.designConfig.colorTheme}`)
+      if (this.designConfig.materialName) parts.push(`Material ${this.designConfig.materialName}`)
+      if (this.designConfig.colorTheme) parts.push(`Color ${this.designConfig.colorTheme}`)
       return parts.filter(Boolean).join(' / ')
     },
     sceneStatusText() {
-      if (this.sceneState.failed) return '已回退到静态参数卡片'
-      if (!this.sceneState.ready) return '正在初始化 Three.js 场景...'
-      return '支持拖拽旋转与滚轮缩放，已限制视角与缩放范围。'
+      if (this.sceneState.failed) return 'Fallback preview is active.'
+      if (!this.sceneState.ready) return 'Initializing Three.js scene...'
+      return 'Drag to rotate, wheel to zoom. Camera range is constrained.'
     },
     fallbackBodyStyle() {
       return {
@@ -438,21 +441,21 @@ export default {
     syncFromSession() {
       const latest = loadTryonContext()
       if (!latest) {
-        this.$message.warning('当前没有可同步的试穿上下文，请先从商品详情页进入。')
+        this.$message.warning('No try-on context is available to sync.')
         return
       }
       this.hydrateFromContext(latest)
       this.$nextTick(() => {
         this.initScene()
       })
-      this.$message.success('已同步最近一次定制参数。')
+      this.$message.success('Latest config synced.')
     },
     buildSceneMetrics() {
       const body = this.bodyProfile || createFallbackBodyProfile()
       const design = this.designConfig || normalizeDesignConfig({})
       const sizeFactorMap = { S: 0.94, M: 1, L: 1.06, XL: 1.12 }
-      const fitMap = { 常规: 0.12, 宽松: 0.22, 弹力: 0.08, 舞台友好: 0.26 }
-      const silhouetteMap = { 修身: 0.92, 常规: 1, 宽松: 1.12, 伞摆: 1.2, 直筒: 1.04 }
+      const fitMap = { '\u5e38\u89c4': 0.12, '\u5bbd\u677e': 0.22, '\u5f39\u529b': 0.08, '\u821e\u53f0\u53cb\u597d': 0.26 }
+      const silhouetteMap = { '\u4fee\u8eab': 0.92, '\u5e38\u89c4': 1, '\u5bbd\u677e': 1.12, '\u4f1e\u6446': 1.2, '\u76f4\u7b52': 1.04 }
       const sizeFactor = sizeFactorMap[design.sizeCode] || 1
       const heightFactor = clamp(body.heightCm / 168, 0.86, 1.18)
       const shoulderWidth = clamp(body.shoulderCm / 38, 0.84, 1.22) * sizeFactor
@@ -528,7 +531,7 @@ export default {
       } catch (error) {
         this.sceneState.failed = true
         this.sceneState.ready = false
-        this.sceneState.failedMessage = error && error.message ? error.message : 'Three.js 初始化失败'
+        this.sceneState.failedMessage = error && error.message ? error.message : 'Three.js initialization failed'
         this.destroyScene()
       }
     },

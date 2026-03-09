@@ -24,17 +24,20 @@
       <div v-if="showFooter" class="bottom-row">
         <strong v-if="showPrice">{{ currencySymbol }}{{ displayPrice }}</strong>
         <div v-else class="price-placeholder"></div>
-        <el-button v-if="actionText" type="text" @click.stop="$emit('action')">{{ actionText }}</el-button>
+        <div v-if="actionText || secondaryActionText" class="action-group">
+          <el-button v-if="secondaryActionText" type="text" class="secondary-action" @click.stop="$emit('secondary-action')">{{ secondaryActionText }}</el-button>
+          <el-button v-if="actionText" type="text" @click.stop="$emit('action')">{{ actionText }}</el-button>
+        </div>
       </div>
     </div>
   </article>
 </template>
 
 <script>
-const FALLBACK_TITLE = '\u672a\u547d\u540d\u6b3e\u5f0f'
-const DEFAULT_EMPTY_TEXT = '\u5f85\u8865\u5145\u5546\u54c1\u56fe'
-const DEFAULT_ALT_TEXT = '\u5546\u54c1\u56fe'
-const CURRENCY_SYMBOL = '\u00a5'
+const FALLBACK_TITLE = '未命名款式'
+const DEFAULT_EMPTY_TEXT = '待补充商品图'
+const DEFAULT_ALT_TEXT = '商品图'
+const CURRENCY_SYMBOL = '¥'
 
 export default {
   name: 'ProductPosterCard',
@@ -46,13 +49,18 @@ export default {
     badge: { type: String, default: '' },
     price: { type: [String, Number], default: null },
     actionText: { type: String, default: '' },
+    secondaryActionText: { type: String, default: '' },
     compact: { type: Boolean, default: false },
     emptyText: { type: String, default: DEFAULT_EMPTY_TEXT },
     imageAlt: { type: String, default: '' },
     footerHidden: { type: Boolean, default: false }
   },
   data() {
-    return { imageFailed: false, fallbackTitle: FALLBACK_TITLE, currencySymbol: CURRENCY_SYMBOL }
+    return {
+      imageFailed: false,
+      fallbackTitle: FALLBACK_TITLE,
+      currencySymbol: CURRENCY_SYMBOL
+    }
   },
   watch: {
     imageSrc() {
@@ -76,14 +84,16 @@ export default {
       return this.price !== null && this.price !== undefined && this.price !== ''
     },
     showFooter() {
-      return !this.footerHidden && (this.showPrice || this.actionText)
+      return !this.footerHidden && (this.showPrice || this.actionText || this.secondaryActionText)
     },
     cardClass() {
       return ['poster-card', { compact: this.compact, clickable: true }]
     },
     backdropStyle() {
       if (!this.hasImage) return {}
-      return { backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.72)), url("${this.imageSrc}")` }
+      return {
+        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.72)), url("${this.imageSrc}")`
+      }
     }
   },
   methods: {
@@ -116,6 +126,8 @@ export default {
 .bottom-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .bottom-row strong { color:#1f3c8d; font-size:22px; line-height:1; }
 .price-placeholder { flex:1; }
+.action-group { display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+.secondary-action::before { content:''; display:inline-block; width:6px; height:6px; margin-right:6px; border-radius:50%; background:#5b6ef5; vertical-align:middle; }
 .compact .poster-shell { padding:12px 12px 0; }
 .compact .poster-frame { aspect-ratio:4/5; border-radius:16px; }
 .compact .poster-backdrop { inset:18px 18px 6px; }
@@ -123,5 +135,5 @@ export default {
 .compact .content { gap:12px; padding:12px 14px 14px; }
 .compact .content h3 { font-size:15px; }
 .compact .bottom-row strong { font-size:19px; }
-@media (max-width:768px){ .bottom-row{ align-items:flex-start; flex-direction:column; } }
+@media (max-width:768px){ .bottom-row{ align-items:flex-start; flex-direction:column; } .action-group{ justify-content:flex-start; } }
 </style>
