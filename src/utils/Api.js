@@ -1,4 +1,4 @@
-const Api = {
+﻿const Api = {
   // auth
   yonghuLogin: '/yonghu/login',
   yonghuRegister: '/yonghu/register',
@@ -74,6 +74,7 @@ const Api = {
   designerPortfolioOrderOptions: '/designer/portfolio/order-options',
   designerPortfolioLinkOrder: '/designer/portfolio/link-order',
   designerPortfolioUnlinkOrder: '/designer/portfolio/unlink-order',
+  designerWorkbenchSummary: '/designer/workbench/summary',
   designerRevenueSummary: '/designer/revenue/summary',
   designerRevenueTrend: '/designer/revenue/trend',
   designerRevenueFlowPage: '/designer/revenue/flow/page',
@@ -99,3 +100,4 @@ const Api = {
 }
 
 export default Api
+

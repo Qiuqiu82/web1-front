@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="designer-workbench-page">
     <section class="page-toolbar">
       <div class="page-copy">
@@ -31,7 +31,7 @@
           </div>
           <div class="task-grid">
             <div class="task-column">
-              <div class="task-head"><strong>{{ texts.poolGroup }}</strong><span>{{ poolOrders.length }} {{ texts.unit }}</span></div>
+              <div class="task-head"><strong>{{ texts.poolGroup }}</strong><span>{{ kpi.poolCount }} {{ texts.unit }}</span></div>
               <div v-if="poolOrders.length" class="task-list">
                 <div v-for="item in poolOrders" :key="`pool-${item.id}`" class="task-row">
                   <div><div class="task-title">{{ item.orderNo || item.id }}</div><div class="task-meta">{{ texts.userLabel }} {{ item.userId || '-' }} | {{ currency }}{{ formatMoney(item.totalAmount) }}</div></div>
@@ -42,7 +42,7 @@
             </div>
 
             <div class="task-column">
-              <div class="task-head"><strong>{{ texts.producingGroup }}</strong><span>{{ producingOrders.length }} {{ texts.unit }}</span></div>
+              <div class="task-head"><strong>{{ texts.producingGroup }}</strong><span>{{ kpi.inProgressCount }} {{ texts.unit }}</span></div>
               <div v-if="producingOrders.length" class="task-list">
                 <div v-for="item in producingOrders" :key="`prod-${item.id}`" class="task-row">
                   <div><div class="task-title">{{ item.orderNo || item.id }}</div><div class="task-meta">{{ item.orderStatus || '-' }} | {{ item.designerTakeTime || '-' }}</div></div>
@@ -54,7 +54,7 @@
             </div>
 
             <div class="task-column">
-              <div class="task-head"><strong>{{ texts.deliveryGroup }}</strong><span>{{ deliveryOrders.length }} {{ texts.unit }}</span></div>
+              <div class="task-head"><strong>{{ texts.deliveryGroup }}</strong><span>{{ kpi.toShipCount }} {{ texts.unit }}</span></div>
               <div v-if="deliveryOrders.length" class="task-list">
                 <div v-for="item in deliveryOrders" :key="`ship-${item.id}`" class="task-row">
                   <div><div class="task-title">{{ item.orderNo || item.id }}</div><div class="task-meta">{{ texts.waitingShip }} | {{ currency }}{{ formatMoney(item.totalAmount) }}</div></div>
@@ -105,58 +105,58 @@
 </template>
 
 <script>
-const STATUS_PENDING_PRODUCTION = '\u5f85\u751f\u4ea7'
-const STATUS_PRODUCING = '\u751f\u4ea7\u4e2d'
-const STATUS_SHIPPED = '\u5df2\u53d1\u8d27'
-const STATUS_FINISHED = '\u5df2\u5b8c\u6210'
-const STATUS_CANCELLED = '\u5df2\u53d6\u6d88'
+const STATUS_PENDING_PRODUCTION = '待生产'
+const STATUS_PRODUCING = '生产中'
+const STATUS_SHIPPED = '已发货'
+const STATUS_FINISHED = '已完成'
+const STATUS_CANCELLED = '已取消'
 const TEXTS = {
-  heroTitle: '\u628a\u63a5\u5355\u3001\u5236\u4f5c\u3001\u6c9f\u901a\u548c\u4ea4\u4ed8\uff0c\u6536\u62e2\u8fdb\u4e00\u4e2a\u8bbe\u8ba1\u5e08\u5de5\u4f5c\u53f0',
-  heroDesc: '\u767b\u5f55\u540e\u5373\u53ef\u5feb\u901f\u67e5\u770b\u5f85\u63a5\u8ba2\u5355\u3001\u6b63\u5728\u63a8\u8fdb\u7684\u4efb\u52a1\u3001\u4eca\u65e5\u63a5\u5355\u8282\u594f\u4ee5\u53ca\u4e2a\u4eba\u8d44\u6599\u5b8c\u6210\u5ea6\u3002',
-  profileCompletion: '\u6863\u6848\u5b8c\u6210\u5ea6 ',
-  focusTitle: '\u4eca\u65e5\u4efb\u52a1\u7126\u70b9',
-  focusDesc: '\u6309\u201c\u5f85\u63a5\u5355 / \u5236\u4f5c\u4e2d / \u5f85\u4ea4\u4ed8\u201d\u5206\u7ec4\uff0c\u4f18\u5148\u63a8\u8fdb\u5173\u952e\u8282\u70b9\u3002',
-  refresh: '\u5237\u65b0\u6570\u636e',
-  poolGroup: '\u5f85\u63a5\u5355',
-  producingGroup: '\u5236\u4f5c\u4e2d',
-  deliveryGroup: '\u5f85\u4ea4\u4ed8',
-  unit: '\u6761',
-  userLabel: '\u7528\u6237',
-  claim: '\u8ba4\u9886',
-  startProduction: '\u5f00\u59cb\u5236\u4f5c',
-  goComm: '\u53bb\u6c9f\u901a',
-  shipNow: '\u53bb\u53d1\u8d27',
-  waitingShip: '\u5f85\u53d1\u8d27',
-  emptyPool: '\u6682\u65f6\u6ca1\u6709\u5f85\u9886\u53d6\u7684\u8ba2\u5355\u3002',
-  emptyProducing: '\u5f53\u524d\u6ca1\u6709\u5904\u4e8e\u5236\u4f5c\u4e2d\u7684\u8ba2\u5355\u3002',
-  emptyDelivery: '\u5f53\u524d\u6ca1\u6709\u5f85\u53d1\u8d27\u7684\u8ba2\u5355\u3002',
-  distributionTitle: '\u8ba2\u5355\u72b6\u6001\u5206\u5e03',
-  trendTitle: '\u8fd17\u65e5\u5904\u7406\u8d8b\u52bf',
-  incomeTitle: '\u91d1\u989d\u6982\u89c8',
-  totalAmount: '\u7d2f\u8ba1\u627f\u63a5\u91d1\u989d',
-  completedAmount: '\u5df2\u5b8c\u6210\u8ba2\u5355\u989d',
-  pendingShipCount: '\u5f85\u4ea4\u4ed8\u8ba2\u5355\u6570',
-  emptyDistribution: '\u6682\u65f6\u8fd8\u6ca1\u6709\u53ef\u7528\u7684\u72b6\u6001\u5206\u5e03\u6570\u636e\u3002',
-  emptyTrend: '\u6682\u65f6\u8fd8\u6ca1\u6709\u8fd17\u65e5\u8d8b\u52bf\u6570\u636e\u3002',
-  loadWarn: '\u8ba2\u5355\u6570\u636e\u52a0\u8f7d\u5b58\u5728\u5f02\u5e38\uff0c\u5df2\u5c55\u793a\u53ef\u7528\u90e8\u5206\u3002',
-  claimConfirm: '\u786e\u8ba4\u8ba4\u9886\u8ba2\u5355 ',
-  startConfirm: '\u786e\u8ba4\u5f00\u59cb\u5236\u4f5c\u8ba2\u5355 ',
-  promptTitle: '\u5b8c\u6210\u5e76\u53d1\u8d27',
-  promptLabel: '\u8bf7\u586b\u5199\u4ea4\u4ed8\u8bf4\u660e\u6216\u7269\u6d41\u5355\u53f7\uff08\u53ef\u9009\uff09',
-  promptPlaceholder: '\u4f8b\u5982\uff1a\u7269\u6d41\u5355\u53f7 + \u4ea4\u4ed8\u8bf4\u660e',
-  confirm: '\u786e\u8ba4',
-  cancel: '\u53d6\u6d88',
-  confirmClaim: '\u786e\u8ba4\u8ba4\u9886',
-  confirmStart: '\u5f00\u59cb\u5236\u4f5c',
-  confirmShip: '\u786e\u8ba4\u53d1\u8d27',
-  claimFail: '\u8ba4\u9886\u5931\u8d25',
-  claimSuccess: '\u8ba4\u9886\u6210\u529f',
-  startFail: '\u5f00\u59cb\u5236\u4f5c\u5931\u8d25',
-  startSuccess: '\u5df2\u5f00\u59cb\u5236\u4f5c',
-  shipFail: '\u53d1\u8d27\u64cd\u4f5c\u5931\u8d25',
-  shipSuccess: '\u5df2\u6807\u8bb0\u53d1\u8d27',
-  profileDone: '\u8d44\u6599\u5df2\u5b8c\u5584\uff0c\u53ef\u4ee5\u6301\u7eed\u6c89\u6dc0\u4e2a\u4eba\u54c1\u724c\u4e0e\u670d\u52a1\u80fd\u529b\u3002',
-  profileTodo: '\u5efa\u8bae\u8865\u5145\u5934\u50cf\u3001\u8054\u7cfb\u65b9\u5f0f\u3001\u4e13\u957f\u548c\u7b80\u4ecb\uff0c\u63d0\u5347\u5408\u4f5c\u4fe1\u4efb\u611f\u3002'
+  heroTitle: '把接单、制作、沟通和交付，收拢进一个设计师工作台',
+  heroDesc: '登录后即可快速查看待接订单、正在推进的任务、今日接单节奏以及个人资料完成度。',
+  profileCompletion: '档案完成度 ',
+  focusTitle: '今日任务焦点',
+  focusDesc: '按“待接单 / 制作中 / 待交付”分组，优先推进关键节点。',
+  refresh: '刷新数据',
+  poolGroup: '待接单',
+  producingGroup: '制作中',
+  deliveryGroup: '待交付',
+  unit: '条',
+  userLabel: '用户',
+  claim: '认领',
+  startProduction: '开始制作',
+  goComm: '去沟通',
+  shipNow: '去发货',
+  waitingShip: '待发货',
+  emptyPool: '暂时没有待领取的订单。',
+  emptyProducing: '当前没有处于制作中的订单。',
+  emptyDelivery: '当前没有待发货的订单。',
+  distributionTitle: '订单状态分布',
+  trendTitle: '近7日处理趋势',
+  incomeTitle: '金额概览',
+  totalAmount: '累计承接金额',
+  completedAmount: '已完成订单额',
+  pendingShipCount: '待交付订单数',
+  emptyDistribution: '暂时还没有可用的状态分布数据。',
+  emptyTrend: '暂时还没有近7日趋势数据。',
+  loadWarn: '订单数据加载存在异常，已展示可用部分。',
+  claimConfirm: '确认认领订单 ',
+  startConfirm: '确认开始制作订单 ',
+  promptTitle: '完成并发货',
+  promptLabel: '请填写交付说明或物流单号（可选）',
+  promptPlaceholder: '例如：物流单号 + 交付说明',
+  confirm: '确认',
+  cancel: '取消',
+  confirmClaim: '确认认领',
+  confirmStart: '开始制作',
+  confirmShip: '确认发货',
+  claimFail: '认领失败',
+  claimSuccess: '认领成功',
+  startFail: '开始制作失败',
+  startSuccess: '已开始制作',
+  shipFail: '发货操作失败',
+  shipSuccess: '已标记发货',
+  profileDone: '资料已完善，可以持续沉淀个人品牌与服务能力。',
+  profileTodo: '建议补充头像、联系方式、专长和简介，提升合作信任感。'
 }
 
 export default {
@@ -164,45 +164,46 @@ export default {
   data() {
     return {
       texts: TEXTS,
-      currency: '\u00a5',
+      currency: '¥',
       loading: false,
       actionLoadingKey: '',
       poolList: [],
       mineList: [],
       profileSnapshot: {},
       kpi: { poolCount: 0, inProgressCount: 0, toShipCount: 0, todayClaimCount: 0 },
+      summary: { totalOrderAmount: 0, completedOrderAmount: 0 },
       statusDistribution: [],
       trendData: []
     }
   },
   computed: {
-    displayName() { return localStorage.getItem('username') || this.profileSnapshot.shejishixingming || '\u8bbe\u8ba1\u5e08' },
+    displayName() { return localStorage.getItem('username') || this.profileSnapshot.shejishixingming || '设计师' },
     todayText() {
       const now = new Date()
-      const weekNames = ['\u5468\u65e5', '\u5468\u4e00', '\u5468\u4e8c', '\u5468\u4e09', '\u5468\u56db', '\u5468\u4e94', '\u5468\u516d']
-      return `${now.getMonth() + 1}\u6708${now.getDate()}\u65e5 | ${weekNames[now.getDay()]}`
+      const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+      return `${now.getMonth() + 1}月${now.getDate()}日 | ${weekNames[now.getDay()]}`
     },
     poolOrders() { return this.poolList.slice(0, 4) },
     producingOrders() { return this.mineList.filter((item) => [STATUS_PENDING_PRODUCTION, STATUS_PRODUCING].includes(item.orderStatus)).slice(0, 4) },
     deliveryOrders() { return this.mineList.filter((item) => item.orderStatus === STATUS_PRODUCING).slice(0, 4) },
     trendMax() { return Math.max(1, ...this.trendData.map((item) => item.count || 0)) },
     distributionMax() { return Math.max(1, ...this.statusDistribution.map((item) => item.count || 0)) },
-    totalOrderAmount() { return this.mineList.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0) },
-    completedOrderAmount() { return this.mineList.filter((item) => item.orderStatus === STATUS_FINISHED).reduce((sum, item) => sum + Number(item.totalAmount || 0), 0) },
+    totalOrderAmount() { return Number(this.summary.totalOrderAmount || 0) },
+    completedOrderAmount() { return Number(this.summary.completedOrderAmount || 0) },
     metricCards() {
       return [
-        { label: this.texts.poolGroup, value: this.kpi.poolCount, sub: '\u7b49\u5f85\u9886\u53d6\u7684\u516c\u5f00\u8ba2\u5355\u6c60', icon: 'el-icon-s-order', bg: '#eef2ff' },
-        { label: '\u5904\u7406\u4e2d\u4efb\u52a1', value: this.kpi.inProgressCount, sub: '\u5f85\u751f\u4ea7\u4e0e\u751f\u4ea7\u4e2d\u7684\u8ba2\u5355', icon: 'el-icon-magic-stick', bg: '#f4f1ff' },
-        { label: '\u4eca\u65e5\u9886\u53d6', value: this.kpi.todayClaimCount, sub: '\u6309\u9886\u53d6\u65f6\u95f4\u7edf\u8ba1', icon: 'el-icon-time', bg: '#eef8ff' },
-        { label: '\u5df2\u5b8c\u6210\u8ba2\u5355\u989d', value: `${this.currency}${this.formatMoney(this.completedOrderAmount)}`, sub: '\u5df2\u95ed\u73af\u8ba2\u5355\u7d2f\u8ba1\u91d1\u989d', icon: 'el-icon-coin', bg: '#eef7ff' }
+        { label: this.texts.poolGroup, value: this.kpi.poolCount, sub: '等待领取的公开订单池', icon: 'el-icon-s-order', bg: '#eef2ff' },
+        { label: '处理中任务', value: this.kpi.inProgressCount, sub: '待生产与生产中的订单', icon: 'el-icon-magic-stick', bg: '#f4f1ff' },
+        { label: '今日领取', value: this.kpi.todayClaimCount, sub: '按领取时间统计', icon: 'el-icon-time', bg: '#eef8ff' },
+        { label: '已完成订单额', value: `${this.currency}${this.formatMoney(this.completedOrderAmount)}`, sub: '已闭环订单累计金额', icon: 'el-icon-coin', bg: '#eef7ff' }
       ]
     },
     quickActions() {
       return [
-        { label: '\u8ba2\u5355\u7ba1\u7406', path: '/designer/orders', icon: 'el-icon-s-order' },
-        { label: '\u6c9f\u901a\u8bb0\u5f55', path: '/designer/communication', icon: 'el-icon-chat-dot-round' },
-        { label: '\u70ed\u95e8\u7075\u611f', path: '/designer/inspirations', icon: 'el-icon-picture-outline-round' },
-        { label: '\u8d44\u6599\u6863\u6848', path: '/designer/profile', icon: 'el-icon-user' }
+        { label: '订单管理', path: '/designer/orders', icon: 'el-icon-s-order' },
+        { label: '沟通记录', path: '/designer/communication', icon: 'el-icon-chat-dot-round' },
+        { label: '热门灵感', path: '/designer/inspirations', icon: 'el-icon-picture-outline-round' },
+        { label: '资料档案', path: '/designer/profile', icon: 'el-icon-user' }
       ]
     },
     profileCompletion() {
@@ -216,17 +217,19 @@ export default {
   methods: {
     go(path) { this.$router.push(path) },
     formatMoney(value) { return Number(value || 0).toFixed(2) },
-    parseDateValue(input) {
-      if (input === undefined || input === null || input === '') return null
-      const date = input instanceof Date ? input : new Date(String(input).replace(/-/g, '/'))
-      return Number.isNaN(date.getTime()) ? null : date
+    parseNumber(value, fallback = 0) {
+      const num = Number(value)
+      return Number.isFinite(num) ? num : fallback
     },
-    parseDayKey(input) {
-      const date = this.parseDateValue(input)
-      if (!date) return ''
-      const month = `${date.getMonth() + 1}`.padStart(2, '0')
-      const day = `${date.getDate()}`.padStart(2, '0')
-      return `${date.getFullYear()}-${month}-${day}`
+    formatTrendLabel(dateText) {
+      const text = String(dateText || '').trim()
+      if (!text) return '-'
+      if (text.length >= 10) {
+        const month = String(Number(text.slice(5, 7)))
+        const day = String(Number(text.slice(8, 10)))
+        return `${month}/${day}`
+      }
+      return text
     },
     distributionWidth(count) { return `${Math.max(18, Math.round((count / this.distributionMax) * 100))}%` },
     trendWidth(count) { return `${Math.max(10, Math.round((count / this.trendMax) * 100))}%` },
@@ -236,7 +239,7 @@ export default {
         id: row.id || row.orderId || row.order_id || '',
         orderNo: row.orderNo || row.order_no || '',
         userId: row.userId || row.user_id || '',
-        totalAmount: row.totalAmount || row.total_amount || 0,
+        totalAmount: this.parseNumber(row.totalAmount || row.total_amount || 0),
         orderStatus: row.orderStatus || row.order_status || '',
         designerStatus: row.designerStatus || row.designer_status || '',
         designerTakeTime: row.designerTakeTime || row.designer_take_time || '',
@@ -249,43 +252,54 @@ export default {
       const total = Number(data.total || data.count || data.recordsTotal || (Array.isArray(list) ? list.length : 0))
       return { list: Array.isArray(list) ? list : [], total }
     },
-    updateMetrics() {
-      const mineRows = this.mineList
-      const today = this.parseDayKey(new Date())
-      this.kpi.poolCount = this.poolList.length
-      this.kpi.inProgressCount = mineRows.filter((item) => [STATUS_PENDING_PRODUCTION, STATUS_PRODUCING].includes(item.orderStatus)).length
-      this.kpi.toShipCount = mineRows.filter((item) => item.orderStatus === STATUS_PRODUCING).length
-      this.kpi.todayClaimCount = mineRows.filter((item) => this.parseDayKey(item.designerTakeTime || item.addtime) === today).length
-      this.statusDistribution = [STATUS_PENDING_PRODUCTION, STATUS_PRODUCING, STATUS_SHIPPED, STATUS_FINISHED, STATUS_CANCELLED].map((label) => ({ label, count: mineRows.filter((item) => item.orderStatus === label).length }))
-      const trendMap = {}
-      for (let idx = 6; idx >= 0; idx -= 1) {
-        const date = new Date()
-        date.setDate(date.getDate() - idx)
-        const key = this.parseDayKey(date)
-        trendMap[key] = { label: `${date.getMonth() + 1}/${date.getDate()}`, count: 0 }
-      }
-      mineRows.forEach((item) => {
-        const key = this.parseDayKey(item.designerTakeTime || item.addtime)
-        if (key && trendMap[key]) trendMap[key].count += 1
+    applySummary(rawData = {}) {
+      const summary = rawData || {}
+      const statusMap = {}
+      const statusRows = Array.isArray(summary.statusDistribution) ? summary.statusDistribution : []
+      statusRows.forEach((item) => {
+        const label = String((item && item.label) || '').trim()
+        if (label) {
+          statusMap[label] = this.parseNumber(item.count, 0)
+        }
       })
-      this.trendData = Object.values(trendMap)
+      this.kpi = {
+        poolCount: this.parseNumber(summary.poolCount, 0),
+        inProgressCount: this.parseNumber(summary.inProgressCount, 0),
+        toShipCount: this.parseNumber(summary.toShipCount, 0),
+        todayClaimCount: this.parseNumber(summary.todayClaimCount, 0)
+      }
+      this.summary = {
+        totalOrderAmount: this.parseNumber(summary.totalOrderAmount, 0),
+        completedOrderAmount: this.parseNumber(summary.completedOrderAmount, 0)
+      }
+      this.statusDistribution = [STATUS_PENDING_PRODUCTION, STATUS_PRODUCING, STATUS_SHIPPED, STATUS_FINISHED, STATUS_CANCELLED].map((label) => ({
+        label,
+        count: this.parseNumber(statusMap[label], 0)
+      }))
+      const trendRows = Array.isArray(summary.claimTrend) ? summary.claimTrend : []
+      this.trendData = trendRows.map((item) => ({
+        date: item && item.date ? String(item.date) : '',
+        label: (item && item.label) || this.formatTrendLabel(item && item.date),
+        count: this.parseNumber(item && item.count, 0)
+      }))
     },
     canStartProduction(row) { return row && row.orderStatus === STATUS_PENDING_PRODUCTION },
     async loadData() {
       this.loading = true
       try {
-        const [poolRes, mineRes, sessionRes] = await Promise.all([
-          this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerPool, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 120 } }),
-          this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerMine, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 300 } }),
+        const [summaryRes, poolRes, mineRes, sessionRes] = await Promise.all([
+          this.$proxy.Request({ url: this.$proxy.Api.designerWorkbenchSummary, method: 'get', showLoading: false, showError: false }),
+          this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerPool, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 20 } }),
+          this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerMine, method: 'get', showLoading: false, showError: false, params: { page: 1, limit: 20 } }),
           this.$proxy.Request({ url: this.$proxy.Api.shejishiSession, method: 'get', showLoading: false, showError: false })
         ])
-        if (!poolRes || poolRes.code !== 0 || !mineRes || mineRes.code !== 0) {
+        if (!summaryRes || summaryRes.code !== 0 || !poolRes || poolRes.code !== 0 || !mineRes || mineRes.code !== 0) {
           this.$message.warning(this.texts.loadWarn)
         }
         this.poolList = this.normalizeOrders(this.parsePageData((poolRes && poolRes.data) || {}).list)
         this.mineList = this.normalizeOrders(this.parsePageData((mineRes && mineRes.data) || {}).list)
         this.profileSnapshot = (sessionRes && sessionRes.code === 0 && sessionRes.data) || {}
-        this.updateMetrics()
+        this.applySummary((summaryRes && summaryRes.code === 0 && summaryRes.data) || {})
       } finally {
         this.loading = false
       }
@@ -294,7 +308,7 @@ export default {
       return this.$confirm(message, this.texts.confirm, { confirmButtonText, cancelButtonText: this.texts.cancel, type: 'warning' }).then(() => true).catch(() => false)
     },
     async claim(row) {
-      const ok = await this.confirmAction(`${this.texts.claimConfirm}${row.orderNo || row.id}\uff1f`, this.texts.confirmClaim)
+      const ok = await this.confirmAction(`${this.texts.claimConfirm}${row.orderNo || row.id}？`, this.texts.confirmClaim)
       if (!ok) return
       this.actionLoadingKey = `claim-${row.id}`
       const res = await this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerClaim, method: 'post', dataType: 'json', showError: false, params: { orderId: row.id } })
@@ -305,7 +319,7 @@ export default {
       this.openCommunication(row)
     },
     async startProduction(row) {
-      const ok = await this.confirmAction(`${this.texts.startConfirm}${row.orderNo || row.id}\uff1f`, this.texts.confirmStart)
+      const ok = await this.confirmAction(`${this.texts.startConfirm}${row.orderNo || row.id}？`, this.texts.confirmStart)
       if (!ok) return
       this.actionLoadingKey = `start-${row.id}`
       const res = await this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerStart, method: 'post', dataType: 'json', showError: false, params: { orderId: row.id } })
@@ -319,7 +333,7 @@ export default {
       if (!promptRes) return
       const remark = (promptRes.value || '').trim()
       this.actionLoadingKey = `ship-${row.id}`
-      const res = await this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerShip, method: 'post', dataType: 'json', showError: false, params: { orderId: row.id, remark: remark || '\u8bbe\u8ba1\u5e08\u5df2\u5b8c\u6210\u5236\u4f5c\u5e76\u53d1\u8d27' } })
+      const res = await this.$proxy.Request({ url: this.$proxy.Api.cosorderDesignerShip, method: 'post', dataType: 'json', showError: false, params: { orderId: row.id, remark: remark || '设计师已完成制作并发货' } })
       this.actionLoadingKey = ''
       if (!res || res.code !== 0) { this.$message.error((res && res.msg) || this.texts.shipFail); return }
       this.$message.success(res.msg || this.texts.shipSuccess)
@@ -375,3 +389,6 @@ export default {
 @media (max-width:900px){ .page-toolbar{ flex-direction:column; } .page-actions{ justify-content:flex-start; } .task-grid{ grid-template-columns:1fr; } }
 @media (max-width:640px){ .metric-grid{ grid-template-columns:1fr; } .page-copy h2{ font-size:22px; } .task-card,.side-card{ padding:18px; } }
 </style>
+
+
+
