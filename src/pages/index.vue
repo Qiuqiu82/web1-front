@@ -52,6 +52,20 @@
       <router-view />
     </main>
 
+    <ai-chat-float-entry
+      :visible="showAiFloatEntry"
+      :unread-count="aiUnreadCount"
+      @open="openAiChatByEntry"
+    />
+
+    <ai-chat-drawer
+      :visible="aiDrawerVisible"
+      :messages="aiMessages"
+      :sending="aiSending"
+      :session-id="aiSessionId"
+      @close="aiDrawerVisible = false"
+      @send="handleAiSend"
+    />
     <auth-dialog
       :visible.sync="authDialog.visible"
       :mode="authDialog.mode"
@@ -65,11 +79,15 @@
 
 <script>
 import AuthDialog from '@/components/AuthDialog'
+import AiChatFloatEntry from '@/components/AiChatFloatEntry'
+import AiChatDrawer from '@/components/AiChatDrawer'
 
 export default {
   name: 'Index',
   components: {
-    AuthDialog
+    AuthDialog,
+    AiChatFloatEntry,
+    AiChatDrawer
   },
   data() {
     return {
@@ -80,7 +98,13 @@ export default {
         role: 'yonghu',
         redirect: null
       },
-      authRouteSignature: ''
+      authRouteSignature: '',
+      aiDrawerVisible: false,
+      aiMessages: [],
+      aiSending: false,
+      aiSessionId: '',
+      aiPendingAutoOpen: false,
+      aiUnreadCount: 0
     }
   },
   computed: {
@@ -104,6 +128,9 @@ export default {
     displayName() {
       this.authVersion
       return localStorage.getItem('username') || localStorage.getItem('adminName') || '访客'
+    },
+    showAiFloatEntry() {
+      return this.$route.path.indexOf('/index/') === 0
     },
     navMenus() {
       const menus = [
@@ -130,6 +157,7 @@ export default {
       immediate: true,
       handler() {
         this.consumeAuthRouteQuery()
+        this.consumeAiRouteQuery()
       }
     }
   },
@@ -207,6 +235,95 @@ export default {
     },
     handleAuthSuccess() {
       this.authVersion += 1
+      if (this.aiPendingAutoOpen && this.isLoggedIn) {
+        this.aiDrawerVisible = true
+        this.aiUnreadCount = 0
+        this.aiPendingAutoOpen = false
+      }
+    },
+    consumeAiRouteQuery() {
+      if (this.$route.query.ai !== 'open') {
+        return
+      }
+      if (!this.isLoggedIn) {
+        this.aiPendingAutoOpen = true
+        return
+      }
+      this.aiDrawerVisible = true
+      this.aiUnreadCount = 0
+      this.aiPendingAutoOpen = false
+      this.clearAiRouteQuery()
+    },
+    clearAiRouteQuery() {
+      const query = { ...this.$route.query }
+      if (query.ai === undefined) {
+        return
+      }
+      delete query.ai
+      this.$router.replace({ path: this.$route.path, query }).catch(() => {})
+    },
+    buildAiRedirect() {
+      const query = { ...this.$route.query, ai: 'open' }
+      return { path: this.$route.path, query }
+    },
+    openAiChatByEntry() {
+      if (!this.isLoggedIn) {
+        this.aiPendingAutoOpen = true
+        this.openAuth('login', 'yonghu', this.buildAiRedirect())
+        return
+      }
+      this.aiDrawerVisible = true
+      this.aiUnreadCount = 0
+    },
+    appendAiMessage(role, content, extra = {}) {
+      this.aiMessages.push({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        role,
+        content,
+        createdAt: new Date().toISOString(),
+        recommendations: Array.isArray(extra.recommendations) ? extra.recommendations : []
+      })
+      if (role === 'assistant' && !this.aiDrawerVisible) {
+        this.aiUnreadCount += 1
+      }
+    },
+    async handleAiSend(message) {
+      const text = String(message || '').trim()
+      if (!text || this.aiSending) {
+        return
+      }
+      if (!this.isLoggedIn) {
+        this.openAiChatByEntry()
+        return
+      }
+
+      this.appendAiMessage('user', text)
+      this.aiSending = true
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.aiChatSend,
+        method: 'post',
+        dataType: 'json',
+        showLoading: false,
+        params: {
+          message: text,
+          sourcePage: this.$route.path,
+          sessionId: this.aiSessionId || null
+        }
+      })
+      this.aiSending = false
+
+      if (!res || res.code !== 0) {
+        this.appendAiMessage('assistant', (res && res.msg) || 'AI 服务暂时不可用，请稍后再试。')
+        return
+      }
+
+      const data = res.data || {}
+      if (data.sessionId) {
+        this.aiSessionId = String(data.sessionId)
+      }
+      this.appendAiMessage('assistant', data.answer || '暂时没有生成回复，请换个问法试试。', {
+        recommendations: data.recommendations || []
+      })
     },
     logout() {
       localStorage.removeItem('Token')
@@ -387,3 +504,5 @@ export default {
   }
 }
 </style>
+
+

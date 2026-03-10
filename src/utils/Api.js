@@ -93,6 +93,9 @@
   cosProfileBodySetDefaultPrefix: '/cosprofile/body/set-default/',
   cosProfileBodyDefault: '/cosprofile/body/default',
 
+  // ai chat
+  aiChatSend: '/ai/chat/send',
+
   // mock pay
   cosPayCreate: '/cospay/create',
   cosPayStatus: '/cospay/status',
@@ -100,4 +103,5 @@
 }
 
 export default Api
+
 
