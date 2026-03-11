@@ -1,9 +1,8 @@
-<template>
+﻿<template>
   <div class="cart-page">
     <section class="title-panel">
       <div>
         <h2>购物车</h2>
-        <p>确认定制信息后提交订单，默认自动填充个人资料。</p>
       </div>
       <el-button round @click="$router.push('/index/browse')">继续浏览</el-button>
     </section>

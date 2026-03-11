@@ -10,8 +10,8 @@
     <section class="ai-chat-drawer">
       <header class="drawer-head">
         <div class="head-title">
-          <strong>AI 智能客服</strong>
-          <span>基于你的需求提供搭配建议</span>
+          <strong>AI 智能客服-小衣</strong>
+          <span>今天喜欢什么?</span>
         </div>
         <el-tag size="mini" type="success">在线</el-tag>
       </header>

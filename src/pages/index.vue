@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="layout-shell">
     <div class="bg-orb orb-left" />
     <div class="bg-orb orb-right" />
@@ -7,7 +7,7 @@
       <div class="brand" @click="$router.push('/index/home')">
         <div class="brand-mark">衣</div>
         <div class="brand-text">
-          <div class="brand-cn">角色扮演定制服装工坊</div>
+          <div class="brand-cn">动漫服装定制</div>
           <div class="brand-en">CUSTOM ATELIER PLATFORM</div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default {
       const menus = [
         { label: '首页', path: '/index/home' },
         { label: '服装浏览', path: '/index/browse' },
-        { label: '3D试穿', path: '/index/tryon' },
+        { label: 'AI试穿', path: '/index/tryon' },
         { label: '我的订单', path: '/index/cosorder', requiresAuth: true, roleHint: 'yonghu' }
       ]
       if (this.isUser) {

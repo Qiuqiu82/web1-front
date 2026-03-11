@@ -1,9 +1,8 @@
-<template>
+﻿<template>
   <div class="order-page">
     <section class="header-panel">
       <div class="header-title">
         <h2>我的订单</h2>
-        <p>按清晰阶段跟踪订单进度，聚焦关键操作。</p>
       </div>
       <div class="status-tabs">
         <button

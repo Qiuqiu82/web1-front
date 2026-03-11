@@ -1,4 +1,4 @@
-﻿const Api = {
+const Api = {
   // auth
   yonghuLogin: '/yonghu/login',
   yonghuRegister: '/yonghu/register',
@@ -95,6 +95,10 @@
 
   // ai chat
   aiChatSend: '/ai/chat/send',
+
+  // ai try-on
+  tryonTaskCreate: '/tryon/task/create',
+  tryonTaskStatusPrefix: '/tryon/task/status/',
 
   // mock pay
   cosPayCreate: '/cospay/create',

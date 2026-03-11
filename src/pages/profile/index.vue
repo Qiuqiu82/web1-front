@@ -3,7 +3,6 @@
     <section class="header-panel">
       <div>
         <h2>个人中心</h2>
-        <p>管理地址簿和身材档案，结算时可自动填充。</p>
       </div>
     </section>
 

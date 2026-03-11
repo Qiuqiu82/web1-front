@@ -83,7 +83,7 @@
               />
             </el-select>
             <el-button type="text" @click="$router.push('/index/profile')">管理档案</el-button>
-        <el-button plain class="tryon-btn" @click="openTryOn">3D试穿</el-button>
+        <el-button plain class="tryon-btn" @click="openTryOn">AI试穿</el-button>
           </div>
           <div class="body-tip" v-if="selectedBodySnapshot.profileName">
             {{ selectedBodySnapshot.profileName }} ·
