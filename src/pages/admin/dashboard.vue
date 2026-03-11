@@ -3,7 +3,7 @@
     <section class="dashboard-hero board-card">
       <div class="hero-copy">
         <div class="hero-kicker">运营概览</div>
-        <h2>把订单、设计师产能和经营趋势，收拢到一个可信的后台概览里</h2>
+        <h2>后台概览</h2>
         <p>
           本页只消费后端聚合统计接口，不再由前端本地拼口径。
           你可以直接在这里看清平台规模、当前履约阶段、设计师效率和最近 30 日经营走势。

@@ -3,7 +3,6 @@
     <section class="page-toolbar">
       <div class="page-copy">
         <span class="page-tag">{{ '\u5de5\u4f5c\u53f0' }}</span>
-        <h2>{{ texts.heroTitle }}</h2>
         <p>{{ texts.heroDesc }}</p>
       </div>
       <div class="page-actions">

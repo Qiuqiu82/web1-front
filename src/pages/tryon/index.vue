@@ -49,6 +49,7 @@
               :limit="1"
               accept="image/*"
               :before-upload="beforeImageUpload"
+              :on-exceed="handlePersonUploadExceed"
               :on-success="handlePersonUploadSuccess"
             >
               <div v-if="personImagePreview" class="image-preview-shell">
@@ -78,6 +79,7 @@
               :limit="1"
               accept="image/*"
               :before-upload="beforeImageUpload"
+              :on-exceed="handleGarmentUploadExceed"
               :on-success="handleGarmentUploadSuccess"
             >
               <div v-if="garmentImagePreview" class="image-preview-shell">
@@ -359,6 +361,27 @@ export default {
     },
     handleGarmentUploadSuccess(res) {
       this.handleUploadSuccess('garment', res)
+    },
+    handlePersonUploadExceed(files) {
+      this.replaceUploaderFile('personUploader', files)
+    },
+    handleGarmentUploadExceed(files) {
+      this.replaceUploaderFile('garmentUploader', files)
+    },
+    replaceUploaderFile(refName, files) {
+      const uploader = this.$refs[refName]
+      const nextFile = files && files.length ? files[0] : null
+      if (!uploader || !nextFile) return
+      if (typeof uploader.clearFiles === 'function') {
+        uploader.clearFiles()
+      }
+      nextFile.uid = nextFile.uid || `${Date.now()}-${Math.random()}`
+      if (typeof uploader.handleStart === 'function') {
+        uploader.handleStart(nextFile)
+      }
+      if (typeof uploader.submit === 'function') {
+        uploader.submit()
+      }
     },
     handleUploadSuccess(kind, res) {
       if (!res || Number(res.code) !== 0 || !res.file) {

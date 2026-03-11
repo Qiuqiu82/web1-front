@@ -4,7 +4,6 @@
       <div class="page-copy">
         <span class="page-tag">{{ texts.pageTag }}</span>
         <h2>{{ texts.pageTitle }}</h2>
-        <p>{{ texts.pageDesc }}</p>
       </div>
       <div class="page-actions">
         <el-input
