@@ -404,7 +404,29 @@ export default {
       const raw = String(url || '').trim()
       if (!raw) return ''
       if (/^https?:/i.test(raw)) return raw
-      return `${this.baseUrl}${raw}`
+      const normalized = raw.replace(/^\/+/, '')
+      return `${String(this.baseUrl || '').replace(/\/+$/, '')}/${normalized}`
+    },
+    normalizeFilePath(value) {
+      const raw = String(value || '').trim().split('?')[0]
+      if (!raw) return ''
+      if (!/^https?:/i.test(raw)) {
+        return raw.replace(/^\/+/, '')
+      }
+      const normalizedBase = `${String(this.baseUrl || '').replace(/\/+$/, '')}/`
+      if (raw.indexOf(normalizedBase) === 0) {
+        return raw.slice(normalizedBase.length).replace(/^\/+/, '')
+      }
+      const uploadIndex = raw.toLowerCase().indexOf('/upload/')
+      if (uploadIndex >= 0) {
+        return raw.slice(uploadIndex + 1)
+      }
+      return raw
+    },
+    normalizeFilePathList(value) {
+      return this.parseImageList(value)
+        .map((item) => this.normalizeFilePath(item))
+        .filter(Boolean)
     },
     splitTags(value) {
       return String(value || '')
@@ -439,10 +461,10 @@ export default {
         return {
           id: item.id,
           title: this.safeText(item.title),
-          coverImage,
+          coverImage: this.normalizeFilePath(coverImage),
           coverImageUrl: this.toFileUrl(coverImage),
           imageListJson: imageListRaw,
-          imageListValue: this.parseImageList(imageListRaw).join(','),
+          imageListValue: this.normalizeFilePathList(imageListRaw).join(','),
           styleTags: this.safeText(item.styleTags, item.style_tags),
           tagList: this.splitTags(this.safeText(item.styleTags, item.style_tags)),
           intro: this.safeText(item.intro),
@@ -547,7 +569,7 @@ export default {
     openProfileDialog() {
       this.profileForm = {
         shejishixingming: this.profile.name,
-        touxiang: this.profile.avatar,
+        touxiang: this.normalizeFilePath(this.profile.avatar),
         lianxifangshi: this.profile.phone,
         zhuanchang: this.profile.specialty,
         jianjie: this.profile.intro
@@ -565,7 +587,7 @@ export default {
           url: this.$proxy.Api.shejishiUpdateMyProfile,
           method: 'post',
           dataType: 'json',
-          params: { ...this.profileForm }
+          params: { ...this.profileForm, touxiang: this.normalizeFilePath(this.profileForm.touxiang) }
         })
         if (!res) return
         this.$message.success(res.msg || '\u8d44\u6599\u5df2\u66f4\u65b0')
@@ -608,8 +630,8 @@ export default {
           params: {
             id: this.portfolioForm.id,
             title: this.portfolioForm.title,
-            coverImage: this.portfolioForm.coverImage,
-            imageListJson: this.portfolioForm.imageListValue,
+            coverImage: this.normalizeFilePath(this.portfolioForm.coverImage),
+            imageListJson: this.normalizeFilePathList(this.portfolioForm.imageListValue).join(','),
             styleTags: this.portfolioForm.styleTags,
             intro: this.portfolioForm.intro,
             status: this.portfolioForm.status,

@@ -1,69 +1,69 @@
 {
-  "origin": "http://localhost:8083",
-  "startedAt": "2026-03-05T08:32:50.892Z",
+  "origin": "http://localhost:8081",
+  "startedAt": "2026-03-10T18:35:46.295Z",
   "pages": [
     {
       "route": "/#/index/home",
-      "url": "http://localhost:8083/#/index/home",
+      "url": "http://localhost:8081/#/index/home",
       "ok": true,
       "status": 200,
       "title": "Web01 - Vue项目",
-      "bodyTextLen": 1234,
+      "bodyTextLen": 1179,
       "hasVueRoot": true,
       "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_home.png"
     },
     {
       "route": "/#/index/coscart",
-      "url": "http://localhost:8083/#/index/coscart",
-      "ok": false,
-      "status": null,
+      "url": "http://localhost:8081/#/index/coscart",
+      "ok": true,
+      "status": 200,
       "title": "Web01 - Vue项目",
-      "bodyTextLen": 97,
+      "bodyTextLen": 1179,
       "hasVueRoot": true,
       "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_coscart.png"
     },
     {
       "route": "/#/index/cosorder",
-      "url": "http://localhost:8083/#/index/cosorder",
-      "ok": false,
-      "status": null,
+      "url": "http://localhost:8081/#/index/cosorder",
+      "ok": true,
+      "status": 200,
       "title": "Web01 - Vue项目",
-      "bodyTextLen": 99,
+      "bodyTextLen": 1179,
       "hasVueRoot": true,
       "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_cosorder.png"
     },
     {
       "route": "/#/index/cosorder-admin",
-      "url": "http://localhost:8083/#/index/cosorder-admin",
-      "ok": false,
-      "status": null,
+      "url": "http://localhost:8081/#/index/cosorder-admin",
+      "ok": true,
+      "status": 200,
       "title": "Web01 - Vue项目",
-      "bodyTextLen": 1266,
+      "bodyTextLen": 1179,
       "hasVueRoot": true,
       "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_index_cosorder_admin.png"
     },
     {
       "route": "/#/login",
-      "url": "http://localhost:8083/#/login",
-      "ok": false,
-      "status": null,
+      "url": "http://localhost:8081/#/login",
+      "ok": true,
+      "status": 200,
       "title": "Web01 - Vue项目",
-      "bodyTextLen": 54,
+      "bodyTextLen": 1179,
       "hasVueRoot": true,
       "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_login.png"
     },
     {
       "route": "/#/register?role=yonghu&pageFlag=register",
-      "url": "http://localhost:8083/#/register?role=yonghu&pageFlag=register",
-      "ok": false,
-      "status": null,
+      "url": "http://localhost:8081/#/register?role=yonghu&pageFlag=register",
+      "ok": true,
+      "status": 200,
       "title": "Web01 - Vue项目",
-      "bodyTextLen": 57,
+      "bodyTextLen": 1179,
       "hasVueRoot": true,
       "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\smoke-_register_role_yonghu_pageFlag_register.png"
     }
   ],
   "pageErrors": [],
   "consoleErrors": [],
-  "finishedAt": "2026-03-05T08:33:00.625Z"
+  "finishedAt": "2026-03-10T18:35:58.060Z"
 }

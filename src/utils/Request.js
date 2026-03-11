@@ -57,6 +57,7 @@ instance.interceptors.response.use(
     if (errorCallback) {
       errorCallback(responseData)
     }
+
     return Promise.reject({
       showError,
       msg: (responseData && (responseData.msg || responseData.info)) || '请求失败'
@@ -65,6 +66,12 @@ instance.interceptors.response.use(
   (error) => {
     if (error.config && error.config.showLoading && loading) {
       loading.close()
+    }
+    if (error && error.code === 'ECONNABORTED') {
+      return Promise.reject({ showError: true, msg: '请求超时，请稍后重试' })
+    }
+    if (error && error.code === 'ERR_CANCELED') {
+      return Promise.reject({ showError: false, msg: '请求已取消' })
     }
     return Promise.reject({ showError: true, msg: '网络异常' })
   }
@@ -80,7 +87,8 @@ const request = (config) => {
     responseType = RESPONSE_TYPE_JSON,
     showError = true,
     errorCallback,
-    uploadProgressCallback
+    uploadProgressCallback,
+    timeout = 10 * 1000
   } = config
 
   const token = localStorage.getItem('Token') || localStorage.getItem('token') || ''
@@ -101,7 +109,8 @@ const request = (config) => {
       headers,
       showLoading,
       errorCallback,
-      showError
+      showError,
+      timeout
     })
   } else {
     let body = null
@@ -126,7 +135,8 @@ const request = (config) => {
       headers,
       showLoading,
       errorCallback,
-      showError
+      showError,
+      timeout
     })
   }
 

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <el-drawer
     :visible.sync="innerVisible"
     :size="drawerSize"
@@ -20,7 +20,8 @@
         <template v-if="safeMessages.length">
           <article v-for="item in safeMessages" :key="item.id" :class="['msg-item', item.role === 'user' ? 'from-user' : 'from-ai']">
             <div class="msg-bubble">
-              <p>{{ item.content }}</p>
+              <p v-if="item.role === 'user'">{{ item.content }}</p>
+              <div v-else class="msg-rich" v-html="renderAiContent(item.content)" />
               <small>{{ formatTime(item.createdAt) }}</small>
             </div>
             <div
@@ -35,7 +36,18 @@
           </article>
         </template>
 
-        <div v-else class="welcome-box">
+        <article v-if="waiting" class="msg-item from-ai is-thinking">
+          <div class="msg-bubble thinking-bubble">
+            <p class="thinking-title">AI 正在思考你的问题</p>
+            <div class="thinking-dots" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+        </article>
+
+        <div v-else-if="!safeMessages.length" class="welcome-box">
           <h4>你好，我是你的智能搭配顾问</h4>
           <p>告诉我预算、场景或风格偏好，我会给你更贴近需求的服装建议。</p>
           <div class="quick-list">
@@ -90,6 +102,10 @@ export default {
       type: Boolean,
       default: false
     },
+    waiting: {
+      type: Boolean,
+      default: false
+    },
     sessionId: {
       type: String,
       default: ''
@@ -131,6 +147,13 @@ export default {
           this.scrollToBottom()
         })
       }
+    },
+    waiting(value) {
+      if (value) {
+        this.$nextTick(() => {
+          this.scrollToBottom()
+        })
+      }
     }
   },
   methods: {
@@ -141,6 +164,156 @@ export default {
       const hh = `${date.getHours()}`.padStart(2, '0')
       const mm = `${date.getMinutes()}`.padStart(2, '0')
       return `${hh}:${mm}`
+    },
+    escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    },
+    formatInlineMarkdown(text) {
+      let value = this.escapeHtml(text)
+      value = value.replace(/`([^`]+)`/g, '<code>$1</code>')
+      value = value.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      value = value.replace(/__([^_]+)__/g, '<strong>$1</strong>')
+      value = value.replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      value = value.replace(/_([^_]+)_/g, '<em>$1</em>')
+      value = value.replace(/\*\*([^*]+)$/g, '<strong>$1</strong>')
+      value = value.replace(/__([^_]+)$/g, '<strong>$1</strong>')
+      return value
+    },
+    renderDetailLine(raw) {
+      const detail = String(raw || '').match(/^([^：:]{2,20})[：:]\s*(.+)$/)
+      if (!detail) {
+        return `<p>${this.formatInlineMarkdown(raw)}</p>`
+      }
+      return `<p class="md-kv"><span>${this.formatInlineMarkdown(detail[1])}</span>${this.formatInlineMarkdown(detail[2])}</p>`
+    },
+    renderListItem(raw) {
+      const detail = String(raw || '').match(/^([^：:]{2,20})[：:]\s*(.+)$/)
+      if (!detail) {
+        return this.formatInlineMarkdown(raw)
+      }
+      return `<span class="md-li-label">${this.formatInlineMarkdown(detail[1])}</span>${this.formatInlineMarkdown(detail[2])}`
+    },
+    renderAiContent(content) {
+      const source = String(content || '').replace(/\r\n/g, '\n')
+      const lines = source.split('\n')
+      const html = []
+
+      let orderedOpen = false
+      let orderedItemOpen = false
+      let nestedUlOpen = false
+      let plainUlOpen = false
+
+      const closeNestedUl = () => {
+        if (!nestedUlOpen) return
+        html.push('</ul>')
+        nestedUlOpen = false
+      }
+
+      const closeOrderedItem = () => {
+        if (!orderedItemOpen) return
+        closeNestedUl()
+        html.push('</li>')
+        orderedItemOpen = false
+      }
+
+      const closeOrdered = () => {
+        if (!orderedOpen) return
+        closeOrderedItem()
+        html.push('</ol>')
+        orderedOpen = false
+      }
+
+      const closePlainUl = () => {
+        if (!plainUlOpen) return
+        html.push('</ul>')
+        plainUlOpen = false
+      }
+
+      const openOrderedItem = (titleText) => {
+        closePlainUl()
+        if (!orderedOpen) {
+          html.push('<ol class="md-list md-ol">')
+          orderedOpen = true
+        }
+        closeOrderedItem()
+        html.push('<li class="md-ol-item">')
+        html.push(`<p class="md-item-title">${this.formatInlineMarkdown(titleText)}</p>`)
+        orderedItemOpen = true
+      }
+
+      lines.forEach((line) => {
+        const raw = String(line || '').trim()
+
+        if (!raw) {
+          closePlainUl()
+          if (orderedItemOpen) {
+            closeOrderedItem()
+            return
+          }
+          closeOrdered()
+          html.push('<p class="md-empty"></p>')
+          return
+        }
+
+        const heading = raw.match(/^(#{1,6})\s+(.+)$/)
+        if (heading) {
+          closePlainUl()
+          closeOrdered()
+          const level = heading[1].length
+          html.push(`<p class="md-heading md-heading-${level}">${this.formatInlineMarkdown(heading[2])}</p>`)
+          return
+        }
+
+        const ordered = raw.match(/^\d+[.)]\s+(.+)$/)
+        if (ordered) {
+          openOrderedItem(ordered[1])
+          return
+        }
+
+        const codeItem = raw.match(/^COS-[A-Za-z0-9-]+\s+.+/)
+        if (codeItem) {
+          openOrderedItem(raw)
+          return
+        }
+
+        const unordered = raw.match(/^[-*•·]\s+(.+)$/)
+        if (unordered) {
+          if (orderedItemOpen) {
+            if (!nestedUlOpen) {
+              html.push('<ul class="md-sub-list">')
+              nestedUlOpen = true
+            }
+            html.push(`<li>${this.renderListItem(unordered[1])}</li>`)
+            return
+          }
+
+          closeOrdered()
+          if (!plainUlOpen) {
+            html.push('<ul class="md-list md-ul">')
+            plainUlOpen = true
+          }
+          html.push(`<li>${this.renderListItem(unordered[1])}</li>`)
+          return
+        }
+
+        closePlainUl()
+        if (orderedItemOpen) {
+          html.push(this.renderDetailLine(raw))
+          return
+        }
+
+        closeOrdered()
+        html.push(`<p>${this.formatInlineMarkdown(raw)}</p>`)
+      })
+
+      closePlainUl()
+      closeOrdered()
+      return html.join('')
     },
     handleEnter(event) {
       if (event.shiftKey) return
@@ -200,6 +373,13 @@ export default {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.message-wrap::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .msg-item {
@@ -221,6 +401,144 @@ export default {
   white-space: pre-wrap;
 }
 
+.msg-rich {
+  color: #223167;
+  font-size: 13px;
+  line-height: 1.66;
+  white-space: normal;
+}
+
+.msg-rich p {
+  margin: 0 0 8px;
+  white-space: normal;
+}
+
+.msg-rich p:last-child {
+  margin-bottom: 0;
+}
+
+.msg-rich .md-empty {
+  height: 6px;
+  margin: 0;
+}
+
+.msg-rich strong {
+  color: #1c2f69;
+  font-weight: 700;
+}
+
+.msg-rich em {
+  color: #334885;
+  font-style: italic;
+}
+
+.msg-rich .md-heading {
+  margin: 2px 0 8px;
+  font-weight: 700;
+  color: #1a2c63;
+}
+
+.msg-rich .md-heading-1,
+.msg-rich .md-heading-2 {
+  font-size: 15px;
+}
+
+.msg-rich .md-heading-3,
+.msg-rich .md-heading-4,
+.msg-rich .md-heading-5,
+.msg-rich .md-heading-6 {
+  font-size: 14px;
+}
+
+.msg-rich .md-list {
+  margin: 6px 0 10px;
+}
+
+.msg-rich .md-ol {
+  list-style: none;
+  padding: 0;
+  counter-reset: ai-step;
+}
+
+.msg-rich .md-ol-item {
+  position: relative;
+  margin: 0 0 10px;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid #dbe4ff;
+  border-radius: 12px;
+  background: linear-gradient(140deg, #f7f9ff 0%, #ffffff 100%);
+}
+
+.msg-rich .md-ol-item::before {
+  counter-increment: ai-step;
+  content: counter(ai-step);
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #5670ff;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.msg-rich .md-item-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #16295f;
+  font-weight: 700;
+}
+
+.msg-rich .md-sub-list {
+  margin: 0 0 4px;
+  padding-left: 18px;
+}
+
+.msg-rich .md-sub-list li {
+  margin: 4px 0;
+  color: #2a3e77;
+}
+
+.msg-rich .md-li-label {
+  display: inline-block;
+  margin-right: 4px;
+  color: #243978;
+  font-weight: 700;
+}
+
+.msg-rich .md-kv {
+  margin: 4px 0;
+}
+
+.msg-rich .md-kv span {
+  display: inline-block;
+  min-width: 68px;
+  margin-right: 4px;
+  color: #2a3b79;
+  font-weight: 700;
+}
+
+.msg-rich .md-ul {
+  padding-left: 18px;
+}
+
+.msg-rich .md-ul li {
+  margin: 4px 0;
+}
+
+.msg-rich code {
+  display: inline-block;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #edf2ff;
+  color: #2f458f;
+  font-size: 12px;
+}
 .msg-bubble small {
   display: block;
   margin-top: 6px;
@@ -244,6 +562,60 @@ export default {
 
 .from-ai .msg-bubble {
   background: #fff;
+}
+
+.is-thinking {
+  margin-top: 2px;
+}
+
+.thinking-bubble {
+  width: 210px;
+  background: linear-gradient(135deg, #f6f8ff 0%, #ffffff 100%);
+  border: 1px solid #dbe4ff;
+}
+
+.thinking-title {
+  margin: 0;
+  color: #3b4b86;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.thinking-dots {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.thinking-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5f73ff;
+  opacity: 0.28;
+  animation: ai-thinking-pulse 1.2s infinite ease-in-out;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes ai-thinking-pulse {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.28;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
 }
 
 .rec-list {
@@ -345,9 +717,16 @@ export default {
   max-width: 420px;
 }
 
+.ai-chat-drawer-shell .el-drawer__body {
+  overflow: hidden;
+}
+
 @media (max-width: 768px) {
   .ai-chat-drawer-shell {
     max-width: 100%;
   }
 }
 </style>
+
+
+

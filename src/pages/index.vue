@@ -61,7 +61,8 @@
     <ai-chat-drawer
       :visible="aiDrawerVisible"
       :messages="aiMessages"
-      :sending="aiSending"
+      :sending="aiSending || aiTyping"
+      :waiting="aiSending"
       :session-id="aiSessionId"
       @close="aiDrawerVisible = false"
       @send="handleAiSend"
@@ -102,6 +103,8 @@ export default {
       aiDrawerVisible: false,
       aiMessages: [],
       aiSending: false,
+      aiTyping: false,
+      aiTypingTimer: null,
       aiSessionId: '',
       aiPendingAutoOpen: false,
       aiUnreadCount: 0
@@ -168,6 +171,7 @@ export default {
   beforeDestroy() {
     this.$authDialogBus.$off('open', this.handleBusOpen)
     this.$authDialogBus.$off('close', this.closeAuthDialog)
+    this.clearAiTypingTimer()
   },
   methods: {
     isMenuActive(item) {
@@ -275,6 +279,12 @@ export default {
       this.aiDrawerVisible = true
       this.aiUnreadCount = 0
     },
+    clearAiTypingTimer() {
+      if (this.aiTypingTimer) {
+        clearInterval(this.aiTypingTimer)
+        this.aiTypingTimer = null
+      }
+    },
     appendAiMessage(role, content, extra = {}) {
       this.aiMessages.push({
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -287,9 +297,47 @@ export default {
         this.aiUnreadCount += 1
       }
     },
+    async typeAssistantMessage(answer, recommendations = []) {
+      const fullText = String(answer || '')
+      if (!fullText) {
+        this.appendAiMessage('assistant', '暂时没有生成回复，请换个问法试试。', { recommendations })
+        return
+      }
+
+      this.clearAiTypingTimer()
+      this.aiTyping = true
+
+      const target = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        role: 'assistant',
+        content: '',
+        createdAt: new Date().toISOString(),
+        recommendations: Array.isArray(recommendations) ? recommendations : []
+      }
+      this.aiMessages.push(target)
+      if (!this.aiDrawerVisible) {
+        this.aiUnreadCount += 1
+      }
+
+      const index = this.aiMessages.length - 1
+      const charDelay = fullText.length > 300 ? 8 : fullText.length > 160 ? 12 : 18
+
+      await new Promise((resolve) => {
+        let cursor = 0
+        this.aiTypingTimer = setInterval(() => {
+          cursor += 1
+          this.$set(this.aiMessages[index], 'content', fullText.slice(0, cursor))
+          if (cursor >= fullText.length) {
+            this.clearAiTypingTimer()
+            this.aiTyping = false
+            resolve()
+          }
+        }, charDelay)
+      })
+    },
     async handleAiSend(message) {
       const text = String(message || '').trim()
-      if (!text || this.aiSending) {
+      if (!text || this.aiSending || this.aiTyping) {
         return
       }
       if (!this.isLoggedIn) {
@@ -304,6 +352,7 @@ export default {
         method: 'post',
         dataType: 'json',
         showLoading: false,
+        timeout: 120 * 1000,
         params: {
           message: text,
           sourcePage: this.$route.path,
@@ -312,7 +361,8 @@ export default {
       })
       this.aiSending = false
 
-      if (!res || res.code !== 0) {
+      const successCode = Number(res && res.code)
+      if (!res || (successCode !== 0 && successCode !== 200)) {
         this.appendAiMessage('assistant', (res && res.msg) || 'AI 服务暂时不可用，请稍后再试。')
         return
       }
@@ -321,9 +371,7 @@ export default {
       if (data.sessionId) {
         this.aiSessionId = String(data.sessionId)
       }
-      this.appendAiMessage('assistant', data.answer || '暂时没有生成回复，请换个问法试试。', {
-        recommendations: data.recommendations || []
-      })
+      await this.typeAssistantMessage(data.answer, data.recommendations || [])
     },
     logout() {
       localStorage.removeItem('Token')
@@ -504,5 +552,12 @@ export default {
   }
 }
 </style>
+
+
+
+
+
+
+
 
 

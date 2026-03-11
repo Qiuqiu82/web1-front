@@ -1,0 +1,78 @@
+{
+  "startedAt": "2026-03-10T18:41:29.525Z",
+  "origin": "http://localhost:8081",
+  "backend": "http://localhost:8080/springboot0le12",
+  "login": {
+    "registerStatus": 200,
+    "registerBody": "{\"code\":0}",
+    "loginStatus": 200,
+    "userId": 1773168089576
+  },
+  "pages": [
+    {
+      "route": "/#/index/home",
+      "url": "http://localhost:8081/#/index/home",
+      "ok": true,
+      "status": 200,
+      "bodyTextLen": 1220,
+      "hasApp": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\ai-mcp-_index_home.png"
+    },
+    {
+      "route": "/#/index/browse",
+      "url": "http://localhost:8081/#/index/browse",
+      "ok": true,
+      "status": 200,
+      "bodyTextLen": 1220,
+      "hasApp": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\ai-mcp-_index_browse.png"
+    },
+    {
+      "route": "/#/index/tryon",
+      "url": "http://localhost:8081/#/index/tryon",
+      "ok": true,
+      "status": 200,
+      "bodyTextLen": 1220,
+      "hasApp": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\ai-mcp-_index_tryon.png"
+    },
+    {
+      "route": "/#/index/coscart",
+      "url": "http://localhost:8081/#/index/coscart",
+      "ok": true,
+      "status": 200,
+      "bodyTextLen": 1220,
+      "hasApp": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\ai-mcp-_index_coscart.png"
+    },
+    {
+      "route": "/#/index/cosorder",
+      "url": "http://localhost:8081/#/index/cosorder",
+      "ok": true,
+      "status": 200,
+      "bodyTextLen": 1220,
+      "hasApp": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\ai-mcp-_index_cosorder.png"
+    },
+    {
+      "route": "/#/index/profile",
+      "url": "http://localhost:8081/#/index/profile",
+      "ok": true,
+      "status": 200,
+      "bodyTextLen": 1220,
+      "hasApp": true,
+      "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\ai-mcp-_index_profile.png"
+    }
+  ],
+  "aiChat": {
+    "opened": true,
+    "prompt": "??????????????300??",
+    "responseLength": 341,
+    "responsePreview": "根据您的预算300元，我为您推荐以下几款动漫服装：\n\n1. **间谍过家家 - 阿尼亚学院制服 (COS-005)**\n   - **推荐理由**: 这款服装风格可爱，适合喜欢学院风和少女角色扮演的用户。设计上包括白色衬衫、深绿色背心裙和红色蝴蝶结，非常适合日常改良穿着。\n   - **预算区间**: 200-350元\n   - **适用场景**: Cosplay、日常改良、校园活动\n\n2. **海贼王 - 路飞草帽团服装 (COS-006)**\n   - **推荐理由**:",
+    "screenshot": "F:\\springboot\\front\\web01\\playwright-smoke\\ai-mcp-chat.png",
+    "ok": true
+  },
+  "pageErrors": [],
+  "consoleErrors": [],
+  "finishedAt": "2026-03-10T18:42:05.246Z"
+}
