@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="backoffice-shell" :class="`theme-${theme}`" :style="themeVars">
     <header class="backoffice-header">
       <div class="header-left">
@@ -88,7 +88,7 @@
           </div>
         </section>
 
-        <div class="content-scroll" :class="{ 'is-home': currentContext.isHome }">
+        <div class="content-scroll" :class="{ 'is-home': currentContext.isHome, 'hide-scrollbar': hideOuterScrollbar }">
           <slot />
         </div>
       </main>
