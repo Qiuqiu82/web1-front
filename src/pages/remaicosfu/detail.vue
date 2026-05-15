@@ -648,7 +648,7 @@ export default {
       if (res && res.code === 0) {
         this.$message.success('已加入购物车')
         this.customizeDialogVisible = false
-        this.$confirm('已加入购物车锛屾槸鍚﹀墠寰€璐墿杞︼紵', '提示', {
+        this.$confirm('已加入购物车', '提示', {
           type: 'success'
         })
           .then(() => this.$router.push('/index/coscart'))

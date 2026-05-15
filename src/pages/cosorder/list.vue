@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="order-page">
     <section class="header-panel">
       <div class="header-title">
@@ -66,7 +66,6 @@
         <div class="action-row">
           <template v-if="canPay(row)">
             <el-button type="primary" size="mini" @click="goPay(row)">去支付</el-button>
-            <el-button type="success" size="mini" @click="mockFinishPay(row)">模拟支付成功</el-button>
             <el-button plain size="mini" @click="cancelOrder(row)" v-if="canCancel(row)">取消订单</el-button>
             <el-button size="mini" @click="openDetail(row)">查看详情</el-button>
           </template>
@@ -92,6 +91,58 @@
           <template slot-scope="scope">￥{{ formatMoney(itemAmount(scope.row)) }}</template>
         </el-table-column>
       </el-table>
+    </el-dialog>
+
+    <el-dialog
+      :title="`${payChannelLabel}扫码支付`"
+      :visible.sync="payDialogVisible"
+      width="560px"
+      custom-class="pay-demo-dialog"
+      @closed="handlePayDialogClosed"
+    >
+      <div v-if="currentOrder" class="pay-dialog-body">
+        <div class="pay-hero">
+          <div>
+            <span class="pay-kicker">ORDER PAYMENT</span>
+            <h3>请使用{{ payChannelLabel }}扫码完成支付</h3>
+          </div>
+          <strong>￥{{ formatMoney(currentOrder.totalAmount) }}</strong>
+        </div>
+
+        <div class="pay-content-grid">
+          <div class="pay-qr-card">
+            <img :src="payQrUrl" :alt="`${payChannelLabel}收款码`" />
+            <span>{{ payChannelLabel }}收款码</span>
+          </div>
+
+          <div class="pay-info-card">
+            <div class="pay-info-row">
+              <span>订单号</span>
+              <b>{{ currentOrder.orderNo || '-' }}</b>
+            </div>
+            <div class="pay-info-row">
+              <span>支付单号</span>
+              <b>{{ payOrderNo || '-' }}</b>
+            </div>
+            <div class="pay-info-row">
+              <span>支付方式</span>
+              <b>{{ payChannelLabel }}</b>
+            </div>
+            <div class="pay-info-row">
+              <span>有效期至</span>
+              <b>{{ payExpireTime || '-' }}</b>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+      <span slot="footer">
+        <el-button @click="payDialogVisible = false">稍后支付</el-button>
+        <el-button type="primary" :loading="payConfirming" @click="confirmPayComplete">
+          我已完成支付
+        </el-button>
+      </span>
     </el-dialog>
 
     <el-drawer title="订单详情" :visible.sync="detailVisible" size="500px">
@@ -181,6 +232,9 @@ export default {
       commDraft: '',
       commSending: false,
       payInfo: {},
+      payDialogVisible: false,
+      payConfirming: false,
+      selectedPayChannel: 'WECHAT',
       pollTimer: null,
       sessionUser: {
         userId: 0,
@@ -221,6 +275,24 @@ export default {
     detailBody() {
       if (!this.currentOrder) return {}
       return this.parseSnapshot(this.currentOrder.bodyProfileSnapshotJson || this.currentOrder.body_profile_snapshot_json)
+    },
+    normalizedPayChannel() {
+      const channel = String(this.selectedPayChannel || '').trim().toUpperCase()
+      return channel === 'ALIPAY' ? 'ALIPAY' : 'WECHAT'
+    },
+    payChannelLabel() {
+      return this.normalizedPayChannel === 'ALIPAY' ? '支付宝' : '微信'
+    },
+    payQrUrl() {
+      const fileName = this.normalizedPayChannel === 'ALIPAY' ? 'zfb.jpg' : 'wx.jpg'
+      return `${String(this.$config.baseUrl || '').replace(/\/+$/, '')}/upload/pay/${fileName}`
+    },
+    payOrderNo() {
+      return this.payInfo.payOrderNo || this.payInfo.pay_order_no || ''
+    },
+    payExpireTime() {
+      const value = this.payInfo.expireTime || this.payInfo.expire_time || ''
+      return value ? String(value).replace('T', ' ') : ''
     }
   },
   created() {
@@ -244,6 +316,7 @@ export default {
       if (!text || text === '-') return '-'
       if (text === 'ALIPAY') return '支付宝'
       if (text === 'WECHAT') return '微信'
+      if (text === 'MOCK') return '微信'
       return payType
     },
     parseSnapshot(raw) {
@@ -397,6 +470,7 @@ export default {
       }
       this.sessionUser.userId = userId
       this.sessionUser.userTable = userTable
+      this.selectedPayChannel = this.resolvePayChannel(row)
 
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosPayCreate,
@@ -406,7 +480,7 @@ export default {
           orderNo,
           userId,
           userTable,
-          payChannel: 'mock'
+          payChannel: this.normalizedPayChannel.toLowerCase()
         }
       })
 
@@ -418,6 +492,7 @@ export default {
       this.currentOrder = row
       this.payInfo = res.data || {}
       this.$message.success('支付订单已创建')
+      this.payDialogVisible = true
       this.startPoll(orderNo)
     },
     startPoll(orderNo) {
@@ -439,7 +514,8 @@ export default {
         const payStatus = this.normalizeStatus(payStatusRaw)
         if (payStatus === PAY_PAID) {
           this.stopPoll()
-          this.load()
+          this.payDialogVisible = false
+          await this.load()
           this.$message.success('支付成功')
         }
       }, 3000)
@@ -450,35 +526,44 @@ export default {
         this.pollTimer = null
       }
     },
-    async mockFinishPay(row) {
-      const rowOrderNo = row && (row.orderNo || row.order_no)
+    resolvePayChannel(row) {
+      const raw = String((row && (row.payType || row.pay_type)) || '').trim().toUpperCase()
+      return raw === 'ALIPAY' ? 'ALIPAY' : 'WECHAT'
+    },
+    handlePayDialogClosed() {
+      this.payConfirming = false
+      this.stopPoll()
+    },
+    async confirmPayComplete() {
+      if (this.payConfirming) return
+      const rowOrderNo = this.currentOrder && (this.currentOrder.orderNo || this.currentOrder.order_no)
+      const payOrderNo = this.payOrderNo
+      if (!payOrderNo) {
+        this.$message.warning('支付单号缺失，请重新发起支付')
+        return
+      }
       if (!rowOrderNo) {
         this.$message.warning('订单号缺失')
         return
       }
 
-      if (!this.currentOrder || (this.currentOrder.orderNo || this.currentOrder.order_no) !== rowOrderNo) {
-        await this.goPay(row)
-      }
-
-      const payOrderNo = this.payInfo.payOrderNo || this.payInfo.pay_order_no
-      if (!payOrderNo) {
-        this.$message.warning('请先点击去支付')
-        return
-      }
-
-      const mockRes = await this.$proxy.Request({
+      this.payConfirming = true
+      const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosPayMockSuccess,
         method: 'post',
         params: { payOrderNo }
       })
-      if (!mockRes || mockRes.code !== 0) {
-        this.$message.error((mockRes && (mockRes.msg || mockRes.info)) || '模拟支付失败')
+      this.payConfirming = false
+
+      if (!res || res.code !== 0) {
+        this.$message.error((res && (res.msg || res.info)) || '支付确认失败')
         return
       }
 
-      this.$message.success('模拟支付成功，正在刷新')
-      this.startPoll(rowOrderNo)
+      this.$message.success('支付确认成功，正在刷新订单状态')
+      this.payDialogVisible = false
+      this.stopPoll()
+      await this.load()
     },
     async cancelOrder(row) {
       const orderId = row.id
@@ -1022,6 +1107,126 @@ export default {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+::v-deep .pay-demo-dialog {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+::v-deep .pay-demo-dialog .el-dialog__header {
+  padding: 18px 22px 12px;
+  background: #f8faff;
+  border-bottom: 1px solid #e7edff;
+}
+
+::v-deep .pay-demo-dialog .el-dialog__body {
+  padding: 22px;
+}
+
+.pay-dialog-body {
+  display: grid;
+  gap: 18px;
+}
+
+.pay-hero {
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgba(15, 26, 64, 0.92), rgba(46, 73, 150, 0.86)),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 14px);
+}
+
+.pay-kicker {
+  display: inline-flex;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.pay-hero h3 {
+  margin: 8px 0 0;
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.pay-hero p {
+  margin-top: 8px;
+  max-width: 310px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.7;
+  font-size: 13px;
+}
+
+.pay-hero strong {
+  white-space: nowrap;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.pay-content-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.pay-qr-card,
+.pay-info-card {
+  border-radius: 18px;
+  border: 1px solid #e8edff;
+  background: #fff;
+  box-shadow: 0 12px 26px rgba(77, 96, 160, 0.08);
+}
+
+.pay-qr-card {
+  padding: 16px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+}
+
+.pay-qr-card img {
+  width: 176px;
+  height: 176px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f6f8ff;
+}
+
+.pay-qr-card span {
+  color: #33467c;
+  font-weight: 700;
+}
+
+.pay-info-card {
+  padding: 14px 16px;
+  display: grid;
+  gap: 11px;
+  align-content: center;
+}
+
+.pay-info-row {
+  display: grid;
+  gap: 4px;
+}
+
+.pay-info-row span {
+  color: #8995b7;
+  font-size: 12px;
+}
+
+.pay-info-row b {
+  color: #283973;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-all;
 }
 
 .detail-comm {

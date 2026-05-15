@@ -263,7 +263,8 @@ export default {
       sessionLoading: false,
       detailLoading: false,
       sendLoading: false,
-      pollTimer: null
+      pollTimer: null,
+      pollLoading: false
     }
   },
   computed: {
@@ -495,11 +496,16 @@ export default {
         return
       }
       this.detailLoading = true
-      await Promise.all([this.loadMessages(), this.loadDelivery()])
-      this.detailLoading = false
+      try {
+        await Promise.all([this.loadMessages(), this.loadDelivery()])
+      } finally {
+        this.detailLoading = false
+      }
     },
     async loadMessages() {
       if (!this.selectedSession || !this.selectedSession.orderId) return
+      const previousCount = this.messages.length
+      const previousLastId = previousCount ? this.messages[previousCount - 1].id : null
       const res = await this.$proxy.Request({
         url: this.$proxy.Api.cosorderCommMessagePage,
         method: 'get',
@@ -511,8 +517,13 @@ export default {
           limit: 200
         }
       })
-      this.messages = res && res.code === 0 ? this.normalizeMessageRows((res.data && res.data.list) || []) : []
-      this.$nextTick(() => this.scrollToBottom())
+      if (!res || res.code !== 0) return
+      const nextMessages = this.normalizeMessageRows((res.data && res.data.list) || [])
+      const nextLastId = nextMessages.length ? nextMessages[nextMessages.length - 1].id : null
+      this.messages = nextMessages
+      if (nextMessages.length !== previousCount || nextLastId !== previousLastId) {
+        this.$nextTick(() => this.scrollToBottom())
+      }
     },
     async loadDelivery() {
       if (!this.selectedSession || !this.selectedSession.orderId) return
@@ -523,7 +534,8 @@ export default {
         showError: false,
         params: { orderId: this.selectedSession.orderId }
       })
-      this.deliveryList = res && res.code === 0 ? (res.data || []) : []
+      if (!res || res.code !== 0) return
+      this.deliveryList = res.data || []
     },
     async sendMessage() {
       if (!this.selectedSession || !this.selectedSession.orderId) {
@@ -570,13 +582,20 @@ export default {
       if (!el) return
       el.scrollTop = el.scrollHeight
     },
+    async pollCurrentDetail() {
+      if (this.pollLoading || !this.selectedSession || !this.selectedSession.orderId) return
+      this.pollLoading = true
+      try {
+        await Promise.all([this.loadMessages(), this.loadDelivery()])
+      } finally {
+        this.pollLoading = false
+      }
+    },
     startPoll() {
       this.stopPoll()
       this.pollTimer = setInterval(() => {
-        if (!this.selectedSession || !this.selectedSession.orderId) return
-        this.loadCurrentDetail()
-        this.loadSessions()
-      }, 20000)
+        this.pollCurrentDetail()
+      }, 5000)
     },
     stopPoll() {
       if (this.pollTimer) {

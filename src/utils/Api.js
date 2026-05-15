@@ -7,6 +7,8 @@ const Api = {
   // account statistics
   usersPage: '/users/page',
   yonghuPage: '/yonghu/page',
+  yonghuSession: '/yonghu/session',
+  yonghuUpdate: '/yonghu/update',
   shejishiPage: '/shejishi/page',
   shejishiSession: '/shejishi/session',
   shejishiUpdateMyProfile: '/shejishi/update-my-profile',

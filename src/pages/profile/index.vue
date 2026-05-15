@@ -14,6 +14,61 @@
 
     <section v-else class="panel">
       <el-tabs v-model="activeTab">
+        <el-tab-pane label="个人资料" name="profile">
+          <div class="profile-card" v-loading="profileLoading">
+            <div class="profile-summary">
+              <div class="profile-avatar-preview">
+                <img v-if="profileAvatarUrl" :src="profileAvatarUrl" alt="头像" />
+                <span v-else>{{ profileInitial }}</span>
+              </div>
+              <div>
+                <div class="summary-kicker">USER PROFILE</div>
+                <h3>{{ profileForm.yonghuxingming || profileForm.yonghuzhanghao || '我的资料' }}</h3>
+              </div>
+            </div>
+
+            <el-form
+              ref="profileFormRef"
+              :model="profileForm"
+              :rules="profileRules"
+              label-width="88px"
+              class="user-profile-form"
+            >
+              <el-form-item label="头像">
+                <file-upload
+                  action="file/upload"
+                  :limit="1"
+                  :multiple="false"
+                  :file-urls="profileForm.touxiang"
+                  tip="建议上传正方形头像，支持 JPG/PNG"
+                  @change="handleProfileAvatarChange"
+                />
+              </el-form-item>
+              <el-form-item label="账号">
+                <el-input v-model="profileForm.yonghuzhanghao" disabled />
+              </el-form-item>
+              <el-form-item label="昵称" prop="yonghuxingming">
+                <el-input
+                  v-model.trim="profileForm.yonghuxingming"
+                  maxlength="50"
+                  show-word-limit
+                  placeholder="请输入昵称"
+                />
+              </el-form-item>
+              <el-form-item label="性别" prop="xingbie">
+                <el-radio-group v-model="profileForm.xingbie">
+                  <el-radio label="女">女</el-radio>
+                  <el-radio label="男">男</el-radio>
+                  <el-radio label="保密">保密</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" :loading="profileSaving" @click="saveProfile">保存</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+
         <el-tab-pane label="地址簿" name="address">
           <div class="toolbar">
             <el-button type="primary" size="mini" @click="openAddressDialog()">新增地址</el-button>
@@ -165,7 +220,11 @@ export default {
   name: 'ProfileCenter',
   data() {
     return {
-      activeTab: 'address',
+      activeTab: 'profile',
+      profileLoading: false,
+      profileSaving: false,
+      profileRaw: {},
+      profileForm: this.createProfileForm(),
       addressList: [],
       bodyList: [],
       addressDialogVisible: false,
@@ -174,6 +233,13 @@ export default {
       bodySaving: false,
       addressForm: this.createAddressForm(),
       bodyForm: this.createBodyForm(),
+      profileRules: {
+        yonghuxingming: [
+          { required: true, message: '请输入昵称', trigger: 'blur' },
+          { max: 50, message: '昵称最多 50 个字符', trigger: 'blur' }
+        ],
+        xingbie: [{ required: true, message: '请选择性别', trigger: 'change' }]
+      },
       addressRules: {
         receiverName: [{ required: true, message: '请输入收货人', trigger: 'blur' }],
         receiverPhone: [
@@ -206,6 +272,13 @@ export default {
     isUser() {
       const table = localStorage.getItem('sessionTable') || localStorage.getItem('UserTableName') || ''
       return table === 'yonghu'
+    },
+    profileAvatarUrl() {
+      return this.toFileUrl(this.profileForm.touxiang)
+    },
+    profileInitial() {
+      const name = String(this.profileForm.yonghuxingming || this.profileForm.yonghuzhanghao || '用户').trim()
+      return name ? name.slice(0, 1) : '用'
     }
   },
   created() {
@@ -213,6 +286,17 @@ export default {
     this.loadAll()
   },
   methods: {
+    createProfileForm() {
+      return {
+        id: null,
+        yonghuzhanghao: '',
+        yonghuxingming: '',
+        touxiang: '',
+        xingbie: '保密',
+        lianxifangshi: '',
+        shentishuju: ''
+      }
+    },
     createAddressForm() {
       return {
         id: null,
@@ -267,12 +351,54 @@ export default {
         status: row.status || '启用'
       }
     },
+    normalizeProfile(row = {}) {
+      return {
+        id: row.id || null,
+        yonghuzhanghao: row.yonghuzhanghao || '',
+        yonghuxingming: row.yonghuxingming || '',
+        touxiang: this.normalizeFilePath(row.touxiang || ''),
+        xingbie: row.xingbie || '保密',
+        lianxifangshi: row.lianxifangshi || '',
+        shentishuju: row.shentishuju || ''
+      }
+    },
+    normalizeFilePath(value) {
+      const raw = String(value || '').trim()
+      if (!raw) return ''
+      if (!/^https?:/i.test(raw)) return raw.replace(/^\/+/, '')
+      const base = String(this.$config.baseUrl || '').replace(/\/+$/, '')
+      if (raw.indexOf(`${base}/`) === 0) {
+        return raw.slice(base.length + 1).replace(/^\/+/, '')
+      }
+      const uploadIndex = raw.toLowerCase().indexOf('/upload/')
+      return uploadIndex >= 0 ? raw.slice(uploadIndex + 1) : raw
+    },
+    toFileUrl(value) {
+      const raw = String(value || '').trim()
+      if (!raw) return ''
+      if (/^https?:/i.test(raw)) return raw
+      return `${String(this.$config.baseUrl || '').replace(/\/+$/, '')}/${raw.replace(/^\/+/, '')}`
+    },
     formatAddress(row) {
       if (!row) return ''
       return `${row.province || ''}${row.city || ''}${row.district || ''}${row.detailAddress || ''}`
     },
     async loadAll() {
-      await Promise.all([this.loadAddressList(), this.loadBodyList()])
+      await Promise.all([this.loadProfile(), this.loadAddressList(), this.loadBodyList()])
+    },
+    async loadProfile() {
+      this.profileLoading = true
+      const res = await this.$proxy.Request({
+        url: this.$proxy.Api.yonghuSession,
+        method: 'get',
+        showLoading: false,
+        showError: false
+      })
+      this.profileLoading = false
+      if (!res || res.code !== 0) return
+      const data = res.data || {}
+      this.profileRaw = data
+      this.profileForm = this.normalizeProfile(data)
     },
     async loadAddressList() {
       const res = await this.$proxy.Request({
@@ -308,6 +434,47 @@ export default {
       this.bodyDialogVisible = true
       this.$nextTick(() => {
         if (this.$refs.bodyFormRef) this.$refs.bodyFormRef.clearValidate()
+      })
+    },
+    handleProfileAvatarChange(fileUrls) {
+      this.profileForm.touxiang = this.normalizeFilePath(fileUrls)
+    },
+    saveProfile() {
+      this.$refs.profileFormRef.validate(async (valid) => {
+        if (!valid) return
+        if (!this.profileForm.id) {
+          this.$message.error('用户信息加载失败，请刷新后重试')
+          return
+        }
+        this.profileSaving = true
+        const payload = {
+          ...this.profileRaw,
+          id: this.profileForm.id,
+          yonghuzhanghao: this.profileForm.yonghuzhanghao,
+          yonghuxingming: this.profileForm.yonghuxingming,
+          touxiang: this.normalizeFilePath(this.profileForm.touxiang),
+          xingbie: this.profileForm.xingbie,
+          lianxifangshi: this.profileForm.lianxifangshi,
+          shentishuju: this.profileForm.shentishuju
+        }
+        let res = null
+        try {
+          res = await this.$proxy.Request({
+            url: this.$proxy.Api.yonghuUpdate,
+            method: 'post',
+            dataType: 'json',
+            params: payload
+          })
+        } finally {
+          this.profileSaving = false
+        }
+        if (!res || res.code !== 0) {
+          this.$message.error((res && res.msg) || '保存个人资料失败')
+          return
+        }
+        this.$message.success('个人资料已保存')
+        localStorage.setItem('username', this.profileForm.yonghuxingming || this.profileForm.yonghuzhanghao)
+        await this.loadProfile()
       })
     },
     saveAddress() {
@@ -452,6 +619,81 @@ export default {
   justify-content: flex-end;
 }
 
+.profile-card {
+  max-width: 760px;
+  padding: 8px 4px 18px;
+}
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding: 18px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(64, 158, 255, 0.18), transparent 28%),
+    linear-gradient(135deg, #f8fbff 0%, #fff7f1 100%);
+  border: 1px solid #e8edff;
+}
+
+.profile-avatar-preview {
+  width: 86px;
+  height: 86px;
+  flex: 0 0 auto;
+  border-radius: 20px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #3f8cff 0%, #1dc9a0 100%);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+  box-shadow: 0 14px 30px rgba(63, 140, 255, 0.22);
+}
+
+.profile-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.summary-kicker {
+  margin-bottom: 4px;
+  color: #6d83bd;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.profile-summary h3 {
+  margin: 0;
+  color: #22356b;
+  font-size: 22px;
+}
+
+.profile-summary p {
+  margin: 8px 0 0;
+  color: #7b89a8;
+  line-height: 1.7;
+}
+
+.user-profile-form {
+  max-width: 560px;
+}
+
+.user-profile-form ::v-deep .el-upload--picture-card,
+.user-profile-form ::v-deep .el-upload-list--picture-card .el-upload-list__item {
+  width: 96px;
+  height: 96px;
+  line-height: 96px;
+  border-radius: 12px;
+}
+
+.user-profile-form ::v-deep .el-input__inner {
+  border-radius: 8px;
+}
+
 .triple-row {
   display: grid;
   gap: 8px;
@@ -467,6 +709,11 @@ export default {
 }
 
 @media (max-width: 900px) {
+  .profile-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .triple-row {
     grid-template-columns: 1fr;
   }
